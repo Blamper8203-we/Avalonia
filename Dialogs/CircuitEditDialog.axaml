@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="400"
+        Width="450" MinHeight="300" MaxHeight="600"
+        SizeToContent="Height"
+        x:Class="DINBoard.Dialogs.CircuitEditDialog"
+        Title="{DynamicResource DialogCircuitEditTitle}"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource PanelBackground}">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+        
+        <!-- Header -->
+        <StackPanel Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border x:Name="IconBorder" Background="{DynamicResource AccentBlue}" CornerRadius="4" Width="32" Height="32">
+                    <mi:MaterialIcon x:Name="HeaderIcon" Kind="LightningBolt" Width="20" Height="20" 
+                                     Foreground="White" 
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="CircuitNameText" 
+                               Text="{DynamicResource LabelCircuitNameShort}" 
+                               FontSize="18" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource TextMain}"/>
+                    <TextBlock x:Name="CircuitTypeText" 
+                               Text="MCB" 
+                               FontSize="11" 
+                               Foreground="{DynamicResource TextSecondary}"/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Form -->
+        <ScrollViewer Grid.Row="1" Margin="0,16,0,0">
+            <StackPanel x:Name="FieldsPanel" Spacing="8">
+                <!-- Fields will be added dynamically -->
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,16,0,0">
+            <Button x:Name="BtnCancel" Content="{DynamicResource DialogCancel}" Click="BtnCancel_Click"
+                    Background="{DynamicResource PanelBackgroundAlt}" Foreground="{DynamicResource TextMain}" Padding="16,8"/>
+            <Button x:Name="BtnSave" Content="{DynamicResource DialogSave}" Click="BtnSave_Click"
+                    Background="{DynamicResource AccentBlue}" Foreground="White" Padding="16,8" FontWeight="Bold"/>
+        </StackPanel>
+    </Grid>
+</Window>

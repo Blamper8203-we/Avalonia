@@ -1,0 +1,360 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- Application -->
+    <sys:String x:Key="AppTitle">DINBoard</sys:String>
+    <sys:String x:Key="AppReady">Gotowy</sys:String>
+    
+    <!-- Menu: File -->
+    <sys:String x:Key="MenuFile">Plik</sys:String>
+    <sys:String x:Key="MenuProject">PROJEKT</sys:String>
+    <sys:String x:Key="MenuNewProject">Nowy projekt</sys:String>
+    <sys:String x:Key="MenuOpen">Otwórz...</sys:String>
+    <sys:String x:Key="MenuSave">Zapisz</sys:String>
+    <sys:String x:Key="MenuSaveAs">Zapisz jako...</sys:String>
+    <sys:String x:Key="MenuExport">EKSPORT</sys:String>
+    <sys:String x:Key="MenuPrint">Drukuj schemat</sys:String>
+    <sys:String x:Key="MenuExportPdf">Eksport do PDF</sys:String>
+    <sys:String x:Key="MenuExportPngClean">Eksport do PNG (Czysty)</sys:String>
+    <sys:String x:Key="MenuExportPngAnnotated">Eksport do PNG (Z Oznaczeniami)</sys:String>
+    <sys:String x:Key="MenuExportBom">Zestawienie CSV</sys:String>
+    <sys:String x:Key="MenuExit">Wyjdź</sys:String>
+    
+    <!-- Menu: View -->
+    <sys:String x:Key="MenuView">Widok</sys:String>
+    <sys:String x:Key="MenuDisplayOptions">OPCJE WYŚWIETLANIA</sys:String>
+    <sys:String x:Key="MenuShowGroups">Pokaż grupy</sys:String>
+    <sys:String x:Key="MenuShowBraces">Pokaż klamry z numerami</sys:String>
+    <sys:String x:Key="MenuRightPanel">Panel boczny</sys:String>
+    <sys:String x:Key="MenuSheets">ARKUSZE</sys:String>
+    <sys:String x:Key="MenuSheet1">Szyna DIN</sys:String>
+    <sys:String x:Key="MenuSheet2">Schemat jednokreskowy</sys:String>
+    
+    <!-- Toolbar -->
+    <sys:String x:Key="ToolUndo">Cofnij</sys:String>
+    <sys:String x:Key="ToolRedo">Ponów</sys:String>
+    <sys:String x:Key="ToolDrawWire">Rysuj Przewód</sys:String>
+    <sys:String x:Key="ToolDelete">Usuń</sys:String>
+    <sys:String x:Key="ToolDinRail">Szyna DIN</sys:String>
+    <sys:String x:Key="ToolBusbar">Szyna prądowa</sys:String>
+    <sys:String x:Key="ToolImportSvg">Importuj moduły SVG</sys:String>
+    <sys:String x:Key="ToolZoomIn">Przybliż</sys:String>
+    <sys:String x:Key="ToolZoomOut">Oddal</sys:String>
+    <sys:String x:Key="ToolZoomFit">Wyśrodkuj</sys:String>
+    <sys:String x:Key="ToolGroups">Grupy</sys:String>
+    <sys:String x:Key="ToolSettings">Ustawienia</sys:String>
+    
+    <!-- Tooltips -->
+    <sys:String x:Key="TooltipUndo">Cofnij (Ctrl+Z)</sys:String>
+    <sys:String x:Key="TooltipRedo">Ponów (Ctrl+Y)</sys:String>
+    <sys:String x:Key="TooltipDeleteSelected">Usuń zaznaczone</sys:String>
+    <sys:String x:Key="TooltipDinRail">Generator szyny DIN</sys:String>
+    <sys:String x:Key="TooltipZoomIn">Przybliż (Ctrl +)</sys:String>
+    <sys:String x:Key="TooltipZoomOut">Oddal (Ctrl -)</sys:String>
+    <sys:String x:Key="TooltipZoomFit">Wyśrodkuj (Ctrl 0)</sys:String>
+    <sys:String x:Key="TooltipShowGroups">Pokaż/ukryj ramki grup</sys:String>
+    <sys:String x:Key="TooltipToggleSchematicTheme">Przełącz jasny/ciemny motyw schematu</sys:String>
+    <sys:String x:Key="TooltipUnsavedChanges">Niezapisane zmiany</sys:String>
+    <sys:String x:Key="TooltipTotalPower">Łączna moc obwodów</sys:String>
+    <sys:String x:Key="TooltipGroupCount">Liczba grup obwodów</sys:String>
+    <sys:String x:Key="TooltipModuleCount">Liczba modułów na szynie</sys:String>
+    
+    <!-- Tabs: Main -->
+    <sys:String x:Key="TabDistributionBoard">Rozdzielnica</sys:String>
+    <sys:String x:Key="TabCircuitSchematic">Schemat obwodów</sys:String>
+    
+    <!-- Tabs: Right Panel -->
+    <sys:String x:Key="TabConfiguration">Konfiguracja</sys:String>
+    <sys:String x:Key="TabCircuits">Obwody</sys:String>
+    <sys:String x:Key="TabCircuitGroups">Grupy obwodów</sys:String>
+    <sys:String x:Key="TabBalance">Bilans</sys:String>
+    <sys:String x:Key="TabCircuitList">Lista obwodów</sys:String>
+    <sys:String x:Key="TabValidation">Walidacja</sys:String>
+    <sys:String x:Key="TabCircuitEdit">Edycja obwodu</sys:String>
+    
+    <!-- Settings -->
+    <sys:String x:Key="SettingsTheme">Wygląd</sys:String>
+    <sys:String x:Key="SettingsSelectTheme">Wybierz motyw aplikacji:</sys:String>
+    <sys:String x:Key="SettingsViewOptions">Opcje wyświetlania:</sys:String>
+    <sys:String x:Key="SettingsShowGroupsTooltip">Wyświetla ramki i etykiety grup na canvasie</sys:String>
+    <sys:String x:Key="SettingsShowBracesTooltip">Wyświetla klamry z numeracją nad modułami</sys:String>
+    <sys:String x:Key="SettingsSchematicOptions">OPCJE SCHEMATU</sys:String>
+    <sys:String x:Key="SettingsGrid">Siatka w tle</sys:String>
+    <sys:String x:Key="SettingsDinRailAxis">Oś szyny DIN</sys:String>
+    <sys:String x:Key="SettingsPageNumbers">Numery stron</sys:String>
+    <sys:String x:Key="SettingsInterface">INTERFEJS</sys:String>
+    <sys:String x:Key="SettingsIconSize">Rozmiar ikon w palecie</sys:String>
+    <sys:String x:Key="SettingsHidden">Ukryta</sys:String>
+    <sys:String x:Key="SettingsVisible">Widoczna</sys:String>
+    <sys:String x:Key="SettingsHiddenPlural">Ukryte</sys:String>
+    <sys:String x:Key="SettingsVisiblePlural">Widoczne</sys:String>
+    
+    <!-- Themes -->
+    <sys:String x:Key="ThemeLight">Jasny</sys:String>
+    <sys:String x:Key="ThemeDarkAnthracite">Ciemny (Antracyt)</sys:String>
+    <sys:String x:Key="ThemeDarkNavy">Ciemny (Granat)</sys:String>
+    <sys:String x:Key="ThemeDarkBlack">Ciemny (Czerń)</sys:String>
+    
+    <!-- Power Balance Panel -->
+    <sys:String x:Key="PowerBalance">BILANS MOCY</sys:String>
+    <sys:String x:Key="InstalledPower">Moc zainstalowana</sys:String>
+    <sys:String x:Key="CalculatedPower">Moc obliczeniowa</sys:String>
+    <sys:String x:Key="SimultaneityFactor">Wsp. jednoczesności</sys:String>
+    <sys:String x:Key="PhaseDistribution">ROZKŁAD NA FAZY</sys:String>
+    <sys:String x:Key="BalanceOk">Bilans OK</sys:String>
+    
+    <!-- Validation Messages -->
+    <sys:String x:Key="ValidationPhaseImbalance">Asymetria obciążenia faz</sys:String>
+    <sys:String x:Key="ValidationCableOverload">Przewód przeciążony</sys:String>
+    <sys:String x:Key="ValidationVoltageDrop">Przekroczony spadek napięcia</sys:String>
+    <sys:String x:Key="ValidationProtectionMismatch">Zabezpieczenie za duże dla przewodu</sys:String>
+    <sys:String x:Key="ValidationNoRcdProtection">Brak ochrony różnicowoprądowej</sys:String>
+    <sys:String x:Key="ValidationMainOverload">Przekroczona moc zabezpieczenia głównego</sys:String>
+    <sys:String x:Key="ValidationResults">WYNIKI WALIDACJI</sys:String>
+    <sys:String x:Key="ValidationErrorsPrefix">Błędy: </sys:String>
+    <sys:String x:Key="ValidationWarningsPrefix">Ostrzeżenia: </sys:String>
+    <sys:String x:Key="ValidationCodePrefix">Kod</sys:String>
+    <sys:String x:Key="ValidationMessages">Komunikaty</sys:String>
+    <sys:String x:Key="ValidationMessageFormat">{0} · Kod: {1}</sys:String>
+    <sys:String x:Key="ValidationNoMessages">Brak komunikatów walidacji</sys:String>
+    
+    <!-- Units -->
+    <sys:String x:Key="UnitKw">kW</sys:String>
+    <sys:String x:Key="UnitA">A</sys:String>
+    <sys:String x:Key="UnitV">V</sys:String>
+    <sys:String x:Key="UnitMm2">mm²</sys:String>
+    <sys:String x:Key="UnitM">m</sys:String>
+    <sys:String x:Key="UnitPercent">%</sys:String>
+    
+    <!-- Status Messages -->
+    <sys:String x:Key="StatusReady">Gotowy</sys:String>
+    <sys:String x:Key="StatusSaving">Zapisywanie...</sys:String>
+    <sys:String x:Key="StatusSaved">Zapisano projekt</sys:String>
+    <sys:String x:Key="StatusLoading">Wczytywanie...</sys:String>
+    <sys:String x:Key="StatusLoaded">Wczytano projekt</sys:String>
+    <sys:String x:Key="StatusNoProject">Brak projektu</sys:String>
+    <sys:String x:Key="StatusNewProject">Utworzono nowy projekt</sys:String>
+    <sys:String x:Key="StatusExportPdf">Eksport PDF</sys:String>
+    <sys:String x:Key="StatusThemeChanged">Zmieniono motyw: {0}</sys:String>
+    <sys:String x:Key="StatusModuleAdded">Dodano moduł: {0}</sys:String>
+    <sys:String x:Key="StatusCircuitUpdated">Zaktualizowano obwód: {0}</sys:String>
+    <sys:String x:Key="StatusElementDeleted">Usunięto element</sys:String>
+    <sys:String x:Key="StatusConnectionDeleted">Usunięto połączenie</sys:String>
+    
+    <!-- Dialogs -->
+    <sys:String x:Key="DialogSaveProject">Zapisz projekt</sys:String>
+    <sys:String x:Key="DialogOpenProject">Wczytaj projekt</sys:String>
+    <sys:String x:Key="DialogProjectJson">Projekt (JSON)</sys:String>
+    <sys:String x:Key="DialogCancel">Anuluj</sys:String>
+    <sys:String x:Key="DialogOk">OK</sys:String>
+    <sys:String x:Key="DialogYes">Tak</sys:String>
+    <sys:String x:Key="DialogNo">Nie</sys:String>
+    <sys:String x:Key="DialogSave">Zapisz</sys:String>
+    <sys:String x:Key="DialogExport">Eksportuj</sys:String>
+    <sys:String x:Key="DialogGenerate">Generuj</sys:String>
+    <sys:String x:Key="DialogCircuitConfigTitle">Konfiguracja obwodu</sys:String>
+    <sys:String x:Key="LabelCircuitName">Nazwa obwodu</sys:String>
+    <sys:String x:Key="WatermarkCircuitName">np. Oświetlenie salonu</sys:String>
+    <sys:String x:Key="LabelPowerW">Moc [W]</sys:String>
+    <sys:String x:Key="LabelPhase">Faza</sys:String>
+    <sys:String x:Key="LabelLockPhase">Zablokuj fazę (pomiń przy autom. bilansowaniu)</sys:String>
+    <sys:String x:Key="LabelProtectionType">Typ zabezpieczenia</sys:String>
+    <sys:String x:Key="LabelProtectionCurrent">Prąd zabezpieczenia [A]</sys:String>
+    <sys:String x:Key="DialogBusbarGeneratorTitle">Generator szyny prądowej</sys:String>
+    <sys:String x:Key="LabelPinCount">Liczba pinów:</sys:String>
+    <sys:String x:Key="LabelBusbarType">Typ szyny:</sys:String>
+    <sys:String x:Key="BusbarType3Phase">3-Fazowa (L1-L2-L3)</sys:String>
+    <sys:String x:Key="BusbarType1PhaseL1">1-Fazowa (L1)</sys:String>
+    <sys:String x:Key="BusbarType1PhaseL2">1-Fazowa (L2)</sys:String>
+    <sys:String x:Key="BusbarType1PhaseL3">1-Fazowa (L3)</sys:String>
+    <sys:String x:Key="DialogDinRailTitle">Konfiguracja szyny DIN</sys:String>
+    <sys:String x:Key="DialogDinRailGeneratorTitle">Generator szyny DIN</sys:String>
+    <sys:String x:Key="LabelRowCount">Liczba rzędów:</sys:String>
+    <sys:String x:Key="LabelModulesPerRow">Moduły na rząd:</sys:String>
+    <sys:String x:Key="DinRailPreviewPrefix">Podgląd: </sys:String>
+    <sys:String x:Key="DinRailPreviewSuffix"> modułów</sys:String>
+    <sys:String x:Key="LabelInformation">INFORMACJA</sys:String>
+    <sys:String x:Key="TextPdfExportInfo">Dane projektu (takie jak autor, inwerstor, czy nazwa obiektu) pobierane są teraz prosto z przypisanego projektowi okna Właściwości po lewej stronie.</sys:String>
+    
+    <sys:String x:Key="DialogCircuitEditTitle">Edytuj Obwód</sys:String>
+    <sys:String x:Key="LabelCircuitNameShort">Obwód</sys:String>
+    <sys:String x:Key="DialogGroupModulesTitle">Edytuj Moduły w Grupie</sys:String>
+    <sys:String x:Key="TextGroupModulesDesc">Edytuj parametry modułów w grupie</sys:String>
+    <sys:String x:Key="DialogSaveChanges">Zapisz zmiany</sys:String>
+    <sys:String x:Key="DialogImportModulesTitle">Import Modułów</sys:String>
+    <sys:String x:Key="LabelImportModules">Importuj moduły</sys:String>
+    <sys:String x:Key="LabelSourceFiles">Pliki źródłowe:</sys:String>
+    <sys:String x:Key="WatermarkSourceFiles">Przeciągnij pliki tutaj lub kliknij Przeglądaj...</sys:String>
+    <sys:String x:Key="BtnBrowse">Przeglądaj...</sys:String>
+    <sys:String x:Key="LabelTargetTab">Zakładka docelowa:</sys:String>
+    <sys:String x:Key="WatermarkNewTab">Nowa zakładka (opcjonalnie)</sys:String>
+    <sys:String x:Key="TooltipAutoCategory">Automatycznie przypisz kategorię na podstawie nazwy pliku</sys:String>
+    <sys:String x:Key="TextDropzoneFiles">Przeciągnij pliki SVG / PNG / JPG tutaj</sys:String>
+    <sys:String x:Key="TextDropzoneOrBrowse">lub użyj przycisku Przeglądaj...</sys:String>
+    <sys:String x:Key="LabelModulePreview">Podgląd modułu</sys:String>
+    <sys:String x:Key="LabelModuleType">Typ:</sys:String>
+    <sys:String x:Key="LabelPoles">Bieguny:</sys:String>
+    <sys:String x:Key="LabelFile">Plik:</sys:String>
+    <sys:String x:Key="LabelDate">Data:</sys:String>
+    <sys:String x:Key="LabelSize">Rozmiar:</sys:String>
+    <sys:String x:Key="LabelSelectionCountPrefix">Zaznaczono: </sys:String>
+    <sys:String x:Key="BtnSelectAll">Zaznacz wszystkie</sys:String>
+    <sys:String x:Key="BtnDeselectAll">Odznacz wszystkie</sys:String>
+    <sys:String x:Key="DialogModuleParametersTitle">Edytuj Parametry Modułu</sys:String>
+    <sys:String x:Key="LabelModuleParameters">Parametry Modułu</sys:String>
+    <sys:String x:Key="DialogProjectMetadataTitle">Dane Projektu</sys:String>
+    <sys:String x:Key="HeaderProjectMetadata">Właściwości Projektu (Tabelka Rysunkowa)</sys:String>
+    <sys:String x:Key="SectionProjectData">Dane projektu / obiektu</sys:String>
+    <sys:String x:Key="LabelProjectName">Nazwa projektu:</sys:String>
+    <sys:String x:Key="WatermarkProjectName">np. Rozdzielnica główna</sys:String>
+    <sys:String x:Key="LabelProjectAddress">Adres obiektu:</sys:String>
+    <sys:String x:Key="WatermarkProjectAddress">ul. Przykładowa 1, Miasto</sys:String>
+    <sys:String x:Key="LabelProjectInvestor">Inwestor:</sys:String>
+    <sys:String x:Key="WatermarkProjectInvestor">Jan Kowalski Sp. z o.o.</sys:String>
+    <sys:String x:Key="LabelProjectContractor">Firma instalacyjna:</sys:String>
+    <sys:String x:Key="WatermarkProjectContractor">Elektro-Instal s.c.</sys:String>
+    <sys:String x:Key="SectionDocumentData">Dane dokumentu</sys:String>
+    <sys:String x:Key="LabelDocNumber">Numer rysunku:</sys:String>
+    <sys:String x:Key="WatermarkDocNumber">np. E-SCH-001</sys:String>
+    <sys:String x:Key="LabelDocAuthor">Projektant:</sys:String>
+    <sys:String x:Key="WatermarkDocAuthor">inż. Anna Nowak</sys:String>
+    <sys:String x:Key="LabelDocDesignerId">Nr uprawnień:</sys:String>
+    <sys:String x:Key="WatermarkDocDesignerId">np. MAZ/1234/PWBE/19</sys:String>
+    <sys:String x:Key="LabelDocRevision">Rewizja:</sys:String>
+    <sys:String x:Key="WatermarkDocRevision">1.0</sys:String>
+    <sys:String x:Key="LabelDocNotes">Uwagi:</sys:String>
+    <sys:String x:Key="WatermarkDocNotes">Dodatkowe uwagi i opisy...</sys:String>
+    
+    <!-- Errors -->
+    <sys:String x:Key="ErrorSave">Błąd zapisu: {0}</sys:String>
+    <sys:String x:Key="ErrorLoad">Błąd wczytywania: {0}</sys:String>
+    <sys:String x:Key="ErrorInvalidFile">Błąd wczytywania: nieprawidłowy plik</sys:String>
+    
+    <!-- Empty State -->
+    <sys:String x:Key="EmptyStateTitle">Wygeneruj szynę DIN aby rozpocząć projektowanie</sys:String>
+    <sys:String x:Key="EmptyStateHint">Kliknij przycisk "Szyna DIN" na pasku narzędzi</sys:String>
+    
+    <!-- Status Bar -->
+    <sys:String x:Key="StatusSymbolCount">Symboli: {0}</sys:String>
+    <sys:String x:Key="StatusConnectionCount">Połączeń: {0}</sys:String>
+    <sys:String x:Key="StatusGroupPrefix">Grup: </sys:String>
+    <sys:String x:Key="StatusModulePrefix">Modułów: </sys:String>
+    
+    <!-- Views -->
+    <!-- HomeScreenView -->
+    <sys:String x:Key="HomeWelcome">Witaj w DINBoard</sys:String>
+    <sys:String x:Key="HomeVersion">Wersja 1.0.0</sys:String>
+    <sys:String x:Key="LicenseStatus">STATUS LICENCJI</sys:String>
+    <sys:String x:Key="LicenseTrial">Wersja próbna</sys:String>
+    <sys:String x:Key="LicenseFull">Pełna wersja</sys:String>
+    <sys:String x:Key="LicenseRegisteredToPrefix">Licencja dla: </sys:String>
+    <sys:String x:Key="BtnActivateFullVersion">Aktywuj pełną wersję</sys:String>
+    <sys:String x:Key="HomeActionNewProject">Nowy projekt</sys:String>
+    <sys:String x:Key="HomeActionNewProjectDesc">Utwórz pusty schemat jedno-kreskowy z gotową strukturą oraz widokiem rozdzielnicy.</sys:String>
+    <sys:String x:Key="HomeActionOpenProject">Otwórz projekt</sys:String>
+    <sys:String x:Key="HomeActionOpenProjectDesc">Wczytaj wcześniej zapisany projekt z dysku (plik z rozszerzeniem .json).</sys:String>
+    <sys:String x:Key="HomeRecentProjects">Ostatnio otwierane</sys:String>
+    <sys:String x:Key="HomeNoRecentProjects">Brak ostatnich projektów</sys:String>
+    
+    <!-- ProjectPropertiesView -->
+    <sys:String x:Key="HeaderProjectProperties">Właściwości Projektu</sys:String>
+    <sys:String x:Key="WatermarkProjectAddressShort">ul. Przykładowa 1</sys:String>
+    <sys:String x:Key="WatermarkDocNotesShort">Dodatkowe uwagi...</sys:String>
+    <sys:String x:Key="BtnExportPdfQuick">Eksportuj do PDF</sys:String>
+    
+    <!-- PowerConfigPanel -->
+    <sys:String x:Key="HeaderPowerConfig">KONFIGURACJA ZASILANIA</sys:String>
+    <sys:String x:Key="LabelPowerVoltage">Napięcie sieci</sys:String>
+    <sys:String x:Key="TooltipPowerVoltage">Wybierz napięcie sieciowe zasilające rozdzielnicę</sys:String>
+    <sys:String x:Key="LabelPowerPhases">Fazy</sys:String>
+    <sys:String x:Key="TooltipPowerPhases">Wybierz liczbę faz doprowadzonych do rozdzielnicy (1 lub 3)</sys:String>
+    <sys:String x:Key="LabelPowerMainProtection">Zabezpieczenie główne</sys:String>
+    <sys:String x:Key="TooltipPowerMainProtection">Wskazuje prąd znamionowy zabezpieczenia przedlicznikowego / głównego wyłącznika</sys:String>
+    <sys:String x:Key="LabelPowerConnection">Moc przyłączeniowa</sys:String>
+    <sys:String x:Key="TooltipPowerConnection">Całkowita moc przyłączeniowa przydzielona dla obiektu (w kW)</sys:String>
+    <sys:String x:Key="HeaderRcdSettings">USTAWIENIA RCD</sys:String>
+    <sys:String x:Key="BtnManageRcd">Zarządzaj opcjami RCD</sys:String>
+    
+    <!-- CircuitListView -->
+    <sys:String x:Key="HeaderCircuitList">Lista Obwodów</sys:String>
+    <sys:String x:Key="ColDesignation">Ozn. (np. F1.1)</sys:String>
+    <sys:String x:Key="ColLabel">Skrót / Etykieta</sys:String>
+    <sys:String x:Key="ColPhase">Faza</sys:String>
+    <sys:String x:Key="ColProtection">Zabezpieczenie</sys:String>
+    <sys:String x:Key="ColCircuit">Obwód</sys:String>
+    <sys:String x:Key="ColPowerW">Moc [W]</sys:String>
+    <sys:String x:Key="ColCableLength">Dł. Kabla (m)</sys:String>
+    <sys:String x:Key="ColCableCrossSection">Przekrój (mm²)</sys:String>
+    
+    
+    <!-- CircuitEditPanelView -->
+    <sys:String x:Key="HeaderCircuitEditPanel">Edycja obwodu</sys:String>
+    <sys:String x:Key="TooltipCloseEdit">Zamknij edycję</sys:String>
+    <sys:String x:Key="TextHintDoubleClick">Dwukliknij moduł aby edytować</sys:String>
+    
+    <!-- GroupedCircuitsPanel -->
+    <sys:String x:Key="HeaderElectricCircuits">Obwody elektryczne</sys:String>
+    <sys:String x:Key="MenuEditGroupModules">Edytuj moduły w grupie</sys:String>
+    <sys:String x:Key="MenuUngroup">Rozgrupuj</sys:String>
+    <sys:String x:Key="MenuDeleteGroup">Usuń grupę</sys:String>
+    <sys:String x:Key="MenuEdit">Edytuj</sys:String>
+    <sys:String x:Key="MenuMoveToGroup">Przenieś do grupy...</sys:String>
+    <sys:String x:Key="MenuDelete">Usuń</sys:String>
+    <sys:String x:Key="TextNoCircuitGroups">Brak grup obwodów</sys:String>
+    <sys:String x:Key="TextNoCircuitGroupsDesc">Zaznacz moduły na schemacie i użyj funkcji 'Grupuj', aby utworzyć grupy obwodów</sys:String>
+    
+    <!-- ModulesPaletteView -->
+    <sys:String x:Key="HeaderModules">MODUŁY</sys:String>
+    <sys:String x:Key="MenuDeleteTab">Usuń zakładkę</sys:String>
+    <sys:String x:Key="TextDinRailRequired">Wymagana szyna DIN</sys:String>
+    <sys:String x:Key="TextDinRailRequiredDesc">Wygeneruj szynę aby dodawać moduły</sys:String>
+    
+    <!-- PowerBalancePanel -->
+    <sys:String x:Key="HeaderPowerBalance">BILANS MOCY</sys:String>
+    <sys:String x:Key="LabelInstalledPower">Moc zainstalowana</sys:String>
+    <sys:String x:Key="LabelCalculatedPower">Moc obliczeniowa</sys:String>
+    <sys:String x:Key="LabelSimultaneityFactor">Wsp. jednoczesności</sys:String>
+    
+    <sys:String x:Key="HeaderPhaseBalance">ROZKŁAD NA FAZY</sys:String>
+    <sys:String x:Key="TooltipPhaseLoadL1">Obciążenie Fazy L1. Zielony kolor oznacza optymalne obciążenie, niebieski niedociążenie, a czerwony przeciążenie.</sys:String>
+    <sys:String x:Key="TooltipPhaseLoadL2">Obciążenie Fazy L2. Zielony kolor oznacza optymalne obciążenie, niebieski niedociążenie, a czerwony przeciążenie.</sys:String>
+    <sys:String x:Key="TooltipPhaseLoadL3">Obciążenie Fazy L3. Zielony kolor oznacza optymalne obciążenie, niebieski niedociążenie, a czerwony przeciążenie.</sys:String>
+    
+    <sys:String x:Key="TooltipAsymmetry">Różnica obciążenia pomiędzy najbardziej a najmniej obciążoną fazą. Wartość powyżej 20% może powodować asymetrię napięć.</sys:String>
+    <sys:String x:Key="LabelPhaseAsymmetry">Asymetria faz:</sys:String>
+    
+    <sys:String x:Key="HeaderAutoBalance">AUTOMATYCZNE BILANSOWANIE</sys:String>
+    <sys:String x:Key="BtnAutoBalance">Zbalansuj automatycznie</sys:String>
+    <sys:String x:Key="TextBalancing">Balansowanie...</sys:String>
+    <sys:String x:Key="BtnUndoBalance">↩ Cofnij bilansowanie</sys:String>
+    
+    <!-- Code Behind Strings -->
+    
+    <!-- Toast Notifications -->
+    <sys:String x:Key="ToastTitleViewChanged">Widok zmieniony</sys:String>
+    <sys:String x:Key="ToastMsgGridOn">Włączono siatkę</sys:String>
+    <sys:String x:Key="ToastMsgGridOff">Wyłączono siatkę</sys:String>
+    <sys:String x:Key="ToastMsgPageNumOn">Włączono numery stron</sys:String>
+    <sys:String x:Key="ToastMsgPageNumOff">Wyłączono numery stron</sys:String>
+    <sys:String x:Key="ToastMsgAxesOn">Włączono osie</sys:String>
+    <sys:String x:Key="ToastMsgAxesOff">Wyłączono osie</sys:String>
+    
+    <sys:String x:Key="ToastTitleSaved">Zapisano</sys:String>
+    <sys:String x:Key="ToastTitleSaveError">Błąd zapisu</sys:String>
+    <sys:String x:Key="ToastTitleNewProject">Nowy projekt</sys:String>
+    <sys:String x:Key="ToastMsgNewProject">Utworzono pusty projekt</sys:String>
+    
+    <sys:String x:Key="ToastTitleExportDone">Eksport zakończony</sys:String>
+    <sys:String x:Key="ToastTitleExportError">Błąd eksportu</sys:String>
+    <sys:String x:Key="ToastMsgExportPdf">Wygenerowano dokument PDF</sys:String>
+    <sys:String x:Key="ToastMsgExportPdfQuick">Szybki eksport dokumentu PDF powiódł się</sys:String>
+    <sys:String x:Key="ToastMsgExportBom">Wygenerowano arkusz BOM</sys:String>
+    <sys:String x:Key="ToastMsgExportPng">Wygenerowano plik graficzny PNG</sys:String>
+    
+    <!-- Import Modules Dialog Code Behind -->
+    <sys:String x:Key="FormatSelectionCount">Zaznaczono: {0}</sys:String>
+    <sys:String x:Key="FormatSelectionCountDupe">Zaznaczono: {0} (w tym {1} duplikat(ów))</sys:String>
+    <sys:String x:Key="FormatImportBtn">Importuj ({0})</sys:String>
+    
+</ResourceDictionary>

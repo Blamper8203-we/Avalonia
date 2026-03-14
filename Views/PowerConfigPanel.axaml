@@ -1,0 +1,92 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             x:Class="DINBoard.Views.PowerConfigPanel"
+             x:CompileBindings="False"
+             mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="400">
+
+    <ScrollViewer>
+        <StackPanel Spacing="8" Margin="8">
+
+            <!-- Section: Power Configuration -->
+            <StackPanel Spacing="6">
+                <TextBlock Classes="section-header" Text="{DynamicResource HeaderPowerConfig}"/>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="8">
+                        <!-- Voltage -->
+                        <StackPanel Spacing="3">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="⚡" FontSize="11" Foreground="{DynamicResource AccentBlue}"/>
+                                <TextBlock Text="{DynamicResource LabelPowerVoltage}" Classes="secondary" FontSize="11"/>
+                            </StackPanel>
+                            <ComboBox ItemsSource="{Binding VoltageOptions}" SelectedItem="{Binding CurrentProject.PowerConfig.Voltage}" HorizontalAlignment="Stretch" ToolTip.Tip="{DynamicResource TooltipPowerVoltage}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding StringFormat='{}{0}V'}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Phases -->
+                        <StackPanel Spacing="3">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="🔌" FontSize="11" Foreground="{DynamicResource AccentBlue}"/>
+                                <TextBlock Text="{DynamicResource LabelPowerPhases}" Classes="secondary" FontSize="11"/>
+                            </StackPanel>
+                            <ComboBox ItemsSource="{Binding PhaseOptions}" SelectedItem="{Binding CurrentProject.PowerConfig.Phases}" HorizontalAlignment="Stretch" ToolTip.Tip="{DynamicResource TooltipPowerPhases}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding StringFormat='{}{0}-fazowe'}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Main protection -->
+                        <StackPanel Spacing="3">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="🛡" FontSize="11" Foreground="{DynamicResource AccentBlue}"/>
+                                <TextBlock Text="{DynamicResource LabelPowerMainProtection}" Classes="secondary" FontSize="11"/>
+                            </StackPanel>
+                            <ComboBox ItemsSource="{Binding ProtectionOptions}" SelectedItem="{Binding CurrentProject.PowerConfig.MainProtection}" HorizontalAlignment="Stretch" ToolTip.Tip="{DynamicResource TooltipPowerMainProtection}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding StringFormat='{}{0}A'}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Connection power -->
+                        <StackPanel Spacing="3">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="⚡" FontSize="11" Foreground="{DynamicResource AccentBlue}"/>
+                                <TextBlock Text="{DynamicResource LabelPowerConnection}" Classes="secondary" FontSize="11"/>
+                            </StackPanel>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <NumericUpDown Value="{Binding CurrentProject.PowerConfig.PowerKw}" Minimum="0" Increment="1" FormatString="0.##" ToolTip.Tip="{DynamicResource TooltipPowerConnection}"/>
+                                <TextBlock Grid.Column="1" Text="{DynamicResource UnitKw}" VerticalAlignment="Center" Margin="8,0,0,0" Classes="tertiary"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            
+            <!-- Section: RCD Settings -->
+            <StackPanel Spacing="6">
+                <TextBlock Classes="section-header" Text="{DynamicResource HeaderRcdSettings}"/>
+
+                <Button Classes="accent" HorizontalAlignment="Stretch">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="⚙" FontSize="11"/>
+                        <TextBlock Text="{DynamicResource BtnManageRcd}" FontSize="11"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

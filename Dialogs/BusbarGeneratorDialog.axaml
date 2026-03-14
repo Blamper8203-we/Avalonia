@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        x:Class="DINBoard.Dialogs.BusbarGeneratorDialog"
+        Title="{DynamicResource DialogBusbarGeneratorTitle}"
+        Width="320" Height="230"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource PanelBackground}">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,14">
+            <mi:MaterialIcon Kind="PowerPlug" Width="20" Height="20" Foreground="{DynamicResource AccentBlue}"/>
+            <TextBlock Text="{DynamicResource DialogBusbarGeneratorTitle}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="{DynamicResource LabelPinCount}" VerticalAlignment="Center" FontSize="11"/>
+            <NumericUpDown Grid.Column="1" x:Name="NumPins"
+                           Minimum="3" Maximum="60" Value="3"
+                           HorizontalAlignment="Stretch"
+                           FormatString="0"/>
+
+            <TextBlock Grid.Row="2" Text="{DynamicResource LabelBusbarType}" VerticalAlignment="Center" FontSize="11"/>
+            <ComboBox Grid.Row="2" Grid.Column="1" x:Name="ComboBusbarType"
+                      HorizontalAlignment="Stretch">
+                <ComboBoxItem Content="{DynamicResource BusbarType3Phase}"/>
+                <ComboBoxItem Content="{DynamicResource BusbarType1PhaseL1}"/>
+                <ComboBoxItem Content="{DynamicResource BusbarType1PhaseL2}"/>
+                <ComboBoxItem Content="{DynamicResource BusbarType1PhaseL3}"/>
+            </ComboBox>
+        </Grid>
+
+        <TextBlock Grid.Row="2" x:Name="TxtPreview" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,8"/>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="{DynamicResource DialogCancel}" Click="BtnCancel_Click" FontSize="11"/>
+            <Button Classes="accent" Click="BtnGenerate_Click" FontSize="11">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <mi:MaterialIcon Kind="Check" Width="12" Height="12"/>
+                    <TextBlock Text="{DynamicResource DialogGenerate}"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

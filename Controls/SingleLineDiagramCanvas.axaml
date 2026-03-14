@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:paz="clr-namespace:Avalonia.Controls.PanAndZoom;assembly=Avalonia.Controls.PanAndZoom"
+             xmlns:local="clr-namespace:DINBoard.Controls"
+             x:Class="DINBoard.Controls.SingleLineDiagramCanvas">
+    
+    <paz:ZoomBorder x:Name="ZoomBorder"
+                    Stretch="None"
+                    ZoomSpeed="1.2"
+                    EnableConstrains="False"
+                    ClipToBounds="True"
+                    Background="Transparent">
+        
+        <Grid>
+            <!-- 1. Czysty wektorowy silnik SkiaSharp pod spodem rysujący cały schemat -->
+            <local:SkiaRenderControl x:Name="SkiaCanvas" />
+
+            <!-- 2. Niewidzialny Canvas na górze tylko na potrzeby kontrolek interaktywnych (tzw. EditBox do edycji textów inline) -->
+            <Canvas x:Name="InteractiveCanvas" Background="Transparent" ClipToBounds="False" />
+        </Grid>
+        
+    </paz:ZoomBorder>
+</UserControl>

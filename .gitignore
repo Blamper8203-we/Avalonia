@@ -1,0 +1,29 @@
+bin/
+obj/
+.vs/
+[Bb]uild/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Benchmarks/test artifacts
+BenchmarkDotNet.Artifacts/
+TestResults/
+
+# Tooling
+.agent/
+.qoder/
+
+# Logs
+*.log
+build*.txt
+*build*.txt
+*errors*.txt
+run_log.txt
+diagnostics*.out
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/

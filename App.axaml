@@ -1,0 +1,243 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:semi="https://irihi.tech/semi"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="DINBoard.App"
+             xmlns:local="using:DINBoard"
+             xmlns:converters="using:DINBoard.Converters"
+             RequestedThemeVariant="Dark">
+
+
+    <Application.Styles>
+        <semi:SemiTheme Locale="pl-PL" />
+        <mi:MaterialIconStyles />
+        <StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml"/>
+
+        <!-- Global compact font -->
+        <Style Selector="Window">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontFamily" Value="Segoe UI, Inter, system-ui, sans-serif"/>
+        </Style>
+
+        <!-- Modern Card Style - using theme-aware colors -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource PanelBackground}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.card:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+        </Style>
+        
+        <!-- Section Header Style -->
+        <Style Selector="TextBlock.section-header">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Opacity" Value="0.5"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        
+        <!-- Secondary text -->
+        <Style Selector="TextBlock.secondary">
+            <Setter Property="Opacity" Value="0.7"/>
+        </Style>
+        
+        <!-- Tertiary text -->
+        <Style Selector="TextBlock.tertiary">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+        
+        <!-- Accent Button -->
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+        <Style Selector="Button.accent:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentBlueHover}"/>
+        </Style>
+        <Style Selector="Button.accent:pressed">
+            <Setter Property="Background" Value="{DynamicResource AccentBluePressed}"/>
+        </Style>
+        
+        <!-- Toolbar Button -->
+        <Style Selector="Button.toolbar-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.toolbar-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn:pressed">
+            <Setter Property="Background" Value="{DynamicResource PanelBorder}"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn:disabled">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+        
+        <!-- ToggleButton Toolbar -->
+        <Style Selector="ToggleButton.toolbar-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+        <Style Selector="ToggleButton.toolbar-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+        </Style>
+        <Style Selector="ToggleButton.toolbar-btn:checked">
+            <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ToggleButton.toolbar-btn:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="ToggleButton.toolbar-btn:disabled">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+        
+        <!-- Sheet Tab ToggleButton -->
+        <Style Selector="ToggleButton.sheet-tab">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="ToggleButton.sheet-tab:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+        </Style>
+        <Style Selector="ToggleButton.sheet-tab:checked">
+            <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ToggleButton.sheet-tab:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="ToggleButton.sheet-tab:disabled">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+
+        <Style Selector="Button.toolbar-btn, ToggleButton.toolbar-btn">
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn:pointerover, Button.toolbar-btn:pressed, ToggleButton.toolbar-btn:pointerover, ToggleButton.toolbar-btn:pressed">
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        
+        <!-- Status indicator -->
+        <Style Selector="Border.status-ok">
+            <Setter Property="Background" Value="{DynamicResource AccentGreen}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,4"/>
+        </Style>
+
+        <Style Selector="Border.status-warning">
+            <Setter Property="Background" Value="{DynamicResource AccentOrange}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,4"/>
+        </Style>
+        
+    </Application.Styles>
+    
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://DINBoard/Resources/Strings.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <!-- Light Theme -->
+                    <SolidColorBrush x:Key="AppBackground" Color="#F2F2F7"/>  <!-- Soft Gray (iOS-like) -->
+                    <SolidColorBrush x:Key="PanelBackground" Color="#FFFFFF"/> <!-- Clean White -->
+                    <SolidColorBrush x:Key="PanelBackgroundAlt" Color="#F9FAFB"/> <!-- Slightly darker panel -->
+                    <SolidColorBrush x:Key="PanelBorder" Color="#E5E7EB"/>     <!-- Light Gray Border -->
+                    <SolidColorBrush x:Key="OverlayBackground" Color="#E6F2F2F7"/>
+                    
+                    <SolidColorBrush x:Key="TextMain" Color="#1F2937"/>
+                    <SolidColorBrush x:Key="TextSecondary" Color="#6B7280"/>
+                    <SolidColorBrush x:Key="TextTertiary" Color="#9CA3AF"/>
+                    
+                    <SolidColorBrush x:Key="ToolbarBackground" Color="#FFFFFF"/>
+                    
+                    <!-- Menu/Flyout Colors -->
+                    <SolidColorBrush x:Key="MenuBackground" Color="#FFFFFF"/>
+                    <SolidColorBrush x:Key="MenuBorder" Color="#E5E7EB"/>
+                    <BoxShadows x:Key="CardShadow">0 2 8 0 #20000000</BoxShadows>
+                </ResourceDictionary>
+                
+                <ResourceDictionary x:Key="Dark">
+                    <!-- Dark Theme (Modern Anthracite) -->
+                    <SolidColorBrush x:Key="AppBackground" Color="#111214"/>   <!-- Deeper background -->
+                    <SolidColorBrush x:Key="PanelBackground" Color="#1A1B1E"/> <!-- Slightly lifted panels -->
+                    <SolidColorBrush x:Key="PanelBackgroundAlt" Color="#26272B"/> <!-- Interactive surfaces -->
+                    <SolidColorBrush x:Key="PanelBorder" Color="#2E3035"/>     <!-- Subtle border -->
+                    <SolidColorBrush x:Key="OverlayBackground" Color="#E6111214"/>
+
+                    <SolidColorBrush x:Key="TextMain" Color="#E4E6EB"/>
+                    <SolidColorBrush x:Key="TextSecondary" Color="#A0A4AB"/>
+                    <SolidColorBrush x:Key="TextTertiary" Color="#6B6F76"/>
+
+                    <SolidColorBrush x:Key="ToolbarBackground" Color="#161719"/>
+
+                    <!-- Menu/Flyout Colors -->
+                    <SolidColorBrush x:Key="MenuBackground" Color="#1E1F23"/>
+                    <SolidColorBrush x:Key="MenuBorder" Color="#2E3035"/>
+                    <BoxShadows x:Key="CardShadow">0 2 12 0 #50000000</BoxShadows>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <converters:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+            
+            <!-- Shared Accent Colors (kept for compatibility) -->
+            <SolidColorBrush x:Key="AccentBlue" Color="#3B82F6"/>
+            <SolidColorBrush x:Key="AccentBlueHover" Color="#2563EB"/>
+            <SolidColorBrush x:Key="AccentBluePressed" Color="#1D4ED8"/>
+            <SolidColorBrush x:Key="AccentOrange" Color="#D97706"/>
+            <SolidColorBrush x:Key="AccentGreen" Color="#10B981"/>
+            <SolidColorBrush x:Key="AccentRed" Color="#EF4444"/>
+            <SolidColorBrush x:Key="AccentYellow" Color="#FACC15"/>
+            <BoxShadows x:Key="ReferenceHighlightShadow">0 0 12 4 #22C55E</BoxShadows>
+            
+            <!-- Legacy Dark keys kept for backward compatibility if used elsewhere -->
+            <SolidColorBrush x:Key="DarkBg0" Color="#111827"/>
+            <SolidColorBrush x:Key="DarkBg1" Color="#1F2937"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

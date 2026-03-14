@@ -1,0 +1,72 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        x:Class="DINBoard.Dialogs.DinRailDialog"
+        Title="{DynamicResource DialogDinRailTitle}"
+        Width="320" Height="250"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource PanelBackground}">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,14">
+            <mi:MaterialIcon Kind="ViewModule" Width="20" Height="20" Foreground="{DynamicResource AccentBlue}"/>
+            <TextBlock Text="{DynamicResource DialogDinRailGeneratorTitle}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Rows input -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{DynamicResource LabelRowCount}" VerticalAlignment="Center" FontSize="11"/>
+            <NumericUpDown Grid.Column="1" x:Name="NumRows" 
+                           Minimum="1" Maximum="10" Value="1" 
+                           Increment="1" FormatString="0"
+                           HorizontalAlignment="Stretch"/>
+        </Grid>
+
+        <!-- Modules input -->
+        <Grid Grid.Row="2" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{DynamicResource LabelModulesPerRow}" VerticalAlignment="Center" FontSize="11"/>
+            <NumericUpDown Grid.Column="1" x:Name="NumModules" 
+                           Minimum="6" Maximum="48" Value="24" 
+                           Increment="6" FormatString="0"
+                           HorizontalAlignment="Stretch"/>
+        </Grid>
+
+        <!-- Preview -->
+        <Border Grid.Row="3" Background="{DynamicResource PanelBackgroundAlt}" 
+                CornerRadius="4" Padding="8" Margin="0,0,0,10">
+            <TextBlock x:Name="TxtPreview" 
+                       Text="Podgląd: 1 x 24 modułów" 
+                       FontSize="11" Foreground="{DynamicResource TextSecondary}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="{DynamicResource DialogCancel}" Width="80" Click="BtnCancel_Click" FontSize="11"/>
+            <Button Width="80" Classes="accent" Click="BtnGenerate_Click" FontSize="11">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <mi:MaterialIcon Kind="Check" Width="12" Height="12"/>
+                    <TextBlock Text="{DynamicResource DialogGenerate}"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

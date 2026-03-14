@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="DINBoard.Views.CircuitEditPanelView"
+             mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="500">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+        
+        <!-- Header -->
+        <Border Background="{DynamicResource PanelBackgroundAlt}" Padding="12,10" CornerRadius="0">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Border x:Name="IconBorder" Background="{DynamicResource AccentBlue}" CornerRadius="4" Width="28" Height="28">
+                        <mi:MaterialIcon x:Name="HeaderIcon" Kind="LightningBolt" Width="16" Height="16" 
+                                         Foreground="White" 
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="CircuitNameText" 
+                                   Text="{DynamicResource HeaderCircuitEditPanel}" 
+                                   FontSize="14" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextMain}"/>
+                        <TextBlock x:Name="CircuitTypeText" 
+                                   Text="" 
+                                   FontSize="10" 
+                                   Foreground="{DynamicResource TextSecondary}"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Grid.Column="2" x:Name="BtnClose" Click="BtnClose_Click" 
+                        Background="Transparent" Padding="4" ToolTip.Tip="{DynamicResource TooltipCloseEdit}"
+                        VerticalAlignment="Top">
+                    <mi:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Form -->
+        <ScrollViewer Grid.Row="1" Margin="0,4,0,0" Padding="12,4,20,4">
+            <StackPanel x:Name="FieldsPanel" Spacing="8" Margin="0,0,4,0">
+                <!-- Fields will be added dynamically -->
+                <TextBlock x:Name="EmptyHint" Text="{DynamicResource TextHintDoubleClick}" 
+                           Foreground="{DynamicResource TextTertiary}" 
+                           FontSize="11" HorizontalAlignment="Center" Margin="0,20"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Save Button -->
+        <Border Grid.Row="2" Padding="12,8" Background="{DynamicResource PanelBackgroundAlt}">
+            <Button x:Name="BtnSave" Content="{DynamicResource DialogSaveChanges}" Click="BtnSave_Click"
+                    Background="{DynamicResource AccentBlue}" Foreground="White" 
+                    Padding="16,8" FontWeight="Bold"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    IsVisible="False"/>
+        </Border>
+    </Grid>
+</UserControl>

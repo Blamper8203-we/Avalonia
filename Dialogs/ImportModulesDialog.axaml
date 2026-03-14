@@ -1,0 +1,166 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:DINBoard.Services"
+        x:Class="DINBoard.Dialogs.ImportModulesDialog"
+        Title="{DynamicResource DialogImportModulesTitle}"
+        Width="850"
+        Height="620"
+        CanResize="True"
+        Background="{DynamicResource PanelBackground}">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Panel górny -->
+        <Border Grid.Row="0" Padding="10" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1">
+            <StackPanel Spacing="6">
+                <TextBlock Text="{DynamicResource LabelImportModules}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource TextMain}"/>
+
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                    <StackPanel Grid.Column="0" Grid.Row="0" Spacing="3">
+                        <TextBlock Text="{DynamicResource LabelSourceFiles}" Foreground="{DynamicResource TextMain}" FontSize="11"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBox x:Name="SourcePathTextBox" Width="320" IsReadOnly="True" Height="28" Watermark="{DynamicResource WatermarkSourceFiles}"/>
+                            <Button Content="{DynamicResource BtnBrowse}" Width="90" Click="BrowseSourceButton_Click" FontSize="11"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="0" Grid.Row="1" Spacing="3" Margin="0,4,0,0">
+                        <TextBlock Text="{DynamicResource LabelTargetTab}" Foreground="{DynamicResource TextMain}" FontSize="11"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ComboBox x:Name="CategoryComboBox" Width="160" Height="28"/>
+                            <TextBox x:Name="NewCategoryTextBox" Width="160" Height="28" Watermark="{DynamicResource WatermarkNewTab}"/>
+                            <CheckBox x:Name="AutoCategoryCheckBox" Content="Auto" IsChecked="False" VerticalAlignment="Center"
+                                      ToolTip.Tip="{DynamicResource TooltipAutoCategory}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Panel główny - lista modułów z podglądem -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,280">
+            <!-- Lista modułów / Drop zone -->
+            <Border Grid.Column="0" Padding="10"
+                    DragDrop.AllowDrop="True">
+                <Grid>
+                    <Border x:Name="DropZone"
+                            BorderBrush="{DynamicResource PanelBorder}" BorderThickness="2"
+                            CornerRadius="6" Background="Transparent"
+                            IsVisible="True"
+                            VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Padding="24,16" Opacity="0.5">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <TextBlock Text="📁" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource TextDropzoneFiles}" 
+                                       FontSize="11" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource TextDropzoneOrBrowse}" 
+                                       FontSize="10" Foreground="{DynamicResource TextTertiary}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <ListBox x:Name="ModulesList" 
+                             SelectionChanged="ModulesList_SelectionChanged"
+                             Foreground="{DynamicResource TextMain}"
+                             Background="{DynamicResource PanelBackground}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="local:ImportableModule">
+                                <Border BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1" Padding="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center"/>
+                                        <Border Width="28" Height="28" Background="#F0F0F0" CornerRadius="3" 
+                                                ClipToBounds="True" VerticalAlignment="Center">
+                                            <Image Source="{Binding Thumbnail}" Stretch="Uniform" Margin="1"/>
+                                        </Border>
+                                        <StackPanel Spacing="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DisplayName}" FontWeight="Medium" FontSize="11" Foreground="{DynamicResource TextMain}"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding ModuleType}" FontSize="9" Foreground="{DynamicResource TextSecondary}"/>
+                                                <TextBlock Text="{Binding PoleCountFormatted}" FontSize="9" Foreground="{DynamicResource TextSecondary}"/>
+                                                <TextBlock Text="{Binding FileSizeFormatted}" FontSize="9" Foreground="{DynamicResource TextTertiary}"/>
+                                                <TextBlock Text="{Binding DuplicateWarning}" FontSize="9" Foreground="{DynamicResource AccentRed}" 
+                                                           IsVisible="{Binding IsDuplicate}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Panel podglądu i info -->
+            <Border Grid.Column="1" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1,0,0,0">
+                <ScrollViewer>
+                    <StackPanel Spacing="6" Margin="10">
+                        <TextBlock Text="{DynamicResource LabelModulePreview}" FontWeight="Medium" FontSize="11" Foreground="{DynamicResource TextMain}"/>
+
+                        <Border BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="4" Background="{DynamicResource PanelBackgroundAlt}">
+                            <Image x:Name="PreviewImage" Height="200" Stretch="Uniform" Margin="4"/>
+                        </Border>
+
+                        <StackPanel Spacing="4">
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="{DynamicResource LabelModuleType}" FontWeight="Medium" FontSize="10" Foreground="{DynamicResource TextMain}"/>
+                                <TextBlock x:Name="ModuleTypeLabel" Foreground="{DynamicResource TextSecondary}" FontSize="10"/>
+                            </StackPanel>
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="{DynamicResource LabelPoles}" FontWeight="Medium" FontSize="10" Foreground="{DynamicResource TextMain}"/>
+                                <TextBlock x:Name="PolesLabel" Foreground="{DynamicResource TextSecondary}" FontSize="10"/>
+                            </StackPanel>
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="{DynamicResource LabelFile}" FontWeight="Medium" FontSize="10" Foreground="{DynamicResource TextMain}"/>
+                                <TextBlock x:Name="FileNameLabel" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" FontSize="10"/>
+                            </StackPanel>
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="{DynamicResource LabelDate}" FontWeight="Medium" FontSize="10" Foreground="{DynamicResource TextMain}"/>
+                                <TextBlock x:Name="FileDateLabel" Foreground="{DynamicResource TextSecondary}" FontSize="10"/>
+                            </StackPanel>
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="{DynamicResource LabelSize}" FontWeight="Medium" FontSize="10" Foreground="{DynamicResource TextMain}"/>
+                                <TextBlock x:Name="FileSizeLabel" Foreground="{DynamicResource TextSecondary}" FontSize="10"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Rectangle Height="1" Fill="{DynamicResource PanelBorder}" Margin="0,5"/>
+
+                        <TextBlock x:Name="SelectionCountLabel" 
+                                   Text="Zaznaczono: 0" 
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextTertiary}"/>
+
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Button Content="{DynamicResource BtnSelectAll}" 
+                                    Click="SelectAllButton_Click"
+                                    Classes="outline"
+                                    Width="100" FontSize="10"/>
+                            <Button Content="{DynamicResource BtnDeselectAll}" 
+                                    Click="DeselectAllButton_Click"
+                                    Classes="outline"
+                                    Width="100" FontSize="10"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Panel dolny -->
+        <Border Grid.Row="2" Padding="10" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock x:Name="StatusLabel" 
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondary}"
+                           Text="" TextWrapping="Wrap" FontSize="10"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Content="{DynamicResource DialogCancel}" Width="80" Click="CancelButton_Click" FontSize="11"/>
+                    <Button x:Name="ImportButton" Content="Importuj (0)" 
+                            Width="110" FontSize="11"
+                            Classes="accent"
+                            Click="ImportButton_Click"
+                            IsEnabled="False"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+
+</Window>

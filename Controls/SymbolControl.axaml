@@ -1,0 +1,162 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="using:DINBoard.Models"
+             xmlns:controls="using:DINBoard.Controls"
+             xmlns:converters="using:DINBoard.Converters"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="DINBoard.Controls.SymbolControl"
+             x:DataType="models:SymbolItem"
+             mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="100"
+             Width="{Binding Width}" Height="{Binding Height}"
+             Background="Transparent"
+             ClipToBounds="False">
+
+    <ToolTip.Tip>
+        <Border Background="{DynamicResource PanelBackground}" Padding="8" CornerRadius="4" MaxWidth="250">
+            <StackPanel Spacing="3">
+                <TextBlock Text="{Binding Label}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource TextMain}"/>
+                <TextBlock FontSize="10" Foreground="{DynamicResource TextSecondary}">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="Oznaczenie: {0}">
+                            <Binding Path="ReferenceDesignation" FallbackValue="-"/>
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                <TextBlock Text="{Binding Type, StringFormat='Typ: {0}'}" FontSize="10" Foreground="{DynamicResource TextSecondary}"
+                           IsVisible="{Binding Type, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                <TextBlock Text="{Binding Phase, StringFormat='Faza: {0}'}" FontSize="10" Foreground="{DynamicResource AccentBlue}" FontWeight="SemiBold"
+                           IsVisible="{Binding Phase, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                <TextBlock Text="{Binding Group, StringFormat='Grupa: {0}'}" FontSize="10" Foreground="{DynamicResource TextSecondary}"
+                           IsVisible="{Binding Group, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                <TextBlock Text="{Binding PowerW, StringFormat='Moc: {0}W'}" FontSize="10" Foreground="{DynamicResource TextSecondary}"
+                           IsVisible="{Binding PowerW}"/>
+            </StackPanel>
+        </Border>
+    </ToolTip.Tip>
+
+    <UserControl.ContextMenu>
+        <ContextMenu>
+            <MenuItem Click="EditParameters_Click">
+                <MenuItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="Pencil" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
+                        <TextBlock Text="Edytuj w panelu" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </MenuItem.Header>
+            </MenuItem>
+            <Separator x:Name="SepGrouping" />
+            <MenuItem x:Name="MenuGroupSelected" Click="GroupSelected_Click">
+                <MenuItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="Group" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
+                        <TextBlock Text="Grupuj zaznaczone" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </MenuItem.Header>
+            </MenuItem>
+            <MenuItem x:Name="MenuUngroupSelected" Click="UngroupSelected_Click">
+                <MenuItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="Ungroup" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
+                        <TextBlock Text="Usuń z grupy" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </MenuItem.Header>
+            </MenuItem>
+            <Separator x:Name="SepBlueCover" />
+            <MenuItem x:Name="MenuEnableBlueCover" Click="EnableBlueCover_Click">
+                <MenuItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="ShieldCheck" Width="14" Height="14" Foreground="{DynamicResource AccentBlue}"/>
+                        <TextBlock Text="Włącz osłonę niebieską" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </MenuItem.Header>
+            </MenuItem>
+            <MenuItem x:Name="MenuDisableBlueCover" Click="DisableBlueCover_Click">
+                <MenuItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="ShieldOff" Width="14" Height="14" Foreground="{DynamicResource TextTertiary}"/>
+                        <TextBlock Text="Wyłącz osłonę niebieską" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </MenuItem.Header>
+            </MenuItem>
+            <Separator />
+            <MenuItem Click="DuplicateSymbol_Click">
+                <MenuItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="ContentCopy" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
+                        <TextBlock Text="Powiel" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </MenuItem.Header>
+            </MenuItem>
+            <Separator />
+            <MenuItem Click="DeleteSymbol_Click">
+                <MenuItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="TrashCanOutline" Width="14" Height="14" Foreground="{DynamicResource AccentRed}"/>
+                        <TextBlock Text="Usuń" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </MenuItem.Header>
+            </MenuItem>
+        </ContextMenu>
+    </UserControl.ContextMenu>
+
+
+
+    <!-- Wizualizacja Symbolu -->
+    <Grid x:Name="RootGrid" ClipToBounds="False" Width="{Binding Width}" Height="{Binding Height}">
+
+        <!-- Ramka Zaznaczenia (współczesna - wypełnieniowa) -->
+        <Border Background="{DynamicResource AccentBlue}"
+                Opacity="0.3"
+                CornerRadius="2"
+                IsHitTestVisible="False"
+                IsVisible="{Binding ShowSelectionOutline}"
+                ZIndex="10" />
+
+        <!-- Render Visual Image (SVG/Bitmap) -->
+        <Image Source="{Binding Visual}" Stretch="Uniform" 
+               Width="{Binding Width}" Height="{Binding Height}" />
+
+        <!-- Terminal Axis Lines (debug visualization) -->
+        <Canvas x:Name="TerminalAxesCanvas" IsHitTestVisible="False" ClipToBounds="False"/>
+
+        <!-- Circuit Label (below module) - UKRYTE na canvas (arkusz 1), widoczne tylko w arkuszu 2 -->
+        <!-- Wcześniej pokazywało CircuitName, ale użytkownik nie chce tego na schemacie rozdzielnicy -->
+        <Border Background="{DynamicResource PanelBackground}"
+                Opacity="0.9"
+                CornerRadius="4"
+                Padding="6,3"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Center"
+                Margin="0,0,0,-25"
+                IsHitTestVisible="False"
+                IsVisible="False">
+            <TextBlock Text="{Binding CircuitName}"
+                       FontSize="10"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextMain}"
+                       TextAlignment="Center"/>
+        </Border>
+
+        <!-- Fallback if no visual -->
+        <TextBlock Text="{Binding Label}" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                   IsVisible="{Binding Visual, Converter={x:Static ObjectConverters.IsNull}}"/>
+
+        <!-- Oznaczenie schematowe pod modułem (Q0, QF1, T1, H1...) -->
+        <Border Background="#CC1a1a2e"
+                CornerRadius="3"
+                Padding="4,1"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Center"
+                Margin="0,0,0,-20"
+                IsHitTestVisible="False"
+                IsVisible="{Binding ReferenceDesignation, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding ReferenceDesignation}"
+                       FontSize="9"
+                       FontWeight="Bold"
+                       Foreground="#D4D4D4"
+                       TextAlignment="Center"/>
+        </Border>
+    </Grid>
+</UserControl>

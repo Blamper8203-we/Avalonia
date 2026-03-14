@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="DINBoard.Controls.ToastNotification"
+             IsHitTestVisible="True"
+             HorizontalAlignment="Right"
+             VerticalAlignment="Bottom"
+             Margin="0,0,16,16"
+             Opacity="0"
+             RenderTransformOrigin="0.5,1">
+    
+    <UserControl.RenderTransform>
+        <TranslateTransform Y="20"/>
+    </UserControl.RenderTransform>
+    
+    <UserControl.Transitions>
+        <Transitions>
+            <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="CubicEaseOut"/>
+            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+        </Transitions>
+    </UserControl.Transitions>
+
+    <Border x:Name="ToastBorder"
+            Background="{DynamicResource PanelBackground}"
+            BorderBrush="{DynamicResource PanelBorder}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="12,10"
+            MinWidth="260"
+            MaxWidth="400"
+            BoxShadow="0 4 12 0 #40000000">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            <!-- Icon -->
+            <Border x:Name="IconBorder" Width="28" Height="28" CornerRadius="14" 
+                    Background="{DynamicResource AccentGreen}" VerticalAlignment="Center">
+                <mi:MaterialIcon x:Name="ToastIcon" Kind="Check" Width="16" Height="16" 
+                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- Message -->
+            <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center">
+                <TextBlock x:Name="TitleText" FontWeight="SemiBold" FontSize="12" 
+                           Foreground="{DynamicResource TextMain}" TextWrapping="Wrap"/>
+                <TextBlock x:Name="MessageText" FontSize="10.5" 
+                           Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
+            
+            <!-- Close button -->
+            <Button Grid.Column="2" Background="Transparent" Padding="4" 
+                    VerticalAlignment="Top" Click="CloseButton_Click"
+                    Cursor="Hand" ToolTip.Tip="Zamknij">
+                <mi:MaterialIcon Kind="Close" Width="12" Height="12" Foreground="{DynamicResource TextTertiary}"/>
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

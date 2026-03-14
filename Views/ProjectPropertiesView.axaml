@@ -1,0 +1,106 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="280"
+             x:Class="DINBoard.Views.ProjectPropertiesView"
+             Background="{DynamicResource PanelBackground}">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.lbl">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,0,0,3"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="Margin" Value="0,6,0,8"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Header -->
+        <Border Grid.Row="0" Padding="12,10" 
+                Background="{DynamicResource PanelHeaderBackground}"
+                BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <mi:MaterialIcon Kind="FileDocumentEdit" Width="18" Height="18" 
+                                 Foreground="{DynamicResource AccentBlue}"/>
+                <TextBlock Text="{DynamicResource HeaderProjectProperties}" FontSize="14" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Form -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12,8,12,12">
+            <StackPanel>
+
+                <!-- DANE PROJEKTU -->
+                <TextBlock Text="{DynamicResource SectionProjectData}" Classes="section"/>
+                <Border Background="#0AFFFFFF" BorderBrush="{DynamicResource PanelBorder}" 
+                        BorderThickness="1" CornerRadius="6" Padding="10,10,10,2" Margin="0,0,0,8">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource LabelProjectName}" Classes="lbl"/>
+                        <TextBox x:Name="ProjectNameTextBox" Watermark="{DynamicResource WatermarkProjectName}" TextChanged="OnTextChanged"/>
+
+                        <TextBlock Text="{DynamicResource LabelProjectAddress}" Classes="lbl"/>
+                        <TextBox x:Name="AddressTextBox" Watermark="{DynamicResource WatermarkProjectAddressShort}" TextChanged="OnTextChanged"/>
+
+                        <TextBlock Text="{DynamicResource LabelProjectInvestor}" Classes="lbl"/>
+                        <TextBox x:Name="InvestorTextBox" Watermark="{DynamicResource WatermarkProjectInvestor}" TextChanged="OnTextChanged"/>
+
+                        <TextBlock Text="{DynamicResource LabelProjectContractor}" Classes="lbl"/>
+                        <TextBox x:Name="ContractorTextBox" Watermark="{DynamicResource WatermarkProjectContractor}" TextChanged="OnTextChanged"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- DANE DOKUMENTU -->
+                <TextBlock Text="{DynamicResource SectionDocumentData}" Classes="section"/>
+                <Border Background="#0AFFFFFF" BorderBrush="{DynamicResource PanelBorder}" 
+                        BorderThickness="1" CornerRadius="6" Padding="10,10,10,2" Margin="0,0,0,8">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource LabelDocNumber}" Classes="lbl"/>
+                        <TextBox x:Name="ProjectNumberTextBox" Watermark="{DynamicResource WatermarkDocNumber}" TextChanged="OnTextChanged"/>
+
+                        <TextBlock Text="{DynamicResource LabelDocAuthor}" Classes="lbl"/>
+                        <TextBox x:Name="AuthorTextBox" Watermark="{DynamicResource WatermarkDocAuthor}" TextChanged="OnTextChanged"/>
+
+                        <TextBlock Text="{DynamicResource LabelDocDesignerId}" Classes="lbl"/>
+                        <TextBox x:Name="DesignerIdTextBox" Watermark="{DynamicResource WatermarkDocDesignerId}" TextChanged="OnTextChanged"/>
+
+                        <TextBlock Text="{DynamicResource LabelDocRevision}" Classes="lbl"/>
+                        <TextBox x:Name="RevisionTextBox" Watermark="{DynamicResource WatermarkDocRevision}" TextChanged="OnTextChanged"/>
+
+                        <TextBlock Text="{DynamicResource LabelDocNotes}" Classes="lbl"/>
+                        <TextBox x:Name="NotesTextBox" AcceptsReturn="True" TextWrapping="Wrap" 
+                                 Height="70" Watermark="{DynamicResource WatermarkDocNotesShort}" TextChanged="OnTextChanged"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Bottom Action Bar -->
+        <Border Grid.Row="2" Padding="12" 
+                Background="{DynamicResource PanelHeaderBackground}"
+                BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0">
+            <!-- Export PDF Quick Update Action -->
+            <Button x:CompileBindings="False" Command="{Binding Exporter.ExportPdfQuickCommand}" 
+                    Background="{DynamicResource AccentBlue}" Foreground="White" 
+                    HorizontalAlignment="Right" Padding="15,8" Grid.Column="1" Grid.Row="2">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="🔄" FontSize="14" VerticalAlignment="Center"/>
+                    <mi:MaterialIcon Kind="FilePdfBox" Width="18" Height="18"/>
+                    <TextBlock Text="{DynamicResource BtnExportPdfQuick}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </Border>
+    </Grid>
+</UserControl>

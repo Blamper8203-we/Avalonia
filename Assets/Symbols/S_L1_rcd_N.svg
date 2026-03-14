@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 350" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: transparent; }
+      .wire { fill: none; stroke: #000000; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+      .wire-dashed { fill: none; stroke: #000000; stroke-width: 2; stroke-dasharray: 6, 4; }
+      .node { fill: #000000; }
+      .text-bold { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: bold; fill: #000000; }
+    </style>
+  </defs>
+
+  <!-- Tło -->
+  <rect width="100%" height="100%" class="bg" />
+
+<!-- Górna liczba -->
+  <text x="160" y="85" class="text-bold" style="font-size: 16px;">1</text>
+
+  <!-- Górna linia -->
+  <line x1="150" y1="60" x2="150" y2="120" class="wire" />
+  
+  <!-- Styk stały (górny) -->
+  <circle cx="150" cy="120" r="3" class="node" />
+  
+  <!-- Styk ruchomy -->
+  <line x1="150" y1="180" x2="125" y2="120" class="wire" />
+  
+  <!-- Styk dolny -->
+  <circle cx="150" cy="180" r="3" class="node" />
+  
+  <!-- Dolna linia -->
+  <line x1="150" y1="180" x2="150" y2="300" class="wire" />
+  
+  <!-- Symbol przekładnika różnicowego (elipsa na linii) -->
+  <ellipse cx="150" cy="230" rx="25" ry="12" class="wire" />
+  
+  <!-- Mechanizm wyzwalający (linia przerywana z grotem) -->
+  <line x1="125" y1="230" x2="100" y2="230" class="wire-dashed" />
+  <line x1="100" y1="230" x2="100" y2="150" class="wire-dashed" />
+  <line x1="100" y1="150" x2="135" y2="150" class="wire-dashed" />
+  
+  <!-- Oznaczenie członu różnicowego -->
+  <text x="180" y="235" class="text-bold" style="font-size: 16px;">IΔ</text>
+<!-- Dolna liczba -->
+  <text x="160" y="285" class="text-bold" style="font-size: 16px;">2</text>
+
+</svg>

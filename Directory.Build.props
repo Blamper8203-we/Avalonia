@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- WDAC fix: bin/obj poza Desktop (blokada polityki Windows) -->
+    <!-- <BaseOutputPath>$(USERPROFILE)\.dinboard\bin\</BaseOutputPath> -->
+    <!-- <BaseIntermediateOutputPath>$(USERPROFILE)\.dinboard\obj\</BaseIntermediateOutputPath> -->
+  </PropertyGroup>
+</Project>

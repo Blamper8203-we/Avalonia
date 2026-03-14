@@ -1,0 +1,48 @@
+# DINBoard AI Developer Rules
+
+**As an AI assistant working on the DINBoard project, YOU MUST STRICTLY FOLLOW these architectural, structural, and quality rules. There are NO exceptions.**
+
+Wait, Stop. Read this CAREFULLY. You are participating in a project that has suffered from "Code Mess". Your sole purpose is to enforce Order. 
+
+## 1. Class and Method Size Limits (CRITICAL)
+- **Maksimum 300 linii na klasę.** (Maximum 300 lines per class).
+- **Maksimum 50 linii na metodę.** (Maximum 50 lines per method).
+- If your changes will push a class over 300 lines, **STOP**. You must refactor and split the functionality into a new specialized Service or ViewModel before proceeding.
+
+## 2. Architecture (MVVM & Layering)
+- **Single Responsibility Principle (SRP):** Every class must have only ONE reason to change.
+- **ViewModels (`/ViewModels`):** Only act as Coordinators (like `MainViewModel`) or Specialists (like `WireDrawingViewModel`).
+- **Services (`/Services`):** All business logic, exports, rendering logic, and external operations MUST live here. They must be injected via Dependency Injection (Interfaces).
+- **Views (`/Views` & `/Controls`):** Only UI elements. *Zero* business logic in Code-Behind (`.xaml.cs`).
+- **Helpers (`/Helpers`):** Stateless, reusable utility functions.
+
+## 3. Coding Standards & Naming Conventions
+- **NO "MAGIC NUMBERS" OR STRINGS.** Never hardcode `if (type == "MCB")` or `Calculate(596)`. Always use constants from `Constants.cs` or tightly scoped `public const`.
+- **Naming:** Use clear, descriptive names.
+  - Good: `CalculatePhaseBalance()`, `DefaultViewBoxWidth`, `_symbolService`
+  - Bad: `Calculate()`, `VIEWBOX_W`, `_service`
+- **Nullable Reference Types:** The project uses nullable contexts. Pay attention to `?` and `!` operators. Avoid assuming objects aren't null.
+
+## 4. MVVM Toolkit Specifics
+- Use `[ObservableProperty]` for properties instead of manual `INotifyPropertyChanged` boilerplate.
+- Use `partial void On[PropertyName]Changed(T oldValue, T newValue)` to trigger logic upon property changes (do not write manual setters just to trigger logic).
+- Use `[RelayCommand]` for user actions/commands.
+
+## 5. Testing Requirements (MANDATORY)
+- Every new ViewModel or Service **MUST have at least 5 unit tests** accompanying it in the `/Tests` folder.
+- **Test Naming Convention:** `[MethodName]_[Scenario]_[ExpectedBehavior]`
+  - Good: `AddDrawingPoint_WithValidPoint_AddsToCollection()`
+  - Bad: `TestMethod1()`, `CheckPoints()`
+- Required coverage for new files is 70%. Be proactive and write tests alongside code.
+
+## 6. Documentation
+- All public classes, methods, and properties MUST have standard C# XML documentation (`/// <summary>`).
+- Do not write trivial comments (e.g. `// sets x to 5`). Only document complex logic, decisions, and algorithms.
+- Remove heavily commented-out old code. It belongs in git history.
+
+## 7. Git & Commit Guidelines
+- Commit formats must start with a component tag: `[ViewModel]`, `[Services]`, `[Tests]`.
+- Keep commits isolated. One commit = one logical change.
+- Do not mix pure refactorings with new feature development.
+
+**Failure to observe these rules constitutes a violation of the project's quality guidelines.**

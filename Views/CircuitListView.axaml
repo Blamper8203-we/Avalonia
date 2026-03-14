@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:DINBoard.ViewModels"
+             xmlns:models="using:DINBoard.Models"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="DINBoard.Views.CircuitListView"
+             x:DataType="vm:CircuitListViewModel">
+    
+    <Grid RowDefinitions="Auto,*">
+        <!-- Pasek narzędzi wewnątrz widoku listy -->
+        <Border Grid.Row="0" Background="{DynamicResource ToolbarBackground}" Padding="10" 
+                BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="{DynamicResource HeaderCircuitList}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}"/>
+                <!-- Możemy tu dodać docelowo filtry, np wyszukiwarkę -->
+            </StackPanel>
+        </Border>
+
+        <!-- Tabela -->
+        <DataGrid Grid.Row="1" 
+                  ItemsSource="{Binding CircuitList}" 
+                  AutoGenerateColumns="False" 
+                  IsReadOnly="True"
+                  GridLinesVisibility="All"
+                  BorderThickness="1" 
+                  BorderBrush="{DynamicResource PanelBorder}"
+                  Margin="10">
+            <!-- Definicja nagłówka grupy (np. nazwa lokalizacji) -->
+            <DataGrid.Styles>
+                <Style Selector="DataGridRowGroupHeader">
+                    <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextMain}" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{DynamicResource ColDesignation}" Binding="{Binding ReferenceDesignation}" x:DataType="models:SymbolItem" Width="Auto" />
+                <DataGridTextColumn Header="{DynamicResource ColLabel}" Binding="{Binding Label}" x:DataType="models:SymbolItem" Width="Auto" />
+                <DataGridTextColumn Header="{DynamicResource ColPhase}" Binding="{Binding Phase}" x:DataType="models:SymbolItem" Width="Auto" />
+                <DataGridTextColumn Header="{DynamicResource ColProtection}" Binding="{Binding DisplayProtection}" x:DataType="models:SymbolItem" Width="Auto" />
+                <DataGridTextColumn Header="{DynamicResource ColCircuit}" Binding="{Binding CircuitName}" x:DataType="models:SymbolItem" Width="*" />
+                <DataGridTextColumn Header="{DynamicResource ColPowerW}" Binding="{Binding PowerW}" x:DataType="models:SymbolItem" Width="Auto" />
+                <DataGridTextColumn Header="{DynamicResource ColCableLength}" Binding="{Binding CableLength}" x:DataType="models:SymbolItem" Width="Auto" />
+                <DataGridTextColumn Header="{DynamicResource ColCableCrossSection}" Binding="{Binding CableCrossSection}" x:DataType="models:SymbolItem" Width="Auto" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

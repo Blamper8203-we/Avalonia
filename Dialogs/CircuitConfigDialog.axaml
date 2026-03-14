@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="DINBoard.Dialogs.CircuitConfigDialog"
+        Title="{DynamicResource DialogCircuitConfigTitle}"
+        Width="450" Height="500"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource AppBackground}">
+    
+    <Window.Styles>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="Opacity" Value="0.7"/>
+        </Style>
+    </Window.Styles>
+    
+    <Border Padding="20" Background="{DynamicResource PanelBackground}">
+        <Grid RowDefinitions="Auto,*,Auto">
+            <!-- Header -->
+            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,20">
+                <TextBlock Text="⚡" FontSize="24"/>
+                <TextBlock Text="{DynamicResource DialogCircuitConfigTitle}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource AccentBlue}"/>
+            </StackPanel>
+            
+            <!-- Form -->
+            <ScrollViewer Grid.Row="1">
+                <StackPanel Spacing="15">
+                    <!-- Nazwa obwodu -->
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource LabelCircuitName}" Classes="label"/>
+                        <TextBox x:Name="TxtName" Watermark="{DynamicResource WatermarkCircuitName}"/>
+                    </StackPanel>
+                    
+                    <!-- Moc [W] -->
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource LabelPowerW}" Classes="label"/>
+                        <NumericUpDown x:Name="NumPower" Value="1000" Minimum="0" Maximum="50000" Increment="100"/>
+                    </StackPanel>
+                    
+                    <!-- Faza -->
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource LabelPhase}" Classes="label"/>
+                        <ComboBox x:Name="CmbPhase" SelectedIndex="0">
+                            <ComboBoxItem Content="L1"/>
+                            <ComboBoxItem Content="L2"/>
+                            <ComboBoxItem Content="L3"/>
+                            <ComboBoxItem Content="L1+L2"/>
+                            <ComboBoxItem Content="L2+L3"/>
+                            <ComboBoxItem Content="L3+L1"/>
+                            <ComboBoxItem Content="3-fazowy"/>
+                        </ComboBox>
+                        <CheckBox x:Name="ChkPhaseLocked" Content="{DynamicResource LabelLockPhase}" Margin="0,5,0,0" FontSize="12"/>
+                    </StackPanel>
+                    
+                    <!-- Typ zabezpieczenia -->
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource LabelProtectionType}" Classes="label"/>
+                        <ComboBox x:Name="CmbProtectionType" SelectedIndex="0">
+                            <ComboBoxItem Content="B"/>
+                            <ComboBoxItem Content="C"/>
+                            <ComboBoxItem Content="D"/>
+                        </ComboBox>
+                    </StackPanel>
+                    
+                    <!-- Prąd zabezpieczenia -->
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource LabelProtectionCurrent}" Classes="label"/>
+                        <ComboBox x:Name="CmbProtectionCurrent" SelectedIndex="3">
+                            <ComboBoxItem Content="6"/>
+                            <ComboBoxItem Content="10"/>
+                            <ComboBoxItem Content="13"/>
+                            <ComboBoxItem Content="16"/>
+                            <ComboBoxItem Content="20"/>
+                            <ComboBoxItem Content="25"/>
+                            <ComboBoxItem Content="32"/>
+                            <ComboBoxItem Content="40"/>
+                            <ComboBoxItem Content="50"/>
+                            <ComboBoxItem Content="63"/>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+            
+            <!-- Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
+                <Button x:Name="BtnCancel" Content="{DynamicResource DialogCancel}" Width="100" Click="BtnCancel_Click"/>
+                <Button x:Name="BtnSave" Content="{DynamicResource DialogSave}" Width="100" Classes="accent" Click="BtnSave_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

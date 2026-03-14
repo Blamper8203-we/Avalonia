@@ -1,0 +1,62 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- FR Symbol (viewBox 0 0 68.176 307, axis at 34.088) -->
+    <GeometryGroup x:Key="Geom_FR" FillRule="NonZero">
+        <StreamGeometry>M 0,0 L 68.176,0 L 68.176,307 L 0,307 Z</StreamGeometry>
+        <StreamGeometry>M 34.088,0 L 34.088,124.7</StreamGeometry>
+        <StreamGeometry>M 31.25,124.5 L 36.92,124.5</StreamGeometry>
+        <EllipseGeometry Center="34.088,127" RadiusX="2" RadiusY="2" />
+        <StreamGeometry>M 0.07,136.1 L 34.088,181.5 L 34.088,307</StreamGeometry>
+    </GeometryGroup>
+
+    <!-- MCB 1P Symbol (symmetrical viewBox -133 0 455 850, axis at 94.5) -->
+    <GeometryGroup x:Key="Geom_MCB" FillRule="NonZero">
+        <StreamGeometry>M -133,0 L 322,0 L 322,850 L -133,850 Z</StreamGeometry>
+        <StreamGeometry>M 94.5,0 L 94.5,307</StreamGeometry>
+        <!-- X cross -->
+        <StreamGeometry>M 70.9,236 L 118.1,283.3</StreamGeometry>
+        <StreamGeometry>M 70.9,283.3 L 118.1,236</StreamGeometry>
+        <!-- Horizontal bar -->
+        <StreamGeometry>M 59.1,306.9 L 130,306.9</StreamGeometry>
+        <!-- Blade and bottom wire -->
+        <StreamGeometry>M 0,330.5 L 94.5,519.5 L 94.5,850</StreamGeometry>
+    </GeometryGroup>
+
+    <!-- RCD Symbol (symmetrical viewBox -133 0 455 850, axis at 94.5) -->
+    <GeometryGroup x:Key="Geom_RCD" FillRule="NonZero">
+        <StreamGeometry>M -133,0 L 322,0 L 322,850 L -133,850 Z</StreamGeometry>
+        <StreamGeometry>M 94.5,0 L 94.5,307</StreamGeometry>
+        <StreamGeometry>M 59.1,306.9 L 130,306.9</StreamGeometry>
+        <!-- RCD curve (oval half) -->
+        <PathGeometry>
+            <PathFigure StartPoint="40,250" IsClosed="False">
+                <ArcSegment Point="149,250" Size="54,30" SweepDirection="Clockwise" IsLargeArc="False"/>
+            </PathFigure>
+        </PathGeometry>
+        <!-- Blade and bottom wire -->
+        <StreamGeometry>M 0,330.5 L 94.5,519.5 L 94.5,850</StreamGeometry>
+    </GeometryGroup>
+
+    <!-- Phase Indicator (Lamp) Symbol -->
+    <GeometryGroup x:Key="Geom_PhaseIndicator" FillRule="NonZero">
+        <StreamGeometry>M 0,0 L 100,0 L 100,120 L 0,120 Z</StreamGeometry>
+        <StreamGeometry>M 50,0 L 50,30</StreamGeometry>
+        <EllipseGeometry Center="50,60" RadiusX="30" RadiusY="30" />
+        <StreamGeometry>M 28,38 L 72,82</StreamGeometry>
+        <StreamGeometry>M 28,82 L 72,38</StreamGeometry>
+        <StreamGeometry>M 50,90 L 50,120</StreamGeometry>
+    </GeometryGroup>
+
+    <!-- SPD Symbol (Surge Protection Device) -->
+    <GeometryGroup x:Key="Geom_SPD" FillRule="NonZero">
+        <StreamGeometry>M 0,0 L 100,0 L 100,120 L 0,120 Z</StreamGeometry>
+        <StreamGeometry>M 50,0 L 50,20</StreamGeometry>
+        <!-- Rectangle -->
+        <StreamGeometry>M 20,20 L 80,20 L 80,100 L 20,100 Z</StreamGeometry>
+        <StreamGeometry>M 20,90 L 80,90</StreamGeometry>
+        <StreamGeometry>M 70,30 L 70,70 L 50,70 L 50,50 L 30,50 L 30,90</StreamGeometry>
+        <StreamGeometry>M 50,100 L 50,120</StreamGeometry>
+    </GeometryGroup>
+
+</ResourceDictionary>

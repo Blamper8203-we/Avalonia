@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        x:Class="DINBoard.Dialogs.PdfExportDialog"
+        Title="{DynamicResource MenuExportPdf}"
+        Width="380" Height="380"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource PanelBackground}">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,14">
+            <mi:MaterialIcon Kind="FilePdfBox" Width="20" Height="20" Foreground="{DynamicResource AccentRed}"/>
+            <TextBlock Text="{DynamicResource MenuExportPdf}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Dane dokumentu -->
+        <StackPanel Grid.Row="2" Spacing="3" Margin="0,0,0,10">
+            <TextBlock Text="{DynamicResource LabelInformation}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextTertiary}" Margin="0,0,0,6"/>
+            
+            <TextBlock Text="{DynamicResource TextPdfExportInfo}" 
+                       FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,6"/>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="{DynamicResource DialogCancel}" Width="80" Click="BtnCancel_Click" FontSize="11"/>
+            <Button Width="90" Classes="accent" Click="BtnExport_Click" FontSize="11">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <mi:MaterialIcon Kind="Export" Width="12" Height="12"/>
+                    <TextBlock Text="{DynamicResource DialogExport}"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+  "settings": {
+    "documentationRules": {
+      "documentPrivateElements": true,
+      "documentInternalElements": true,
+      "documentPrivateFields": true,
+      "companyName": "DINBoard Team",
+      "copyrightText": "Copyright (c) DINBoard Team. All rights reserved.",
+      "variables": {
+        "CompanyName": "DINBoard Team"
+      }
+    },
+    "layoutRules": {
+      "newlineAtEndOfFile": "require",
+      "allowConsecutiveUsings": "false"
+    },
+    "maintainabilityRules": {
+      "topLevelTypes": ["class", "interface", "struct", "enum", "delegate"],
+      "statementMustNotUseUnnecessaryParenthesis": true,
+      "arithmeticExpressionsMustDeclarePrecedence": true,
+      "conditionalExpressionsMustDeclarePrecedence": true,
+      "accessModifierMustBeDeclaredExplicitly": true,
+      "fieldsMustBePrivate": true,
+      "constantFieldNamesMustBeginWithCapitalLetter": true,
+      "variableNamesMustNotBePrefixed": true
+    },
+    "namingConventions": {
+      "allowedHungarianPrefixes": [],
+      "allowCommonHungarianPrefixes": true,
+      "allowPrivateFieldsStartingWithUnderscore": true
+    },
+    "spacingRules": {
+      "indentationSize": 4,
+      "tabSize": 4
+    }
+  }
+}
