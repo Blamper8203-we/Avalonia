@@ -215,7 +215,8 @@ public partial class MainWindow : Window
 
     private void InitializeProjectPanel()
     {
-        _projectPanel = this.FindControl<Views.ProjectPropertiesView>("ProjectPanel");
+        var leftPanelHost = this.FindControl<Views.MainLeftPanelView>("MainLeftPanelView");
+        _projectPanel = leftPanelHost?.FindControl<Views.ProjectPropertiesView>("ProjectPanel");
         if (_projectPanel != null)
         {
             _projectPanel.PropertiesChanged += (s, e) =>
@@ -333,9 +334,10 @@ public partial class MainWindow : Window
     {
         if (symbol == null) return;
 
-        var editPanel = this.FindControl<Views.CircuitEditPanelView>("CircuitEditPanel");
-        var tabControl = this.FindControl<TabControl>("RightTabControl");
-        var editTab = this.FindControl<TabItem>("CircuitEditTab");
+        var rightPanelHost = this.FindControl<Views.MainRightPanelView>("MainRightPanelView");
+        var editPanel = rightPanelHost?.FindControl<Views.CircuitEditPanelView>("CircuitEditPanel");
+        var tabControl = rightPanelHost?.FindControl<TabControl>("RightTabControl");
+        var editTab = rightPanelHost?.FindControl<TabItem>("CircuitEditTab");
 
         if (editPanel == null || tabControl == null || editTab == null) return;
 
@@ -442,7 +444,8 @@ public partial class MainWindow : Window
             await dialog.ShowDialog(this);
 
             // Odśwież paletę modułów po zamknięciu dialogu
-            var leftPanel = this.FindControl<DINBoard.Views.ModulesPaletteView>("LeftPanel");
+            var leftPanelHost = this.FindControl<DINBoard.Views.MainLeftPanelView>("MainLeftPanelView");
+            var leftPanel = leftPanelHost?.FindControl<DINBoard.Views.ModulesPaletteView>("LeftPanel");
             leftPanel?.ReloadModules();
         }
         catch (Exception ex)

@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:DINBoard.ViewModels"
+             x:Class="DINBoard.Views.MainStatusBarView"
+             x:DataType="vm:MainViewModel"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="64">
+    <Border x:Name="StatusBarShell"
+            Background="{DynamicResource PanelBackground}"
+            Padding="8,3"
+            BorderBrush="{DynamicResource PanelBorder}"
+            BorderThickness="0,1,0,0">
+        <Grid RowDefinitions="Auto,Auto">
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Project name + status -->
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <mi:MaterialIcon Kind="FileDocumentOutline" Width="12" Height="12" Foreground="{DynamicResource TextTertiary}"/>
+                        <TextBlock Text="{Binding ProjectFileName}" Classes="secondary" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Ellipse Width="6" Height="6" Fill="{DynamicResource AccentRed}" VerticalAlignment="Center"
+                                 IsVisible="{Binding HasUnsavedChanges}" Margin="2,0,0,0"
+                                 ToolTip.Tip="{DynamicResource TooltipUnsavedChanges}"/>
+                    </StackPanel>
+                    <Border Width="1" Background="{DynamicResource PanelBorder}" Margin="4,1" Opacity="0.3"/>
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <mi:MaterialIcon Kind="CheckCircle" Width="12" Height="12" Foreground="{DynamicResource AccentGreen}"/>
+                        <TextBlock Text="{Binding StatusMessage}" Classes="secondary" FontSize="10" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Right: Stats -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="3" ToolTip.Tip="{DynamicResource TooltipTotalPower}">
+                        <mi:MaterialIcon Kind="LightningBolt" Width="12" Height="12" Foreground="{DynamicResource AccentYellow}"/>
+                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center"
+                                   Text="{Binding TotalPowerKW, StringFormat='{}{0:F1} kW'}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="3" ToolTip.Tip="{DynamicResource TooltipGroupCount}">
+                        <mi:MaterialIcon Kind="Group" Width="12" Height="12" Foreground="{DynamicResource AccentBlue}"/>
+                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{DynamicResource StatusGroupPrefix}"/>
+                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{Binding GroupCount}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="3" ToolTip.Tip="{DynamicResource TooltipModuleCount}">
+                        <mi:MaterialIcon Kind="Shape" Width="12" Height="12" Classes="tertiary"/>
+                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{DynamicResource StatusModulePrefix}"/>
+                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{Binding Symbols.Count}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    IsVisible="{Binding Exporter.IsExportInProgress}"
+                    Margin="0,6,0,0"
+                    Padding="8,6"
+                    CornerRadius="6"
+                    Background="{DynamicResource PanelBackgroundAlt}"
+                    BorderThickness="1"
+                    BorderBrush="{DynamicResource PanelBorder}">
+                <StackPanel Spacing="4">
+                    <Grid ColumnDefinitions="170,*,Auto" ColumnSpacing="8">
+                        <ProgressBar Height="6"
+                                     Minimum="0"
+                                     Maximum="100"
+                                     Value="{Binding Exporter.ExportProgressPercent}"
+                                     VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Exporter.ExportProgressStage}"
+                                   Classes="secondary"
+                                   FontSize="10"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Exporter.ExportProgressPercent, StringFormat='{}{0}%'}"
+                                   Classes="secondary"
+                                   FontSize="10"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                    <TextBlock Text="{Binding Exporter.ExportLongOperationReason}"
+                               Classes="tertiary"
+                               FontSize="9"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

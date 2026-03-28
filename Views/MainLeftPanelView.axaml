@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:DINBoard.ViewModels"
+             xmlns:views="using:DINBoard.Views"
+             x:Class="DINBoard.Views.MainLeftPanelView"
+             x:DataType="vm:MainViewModel"
+             mc:Ignorable="d"
+             d:DesignWidth="280"
+             d:DesignHeight="700">
+    <Grid>
+        <views:ModulesPaletteView x:Name="LeftPanel"
+                                  IsModulesEnabled="{Binding Schematic.IsDinRailVisible}"
+                                  IsVisible="{Binding Schematic.IsSheet1Active}"/>
+        <views:ProjectPropertiesView x:Name="ProjectPanel"
+                                     IsVisible="{Binding Schematic.IsSheet2Active}"/>
+    </Grid>
+</UserControl>

@@ -116,110 +116,36 @@
                                 VerticalAlignment="Center"
                                 Margin="34,40"
                                 Spacing="0">
-                        <Border Width="250"
-                                Height="150"
+                        <Border Width="132"
+                                Height="88"
                                 Margin="0,0,0,18"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                CornerRadius="18"
-                                Background="#0F172A"
-                                BorderBrush="#1E293B"
+                                CornerRadius="16"
+                                Background="#101217"
+                                BorderBrush="#2B2F38"
                                 BorderThickness="1">
-                            <Grid>
-                                <Border Margin="14"
-                                        CornerRadius="12"
-                                        Background="#0B1220"
-                                        BorderBrush="#1E3A5F"
-                                        BorderThickness="1"/>
-                                <Canvas Width="220"
-                                        Height="110"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center">
-                                    <Line StartPoint="14,58"
-                                          EndPoint="204,58"
-                                          Stroke="#60A5FA"
-                                          StrokeThickness="3"
-                                          StrokeLineCap="Round"/>
+                            <Grid ColumnDefinitions="*,Auto,*">
+                                <TextBlock Grid.Column="0"
+                                           Text="D"
+                                           FontSize="46"
+                                           FontWeight="SemiBold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
 
-                                    <Ellipse Width="12"
-                                             Height="12"
-                                             Canvas.Left="8"
-                                             Canvas.Top="52"
-                                             Fill="#3B82F6"/>
+                                <Border Grid.Column="1"
+                                        Width="1"
+                                        Margin="0,18"
+                                        Background="#2F3642"/>
 
-                                    <Rectangle Width="28"
-                                               Height="18"
-                                               Canvas.Left="72"
-                                               Canvas.Top="49"
-                                               RadiusX="4"
-                                               RadiusY="4"
-                                               Fill="#111827"
-                                               Stroke="#38BDF8"
-                                               StrokeThickness="2"/>
-
-                                    <Line StartPoint="86,58"
-                                          EndPoint="86,88"
-                                          Stroke="#93C5FD"
-                                          StrokeThickness="2"
-                                          StrokeLineCap="Round"/>
-
-                                    <Rectangle Width="22"
-                                               Height="14"
-                                               Canvas.Left="75"
-                                               Canvas.Top="88"
-                                               RadiusX="3"
-                                               RadiusY="3"
-                                               Fill="#0F172A"
-                                               Stroke="#22D3EE"
-                                               StrokeThickness="2"/>
-
-                                    <Line StartPoint="132,58"
-                                          EndPoint="132,34"
-                                          Stroke="#93C5FD"
-                                          StrokeThickness="2"
-                                          StrokeLineCap="Round"/>
-
-                                    <Rectangle Width="24"
-                                               Height="14"
-                                               Canvas.Left="120"
-                                               Canvas.Top="20"
-                                               RadiusX="3"
-                                               RadiusY="3"
-                                               Fill="#0F172A"
-                                               Stroke="#34D399"
-                                               StrokeThickness="2"/>
-
-                                    <Rectangle Width="36"
-                                               Height="22"
-                                               Canvas.Left="166"
-                                               Canvas.Top="47"
-                                               RadiusX="5"
-                                               RadiusY="5"
-                                               Fill="#111827"
-                                               Stroke="#60A5FA"
-                                               StrokeThickness="2"/>
-
-                                    <Line StartPoint="184,58"
-                                          EndPoint="184,36"
-                                          Stroke="#60A5FA"
-                                          StrokeThickness="2"/>
-                                    <Line StartPoint="184,36"
-                                          EndPoint="198,36"
-                                          Stroke="#60A5FA"
-                                          StrokeThickness="2"/>
-                                    <Ellipse Width="4"
-                                             Height="4"
-                                             Canvas.Left="196"
-                                             Canvas.Top="34"
-                                             Fill="#60A5FA"/>
-
-                                    <TextBlock Canvas.Left="16"
-                                               Canvas.Top="72"
-                                               Text="schemat jednokreskowy"
-                                               FontSize="10"
-                                               Foreground="#94A3B8"
-                                               FontFamily="Consolas, Cascadia Mono, monospace"/>
-                                </Canvas>
+                                <TextBlock Grid.Column="2"
+                                           Text="B"
+                                           FontSize="46"
+                                           FontWeight="SemiBold"
+                                           Foreground="#3B82F6"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 

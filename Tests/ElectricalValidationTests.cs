@@ -178,6 +178,43 @@ public class ElectricalValidationTests
     }
 
     [Fact]
+    public void ValidateProject_HighVoltageDrop_ShouldReturnWarning()
+    {
+        var project = new Project();
+        var symbols = new List<SymbolItem>
+        {
+            new SymbolItem
+            {
+                Id = "main",
+                Type = "Switch Disconnector"
+            },
+            new SymbolItem
+            {
+                Id = "test",
+                Label = "Obwód 1",
+                Type = "MCB",
+                PowerW = 3000,
+                Phase = "L1",
+                CableCrossSection = 1.5,
+                CableLength = 50,
+                CircuitType = "Gniazda",
+                RcdSymbolId = "rcd1"
+            },
+            new SymbolItem
+            {
+                Id = "rcd1",
+                Type = "RCD",
+                ProtectionType = "25A",
+                CableCrossSection = 0
+            }
+        };
+
+        var result = _service.ValidateProject(project, symbols);
+
+        Assert.Contains(result.Warnings, w => w.Code == "VOLTAGE_DROP" && w.SymbolId == "test");
+    }
+
+    [Fact]
     public void ValidateProject_ProtectionTooHighForCable_ShouldReturnError()
     {
         var project = new Project();
@@ -198,6 +235,39 @@ public class ElectricalValidationTests
     }
 
     [Fact]
+    public void ValidateProject_ProtectionMatchingCable_ShouldNotReturnProtectionMismatchError()
+    {
+        var project = new Project();
+        var symbols = new List<SymbolItem>
+        {
+            new SymbolItem
+            {
+                Id = "main",
+                Type = "Switch Disconnector"
+            },
+            new SymbolItem
+            {
+                Id = "mcb1",
+                Type = "MCB",
+                ProtectionType = "B16",
+                CableCrossSection = 2.5,
+                RcdSymbolId = "rcd1"
+            },
+            new SymbolItem
+            {
+                Id = "rcd1",
+                Type = "RCD",
+                ProtectionType = "25A",
+                CableCrossSection = 0
+            }
+        };
+
+        var result = _service.ValidateProject(project, symbols);
+
+        Assert.DoesNotContain(result.Errors, e => e.Code == "PROTECTION_MISMATCH");
+    }
+
+    [Fact]
     public void ValidateProject_HighPhaseImbalance_ShouldReturnWarning()
     {
         var project = new Project();
@@ -211,6 +281,23 @@ public class ElectricalValidationTests
         var result = _service.ValidateProject(project, symbols);
 
         Assert.Contains(result.Warnings, w => w.Code == "PHASE_IMBALANCE");
+    }
+
+    [Fact]
+    public void ValidateProject_BalancedPhases_ShouldNotReturnPhaseImbalanceWarning()
+    {
+        var project = new Project();
+        var symbols = new List<SymbolItem>
+        {
+            new SymbolItem { Id = "main", Type = "Switch Disconnector" },
+            new SymbolItem { PowerW = 1000, Phase = "L1" },
+            new SymbolItem { PowerW = 1000, Phase = "L2" },
+            new SymbolItem { PowerW = 1000, Phase = "L3" }
+        };
+
+        var result = _service.ValidateProject(project, symbols);
+
+        Assert.DoesNotContain(result.Warnings, w => w.Code == "PHASE_IMBALANCE");
     }
 
     [Fact]
@@ -242,6 +329,83 @@ public class ElectricalValidationTests
         var result = _service.ValidateProject(project, symbols);
 
         Assert.DoesNotContain(result.Warnings, w => w.Code == "NO_RCD_PROTECTION");
+    }
+
+    [Fact]
+    public void ValidateProject_RcdOverloadAndMainProtectionHigher_ShouldReturnWarning()
+    {
+        var project = new Project
+        {
+            PowerConfig = new PowerSupplyConfig
+            {
+                MainProtection = 63
+            }
+        };
+
+        var symbols = new List<SymbolItem>
+        {
+            new SymbolItem { Id = "rcd1", Type = "RCD", Label = "RCD-1", ProtectionType = "25A" },
+            new SymbolItem { Id = "mcb1", Type = "MCB", RcdSymbolId = "rcd1", ProtectionType = "B16" },
+            new SymbolItem { Id = "mcb2", Type = "MCB", RcdSymbolId = "rcd1", ProtectionType = "B16" }
+        };
+
+        var result = _service.ValidateProject(project, symbols);
+
+        Assert.Contains(result.Warnings, w => w.Code == "RCD_OVERLOAD");
+    }
+
+    [Fact]
+    public void ValidateProject_RcdOverloadButMainProtectionNotHigher_ShouldNotWarn()
+    {
+        var project = new Project
+        {
+            PowerConfig = new PowerSupplyConfig
+            {
+                MainProtection = 25
+            }
+        };
+
+        var symbols = new List<SymbolItem>
+        {
+            new SymbolItem { Id = "rcd1", Type = "RCD", Label = "RCD-1", ProtectionType = "25A" },
+            new SymbolItem { Id = "mcb1", Type = "MCB", RcdSymbolId = "rcd1", ProtectionType = "B16" },
+            new SymbolItem { Id = "mcb2", Type = "MCB", RcdSymbolId = "rcd1", ProtectionType = "B16" }
+        };
+
+        var result = _service.ValidateProject(project, symbols);
+
+        Assert.DoesNotContain(result.Warnings, w => w.Code == "RCD_OVERLOAD");
+    }
+
+    [Fact]
+    public void ValidateProject_WithoutMainBreaker_ShouldReturnWarning()
+    {
+        var project = new Project();
+        var symbols = new List<SymbolItem>
+        {
+            new SymbolItem { Id = "mcb1", Type = "MCB", RcdSymbolId = "rcd1" },
+            new SymbolItem { Id = "rcd1", Type = "RCD", ProtectionType = "25A" }
+        };
+
+        var result = _service.ValidateProject(project, symbols);
+
+        Assert.Contains(result.Warnings, w => w.Code == "NO_MAIN_BREAKER");
+    }
+
+    [Fact]
+    public void ValidateProject_WithMainBreaker_ShouldNotWarn()
+    {
+        var project = new Project();
+        var symbols = new List<SymbolItem>
+        {
+            new SymbolItem { Id = "main", Type = "Switch Disconnector" },
+            new SymbolItem { Id = "mcb1", Type = "MCB", RcdSymbolId = "rcd1" },
+            new SymbolItem { Id = "rcd1", Type = "RCD", ProtectionType = "25A" }
+        };
+
+        var result = _service.ValidateProject(project, symbols);
+
+        Assert.DoesNotContain(result.Warnings, w => w.Code == "NO_MAIN_BREAKER");
     }
 
     [Fact]

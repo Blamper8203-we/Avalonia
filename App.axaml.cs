@@ -130,7 +130,7 @@ public partial class App : Application
         services.AddSingleton<FileAssociationService>();
         services.AddSingleton<UndoRedoService>();
         services.AddSingleton<IModuleTypeService, ModuleTypeService>();
-        services.AddSingleton<IElectricalValidationService, ElectricalValidationService>();
+        services.AddValidationServices();
         services.AddSingleton<LicenseService>();
         services.AddSingleton<RecentProjectsService>();
         services.AddSingleton<SvgProcessor>();
