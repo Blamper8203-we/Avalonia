@@ -8,8 +8,10 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using DINBoard.Services;
+using DINBoard.Services.Pdf;
 using DINBoard.ViewModels;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace DINBoard;
@@ -18,7 +20,7 @@ public partial class App : Application
 {
     public IServiceProvider Services { get; private set; } = null!;
 
-    /// <summary>Główne okno aplikacji - dostępne dla dialogów</summary>
+    /// <summary>Główne okno aplikacji dostępne dla dialogów.</summary>
     public static MainWindow? MainWindowInstance { get; private set; }
 
     public override void Initialize()
@@ -40,14 +42,27 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var mainWindow = Services.GetRequiredService<MainWindow>();
+            var mainViewModel = Services.GetRequiredService<MainViewModel>();
+            var mainWindow = new MainWindow(mainViewModel);
+            var homeWindow = new HomeWindow(mainViewModel, mainWindow, Services.GetRequiredService<IDialogService>());
+            var fileAssociationService = Services.GetService<FileAssociationService>();
+            fileAssociationService?.EnsureDinboardAssociation();
 
             // Initialize DialogService with Window handle
             var dialogService = Services.GetRequiredService<IDialogService>();
-            dialogService.Initialize(mainWindow);
+            dialogService.Initialize(homeWindow);
 
             MainWindowInstance = mainWindow;
-            desktop.MainWindow = mainWindow;
+            desktop.MainWindow = homeWindow;
+
+            var startupProjectPath = TryGetStartupProjectPath(Program.StartupArgs);
+            if (!string.IsNullOrWhiteSpace(startupProjectPath))
+            {
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    await mainViewModel.Workspace.OpenRecentProjectAsync(startupProjectPath).ConfigureAwait(true);
+                });
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -94,69 +109,98 @@ public partial class App : Application
     private void ConfigureServices(IServiceCollection services)
     {
         // ViewModels
-        services.AddTransient<MainViewModel>();
-
-        // Views (Window)
-        services.AddTransient<MainWindow>();
+        services.AddSingleton<MainViewModel>(sp => new MainViewModel(new MainViewModelDeps(
+            sp.GetRequiredService<IProjectService>(),
+            sp.GetRequiredService<IDialogService>(),
+            sp.GetRequiredService<UndoRedoService>(),
+            sp.GetRequiredService<IModuleTypeService>(),
+            sp.GetRequiredService<SymbolImportService>(),
+            sp.GetRequiredService<ProjectPersistenceService>(),
+            sp.GetRequiredService<IElectricalValidationService>(),
+            sp.GetRequiredService<PdfExportService>(),
+            sp.GetRequiredService<BomExportService>(),
+            sp.GetRequiredService<LatexExportService>(),
+            sp.GetRequiredService<BusbarPlacementService>(),
+            sp.GetRequiredService<LicenseService>(),
+            sp.GetRequiredService<RecentProjectsService>())));
 
         // Core Services
         services.AddSingleton<IProjectService, ProjectService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<FileAssociationService>();
         services.AddSingleton<UndoRedoService>();
         services.AddSingleton<IModuleTypeService, ModuleTypeService>();
         services.AddSingleton<IElectricalValidationService, ElectricalValidationService>();
+        services.AddSingleton<LicenseService>();
+        services.AddSingleton<RecentProjectsService>();
         services.AddSingleton<SvgProcessor>();
         services.AddSingleton<PowerBusbarGenerator>();
         services.AddSingleton<SymbolParameterService>();
         services.AddTransient<SymbolImportService>();
         services.AddTransient<PdfExportService>();
         services.AddTransient<BomExportService>();
+        services.AddTransient<LatexExportService>();
         services.AddTransient<BusbarPlacementService>();
         services.AddTransient<ProjectPersistenceService>();
-        
+
         // Performance Monitoring
         services.AddSingleton<MemoryMonitorService>();
     }
+
+    private static string? TryGetStartupProjectPath(string[]? args)
+    {
+        if (args == null || args.Length == 0)
+        {
+            return null;
+        }
+
+        foreach (var rawArg in args)
+        {
+            if (string.IsNullOrWhiteSpace(rawArg))
+            {
+                continue;
+            }
+
+            if (rawArg.StartsWith("-", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string candidate = rawArg.Trim().Trim('"');
+            if (!File.Exists(candidate))
+            {
+                continue;
+            }
+
+            var extension = Path.GetExtension(candidate);
+            if (!extension.Equals(".dinboard", StringComparison.OrdinalIgnoreCase)
+                && !extension.Equals(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            return Path.GetFullPath(candidate);
+        }
+
+        return null;
+    }
+
     public void UpdateTheme(string themeName)
     {
         if (Application.Current == null) return;
 
-        // Base theme variant
         bool isDark = !string.Equals(themeName, "Jasny", StringComparison.OrdinalIgnoreCase);
         Application.Current.RequestedThemeVariant = isDark ? ThemeVariant.Dark : ThemeVariant.Light;
 
-        if (isDark)
+        if (isDark &&
+            Application.Current.Resources.ThemeDictionaries.TryGetValue(ThemeVariant.Dark, out var darkDict))
         {
-            // Update resources for specific dark variant
-            if (Application.Current.Resources.ThemeDictionaries.TryGetValue(ThemeVariant.Dark, out var darkDict))
-            {
-                switch (themeName)
-                {
-                    case "Ciemny (Granat)": // Navy (Old style)
-                        SetColor(darkDict, "AppBackground", Color.Parse("#111827"));
-                        SetColor(darkDict, "PanelBackground", Color.Parse("#1F2937"));
-                        SetColor(darkDict, "PanelBackgroundAlt", Color.Parse("#2D3748"));
-                        SetColor(darkDict, "PanelBorder", Color.Parse("#374151"));
-                        SetColor(darkDict, "ToolbarBackground", Color.Parse("#1F2937"));
-                        break;
-
-                    case "Ciemny (Czerń)": // OLED Black
-                        SetColor(darkDict, "AppBackground", Color.Parse("#000000"));
-                        SetColor(darkDict, "PanelBackground", Color.Parse("#121212"));
-                        SetColor(darkDict, "PanelBackgroundAlt", Color.Parse("#1E1E1E"));
-                        SetColor(darkDict, "PanelBorder", Color.Parse("#333333"));
-                        SetColor(darkDict, "ToolbarBackground", Color.Parse("#121212"));
-                        break;
-
-                    default: // Ciemny (Antracyt) - Default neutral
-                        SetColor(darkDict, "AppBackground", Color.Parse("#18191A"));
-                        SetColor(darkDict, "PanelBackground", Color.Parse("#242526"));
-                        SetColor(darkDict, "PanelBackgroundAlt", Color.Parse("#3A3B3C"));
-                        SetColor(darkDict, "PanelBorder", Color.Parse("#4E4F50"));
-                        SetColor(darkDict, "ToolbarBackground", Color.Parse("#242526"));
-                        break;
-                }
-            }
+            // Only the neutral dark theme remains available in the UI.
+            SetColor(darkDict, "AppBackground", Color.Parse("#18191A"));
+            SetColor(darkDict, "PanelBackground", Color.Parse("#242526"));
+            SetColor(darkDict, "PanelBackgroundAlt", Color.Parse("#3A3B3C"));
+            SetColor(darkDict, "PanelBorder", Color.Parse("#4E4F50"));
+            SetColor(darkDict, "ToolbarBackground", Color.Parse("#242526"));
         }
     }
 
@@ -182,4 +226,3 @@ public static class DragDropFormats
     public static readonly DataFormat<string> ModuleName = DataFormat.CreateStringApplicationFormat("DINBoard.ModuleName");
     public static readonly DataFormat<string> ModuleFilePath = DataFormat.CreateStringApplicationFormat("DINBoard.ModuleFilePath");
 }
-

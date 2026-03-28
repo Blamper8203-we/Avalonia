@@ -1,26 +1,31 @@
+using System;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Rendering.SceneGraph;
 using Avalonia.Skia;
-using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Messaging;
 using DINBoard.Models;
 using DINBoard.Services;
 using DINBoard.Services.Pdf;
+using DINBoard.ViewModels.Messages;
 using SkiaSharp;
-using System;
-using System.Linq;
 using E = DINBoard.Services.SchematicLayoutEngine;
 
 namespace DINBoard.Controls;
 
 /// <summary>
 /// Prosta kontrolka wektorowa podłączająca pipeline rysowania SkiaSharp pod klatki Avalonia.
-/// Nie wymaga specjalnych pakietów Nuget, wykorzystuje ICustomDrawOperation w standardowej pętli renderingu.
+/// Nie wymaga specjalnych pakietów NuGet, wykorzystuje ICustomDrawOperation w standardowej pętli renderingu.
 /// </summary>
 public class SkiaRenderControl : Control
 {
+    private static readonly object RenderFailureGate = new();
+    private static DateTime _lastRenderFailureNotificationUtc = DateTime.MinValue;
+    private static readonly TimeSpan RenderFailureNotificationCooldown = TimeSpan.FromSeconds(10);
+
     private SchematicLayout? _layoutData;
     private SKRect? _editingCellRect;
 
@@ -56,25 +61,92 @@ public class SkiaRenderControl : Control
     {
         base.Render(context);
 
-        if (_layoutData == null || _layoutData.IsEmpty) return;
+        if (_layoutData == null || _layoutData.IsEmpty)
+        {
+            return;
+        }
 
-        var drawOp = new SkiaDrawOperation(_layoutData, new Rect(0, 0, Bounds.Width, Bounds.Height), _editingCellRect, ShowGrid, ShowPageNumbers, ShowDinRailAxis);
+        var drawOp = new SkiaDrawOperation(
+            _layoutData,
+            new Rect(0, 0, Bounds.Width, Bounds.Height),
+            _editingCellRect,
+            ShowGrid,
+            ShowPageNumbers,
+            ShowDinRailAxis);
         context.Custom(drawOp);
     }
 
-    private class SkiaDrawOperation : ICustomDrawOperation
+    private static void ReportRenderFailure(Exception ex)
+    {
+        var reportPath = TryWriteRenderCrashReport(ex);
+        var reportSuffix = reportPath != null ? $" Raport: {reportPath}" : string.Empty;
+        AppLog.Error($"Błąd renderera schematu Skia.{reportSuffix}", ex);
+
+        if (!ShouldNotifyUserAboutRenderFailure())
+        {
+            return;
+        }
+
+        WeakReferenceMessenger.Default.Send(new ShowToastMessage(new ToastData(
+            "Błąd renderera",
+            "Nie udało się odświeżyć schematu. Szczegóły zapisano w logu aplikacji.",
+            ToastType.Error,
+            5000)));
+    }
+
+    private static bool ShouldNotifyUserAboutRenderFailure()
+    {
+        lock (RenderFailureGate)
+        {
+            var now = DateTime.UtcNow;
+            if (now - _lastRenderFailureNotificationUtc < RenderFailureNotificationCooldown)
+            {
+                return false;
+            }
+
+            _lastRenderFailureNotificationUtc = now;
+            return true;
+        }
+    }
+
+    private static string? TryWriteRenderCrashReport(Exception ex)
+    {
+        try
+        {
+            var logsDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "DINBoard",
+                "Logs");
+
+            Directory.CreateDirectory(logsDirectory);
+
+            var reportPath = Path.Combine(logsDirectory, "render-crash-latest.txt");
+            var reportContent =
+                $"Timestamp (UTC): {DateTime.UtcNow:O}{Environment.NewLine}" +
+                $"Control: {nameof(SkiaRenderControl)}{Environment.NewLine}{Environment.NewLine}" +
+                ex;
+
+            File.WriteAllText(reportPath, reportContent);
+            return reportPath;
+        }
+        catch (Exception writeEx)
+        {
+            AppLog.Warn("Nie udało się zapisać raportu błędu renderera.", writeEx);
+            return null;
+        }
+    }
+
+    private sealed class SkiaDrawOperation : ICustomDrawOperation
     {
         private readonly SchematicLayout _layout;
         private readonly SKRect? _editRect;
         private readonly bool _showGrid;
         private readonly bool _showPageNumbers;
         private readonly bool _showDinRailAxis;
-        
-        public Rect Bounds { get; }
 
-        public SkiaDrawOperation(SchematicLayout lay, Rect bounds, SKRect? editRect, bool showGrid, bool showPageNumbers, bool showDinRailAxis)
+        public SkiaDrawOperation(SchematicLayout layout, Rect bounds, SKRect? editRect, bool showGrid, bool showPageNumbers, bool showDinRailAxis)
         {
-            _layout = lay;
+            _layout = layout;
             Bounds = bounds;
             _editRect = editRect;
             _showGrid = showGrid;
@@ -82,41 +154,47 @@ public class SkiaRenderControl : Control
             _showDinRailAxis = showDinRailAxis;
         }
 
+        public Rect Bounds { get; }
+
         public bool HitTest(Point p) => false;
+
         public bool Equals(ICustomDrawOperation? other) => false;
-        public void Dispose() { }
+
+        public void Dispose()
+        {
+        }
 
         public void Render(ImmediateDrawingContext context)
         {
             try
             {
                 var leaseFeature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
-                if (leaseFeature == null) return;
+                if (leaseFeature == null)
+                {
+                    return;
+                }
 
                 using var lease = leaseFeature.Lease();
                 var skCanvas = lease.SkCanvas;
 
                 skCanvas.Save();
-                
-                for (int pg = 0; pg < _layout.TotalPages; pg++)
+
+                for (var pg = 0; pg < _layout.TotalPages; pg++)
                 {
-                    float yOff = (float)(pg * (E.PageH + E.PageGap));
-                    
-                    // Rysujemy szablon strony (białe tło, ramka, siatka)
+                    var yOff = (float)(pg * (E.PageH + E.PageGap));
+
                     PdfSingleLineDiagramService.DrawPageTemplate(skCanvas, yOff, _showGrid);
-                    
-                    // Rysujemy obwody (symbole, szyny, przewody)
                     PdfSingleLineDiagramService.DrawCircuitVectors(skCanvas, _layout, pg, yOff);
-                    
-                    // Rysujemy tabelę obwodów (Oznaczenie, Zabezp., Obwód, itd.)
                     PdfSingleLineDiagramService.DrawSkiaTable(skCanvas, _layout, pg, yOff);
-                    
-                    // Rysujemy tabelkę rysunkową (title block)
                     PdfSingleLineDiagramService.DrawSkiaTitleBlock(skCanvas, _layout, pg + 1, _layout.TotalPages, yOff, _showPageNumbers);
                 }
 
-                // Maskujemy edytowaną komórkę białym prostokątem — TextBox z warstwy Avalonia
-                // będzie widoczny pod spodem (bo Avalonia renderuje go PO naszym ICustomDrawOperation)
+                if (_showDinRailAxis)
+                {
+                    // Placeholder: the control keeps the flag for compatibility even though axis drawing
+                    // is currently handled by the Avalonia overlay layer.
+                }
+
                 if (_editRect.HasValue)
                 {
                     using var mask = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill };
@@ -127,8 +205,7 @@ public class SkiaRenderControl : Control
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[SkiaRenderControl] Crash w custom drawer (Avalonia): {ex}");
-                System.IO.File.WriteAllText("crash.txt", ex.ToString());
+                ReportRenderFailure(ex);
             }
         }
     }

@@ -46,3 +46,39 @@ Wait, Stop. Read this CAREFULLY. You are participating in a project that has suf
 - Do not mix pure refactorings with new feature development.
 
 **Failure to observe these rules constitutes a violation of the project's quality guidelines.**
+
+
+Project type:
+Desktop engineering software for electricians.
+
+Stack:
+C#, .NET 10, Avalonia UI, MVVM.
+
+Operating rules:
+- Prioritize correctness and stability over aggressive refactoring.
+- Keep changes small and explicit.
+- Preserve existing behavior by default.
+- Do not change electrical logic silently.
+- Do not degrade canvas performance or interaction behavior.
+- Avoid unnecessary allocations and expensive LINQ in hot paths.
+- Avoid blocking the UI thread.
+- Preserve serialization, project load/save behavior, and export behavior.
+- Preserve undo/redo correctness.
+
+Critical subsystems:
+- electrical calculations
+- validation
+- schematic layout
+- canvas rendering
+- drag and drop
+- snapping
+- undo/redo
+- PDF export
+- project persistence
+
+Expected response structure for substantial tasks:
+- Problem
+- Cause
+- Safe fix
+- Code
+- What to test

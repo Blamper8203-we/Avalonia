@@ -125,13 +125,21 @@ public partial class CircuitListViewModel : ObservableObject, IDisposable
 
     private bool IsTerminalBlockOrAux(SymbolItem item)
     {
-        var typeStr = item.Type?.ToLowerInvariant() ?? "";
-        return typeStr.Contains("złączk") || 
-               typeStr.Contains("listwa") ||
-               typeStr.Contains("rozdzielcz") ||
-               typeStr.Contains("styk") ||
-               typeStr.Contains("zasilacz") ||
-               typeStr.Contains("blok");
+        if (item.IsTerminalBlock) return true;
+
+        var searchable = $"{item.Type} {item.Label} {item.VisualPath}".ToLowerInvariant();
+        return searchable.Contains("złączk") ||
+               searchable.Contains("zlaczk") ||
+               searchable.Contains("zacisk") ||
+               searchable.Contains("terminal") ||
+               searchable.Contains("listwa") ||
+               searchable.Contains("listwy") ||
+               searchable.Contains("szyna") ||
+               searchable.Contains("busbar") ||
+               searchable.Contains("rozdzielcz") ||
+               searchable.Contains("styk") ||
+               searchable.Contains("zasilacz") ||
+               searchable.Contains("blok");
     }
 
     public void Dispose()

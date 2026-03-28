@@ -1,14 +1,17 @@
-# Jak Przyczynić Się Do DINBoard
+# Jak Wnosić Zmiany Do DINBoard
 
-Dziękujemy zainteresowania udziałem w projekcie DINBoard! Dokument ten zawiera wytyczne i najlepsze praktyki dla współtwórców projektu.
+Dziękujemy za współtworzenie DINBoard.
+
+To repozytorium zawiera zarówno zwykły kod aplikacji desktopowej, jak i
+wrażliwą logikę inżynierską, więc jakość zmian jest ważniejsza niż samo tempo.
 
 ## Spis Treści
 
 1. [Architektura Kodu](#architektura-kodu)
-2. [Wytyczne Pull Request](#wytyczne-pull-request)
+2. [Wytyczne Dla Pull Requestów](#wytyczne-dla-pull-requestów)
 3. [Styl Kodu](#styl-kodu)
-4. [Wymagania Testów](#wymagania-testów)
-5. [Standard Dokumentacji](#standard-dokumentacji)
+4. [Wymagania Dotyczące Testów](#wymagania-dotyczące-testów)
+5. [Standardy Dokumentacji](#standardy-dokumentacji)
 6. [Workflow Git](#workflow-git)
 7. [Typowe Wzorce](#typowe-wzorce)
 
@@ -16,149 +19,163 @@ Dziękujemy zainteresowania udziałem w projekcie DINBoard! Dokument ten zawiera
 
 ## Architektura Kodu
 
-### Zasada Pojedynczej Odpowiedzialności (SRP)
+### Zasada Pojedynczej Odpowiedzialności
 
-Każda klasa powinna mieć **jedną przyczynę do zmiany**. Jeśli piszesz więcej niż jedną odpowiedzialność, rozważ podzielenie.
+Każda klasa powinna mieć jedną wyraźną przyczynę do zmiany.
 
-**Limity Wielkości Klasy:**
-- **Maksimum 300 linii** na klasę
-- **Maksimum 50 linii** na metodę
-- Jeśli klasa przekracza te limity → **natychmiast refaktoruj**
+Jeśli zmiana dokłada drugi niezależny obowiązek, lepiej go wyodrębnić niż
+rozszerzać istniejącą klasę.
 
-**Praktyczna interpretacja (sygnalizacja):**
-- 🟢 **0-300 linii**: zdrowo
-- 🟡 **301-450 linii**: strefa ostrzegawcza, dodaj plan podziału w PR
-- 🔴 **451+ linii**: wymagany podział/refaktor przed dokładaniem odpowiedzialności
+### Pragmatyczne Limity Rozmiaru
 
-Jeśli 2+ odpowiedzi poniżej to "Nie", rozbij klasę przed merge:
-- Czy klasa nadal ma jedną przyczynę do zmiany?
-- Czy logikę da się testować unit testami bez zależności UI/plików?
-- Czy nowa logika nie powinna trafić do dedykowanego Service?
-- Czy DI jest zachowane (bez zbędnych `new` w View/ViewModel)?
+- cel: `<= 300` linii na klasę
+- strefa ostrzegawcza: `301-450` linii
+- refaktor wymagany przed dokładaniem kolejnej odpowiedzialności: `451+` linii
+- cel: `<= 50` linii na metodę tam, gdzie to praktyczne
 
-**Dobry Przykład:**
+Traktuj te liczby jako bezpieczniki, a nie jedyny miernik jakości.
+
+Zanim rozbudujesz dużą klasę, zapytaj:
+- czy ta klasa nadal ma jedną przyczynę do zmiany
+- czy jej logikę da się testować bez zależności od UI albo plików
+- czy nowa odpowiedzialność nie powinna trafić do osobnego `Service`
+- czy nie zwiększam sprzężenia przez nowe `new` w `View` albo `ViewModel`
+
+### Dobry Przykład
+
 ```csharp
-// ✅ DOBRZE - Skoncentrowana odpowiedzialność
-public partial class WireDrawingViewModel : ObservableObject
+// DOBRZE - skupiona odpowiedzialność
+public partial class ProjectWorkspaceViewModel : ObservableObject
 {
-    // Tylko logika rysowania przewodów
-    public void AddDrawingPoint(Point point) { }
-    public void StartDrawing() { }
-    public void FinishDrawing() { }
+    public async Task SaveProjectAsync()
+    {
+        // Tylko lifecycle projektu i obowiązki workspace
+    }
+
+    public async Task OpenProjectAsync()
+    {
+        // Tylko lifecycle projektu i obowiązki workspace
+    }
 }
 ```
 
-**Zły Przykład:**
+### Zły Przykład
+
 ```csharp
-// ❌ ŹLE - Za wiele odpowiedzialności
+// ŹLE - jeden koordynator zbiera niepowiązane obowiązki
 public partial class MainViewModel : ObservableObject
 {
-    // Zawiera: rysowanie, bilans mocy, walidacja, export, undo/redo...
-    public void DrawWire() { }
-    public void CalculatePowerBalance() { }
-    public void ValidateCircuit() { }
-    public void ExportPDF() { }
-    // ... 1000+ linii
+    public async Task OpenProjectAsync() { }
+    public async Task ExportPdfAsync() { }
+    public void RecalculatePhaseBalance() { }
+    public void ApplyCircuitEditPreset() { }
+    public void RebuildSchematicLayout() { }
 }
 ```
 
 ### Architektura Warstwowa
 
+```text
+Models/              -> Stan domeny i projektu
+|- SymbolItem.cs
+|- Circuit.cs
+`- Project.cs
+
+ViewModels/          -> Stan UI, komendy, orkiestracja
+|- MainViewModel.cs
+|- ProjectWorkspaceViewModel.cs
+|- PowerBalanceViewModel.cs
+`- LayoutViewModel.cs
+
+Views/               -> Tylko UI
+|- MainWindow.axaml
+|- Views/CircuitEditPanelView.axaml
+`- Views/ModulesPaletteView.axaml
+
+Services/            -> Logika współdzielona, domenowa, techniczna i infrastrukturalna
+|- PhaseDistributionCalculator.cs
+|- ProjectPersistenceService.cs
+|- CircuitEditFieldDefinitionProvider.cs
+`- CircuitEditValueApplier.cs
+
+Helpers/             -> Narzędzia pomocnicze
+|- LocalizationHelper.cs
+`- SvgHelper.cs
+
+Tests/               -> Pokrycie zachowania i regresji
+|- Tests/PowerBalanceViewModelTests.cs
+|- Tests/PhaseDistributionCalculatorTests.cs
+`- Tests/ViewModels/ProjectWorkspaceViewModelTests.cs
 ```
-Models/              → Dane (SymbolItem, WireConnection, Circuit)
-├─ SymbolItem.cs
-├─ WireConnection.cs
-└─ Project.cs
 
-ViewModels/          → Logika Aplikacji (Coordinator + Specjaliści)
-├─ MainViewModel.cs         (Koordynator - zarządza innymi VM)
-├─ WireDrawingViewModel.cs  (Logika rysowania)
-├─ PowerBalanceViewModel.cs (Obliczenia mocy)
-└─ ProjectThemeViewModel.cs (Ustawienia UI)
+### Najważniejsze Reguły Architektoniczne
 
-Views/               → Warstwa UI (XAML + Code-behind)
-├─ MainWindow.xaml
-├─ MainWindow.xaml.cs
-└─ ModulesPaletteView.xaml
-
-Services/            → Logika Biznesowa (Jeden Interface = Jedna Odpowiedzialność)
-├─ ISymbolImporter.cs       (Import symboli)
-├─ ISymbolValidator.cs      (Walidacja obwodów)
-├─ IPdfExporter.cs          (Export do PDF)
-└─ SymbolImportService.cs   (Implementacja)
-
-Helpers/             → Narzędzia i Stałe
-├─ SvgHelper.cs     (Operacje SVG)
-├─ PathHelper.cs    (Operacje na ścieżkach)
-└─ Constants.cs
-
-Tests/               → Testy Jednostkowe (Lustrzana struktura)
-├─ WireDrawingViewModelTests.cs
-├─ PowerBalanceViewModelTests.cs
-└─ SvgHelperTests.cs
-```
+- `Views` powinny pozostać wizualne.
+- `ViewModels` powinny orkiestrwać stan UI i komendy.
+- `Services` powinny trzymać logikę domenową, techniczną lub infrastrukturalną.
+- Nie przenoś logiki biznesowej do code-behind.
+- Nie zmieniaj po cichu wzorów elektrycznych, walidacji, persistence,
+  undo/redo ani danych eksportowanych.
 
 ---
 
-## Wytyczne Pull Request
+## Wytyczne Dla Pull Requestów
 
-### Checklist Przed Wysłaniem
+### Lista Kontrolna Przed Wysłaniem
 
-Każdy PR musi przejść WSZYSTKIE sprawdzenia przed połączeniem:
+Każdy nietrywialny PR powinien spełnić te warunki:
 
-```
-☐ Kod się kompiluje bez błędów
-☐ Brak nowych warningów (CS0*)
-☐ Wielkość klasy < 300 linii
-☐ Wielkość metody < 50 linii
-☐ Brak duplikacji kodu (zasada DRY)
-☐ Wszystkie publiczne metody mają dokumentację XML
-☐ Napisane testy jednostkowe dla nowych funkcji
-☐ Pokrycie testami > 70%
-☐ Komunikaty commitów są jasne i opisowe
-☐ Brak kodu debug'owania (Console.WriteLine, TODO dla hacków)
+```text
+[ ] Kod się buduje
+[ ] Uruchomiono odpowiednie testy
+[ ] Ryzykowna logika ma testy celowane albo testy charakteryzujące
+[ ] Brak cichej zmiany zachowania w obszarach krytycznych
+[ ] Wzrost klasy i metod jest uzasadniony
+[ ] Brak martwego kodu i debugowych pozostałości
+[ ] Dokumentacja została zaktualizowana, jeśli zmieniła się architektura lub workflow
 ```
 
 ### Format Tytułu PR
 
-```
+```text
 [KOMPONENT] Krótki opis
+```
 
 Przykłady:
-✅ [ViewModel] Wyodrębnianie WireDrawingViewModel z MainViewModel
-✅ [Services] Ekstrakcja narzędzi SVG do SvgHelper
-✅ [Tests] Dodanie testów jednostkowych dla WireDrawingViewModel
-❌ "fix"
-❌ "refactoring"
-❌ "update"
-```
+- `[ViewModel] Uproszczenie konstruktora MainViewModel`
+- `[Services] Ekstrakcja definicji pól z CircuitEditPanelView`
+- `[Tests] Dodanie pokrycia dla phase distribution planner`
+
+Unikaj tytułów typu:
+- `fix`
+- `update`
+- `refactoring`
 
 ### Szablon Opisu PR
 
 ```markdown
-## Co robi ten PR?
-Krótkie podsumowanie zmian.
+## Co
+Krótki opis zmiany.
 
-## Dlaczego?
-Motywacja i kontekst.
+## Dlaczego
+Problem, ryzyko albo motywacja.
 
-## Jak?
-Podejście techniczne i kluczowe zmiany.
+## Jak
+Najmniejsza bezpieczna zastosowana zmiana.
 
 ## Testowanie
-Jak sprawdzić, że zmiany działają poprawnie.
+Uruchomione testy i wykonane sprawdzenia ręczne.
 
-## Powiązane Problemy
-Zamyka #123
-
-## Zrzuty Ekranu (jeśli dotyczy)
-Zrzuty Przed/Po.
-
-## Checklist
-- [ ] Przechodzi wszystkie sprawdzenia
-- [ ] Dodane testy
-- [ ] Zaktualizowana dokumentacja
+## Uwagi
+Na co recenzent powinien zwrócić szczególną uwagę.
 ```
+
+### Oczekiwania Przy Review
+
+- utrzymuj zmiany w formie nadającej się do review
+- nie mieszaj dużego refaktoru z nową funkcją, jeśli nie jest to konieczne
+- wypisz ręczne kroki smoke testu, jeśli zmiana może wpływać na UI
+- jeśli zmiana dotyka krytycznego subsystemu, opisz obecne zachowanie i ryzyko
 
 ---
 
@@ -167,63 +184,55 @@ Zrzuty Przed/Po.
 ### Konwencje Nazewnictwa
 
 ```csharp
-// ✅ DOBRZE - Jasne, opisowe nazwy
-var symbolData = symbolService.GetSymbolData();
-void CalculatePhaseBalance(int voltage, string phase, bool includeDefaults);
-private List<string> availableThemes;
+// DOBRZE
+var projectMetadata = projectService.GetProjectMetadata();
+void RecalculatePhaseBalance(Project project, IReadOnlyList<SymbolItem> symbols);
+private readonly RecentProjectsService _recentProjectsService;
 private const double DefaultViewBoxWidth = 596;
 
-// ❌ ŹLE - Niejednoznaczne, kryptyczne
+// ŹLE
 var x = GetData();
 void Calculate(int a, string b, bool c);
-private List<string> lst;
-private const double VIEWBOX_W = 596; // Co to jest?
+private readonly RecentProjectsService _svc;
+private const double VIEWBOX_W = 596;
 ```
 
-### Stałe - Nigdy Nie Hardkoduj Liczb Magicznych
+### Unikaj Liczb Magicznych
 
 ```csharp
-// ❌ ŹLE
-var scale = Math.Min(w / 596, h / 842); // Co to są 596 i 842?
+// ŹLE
+var scale = Math.Min(width / 596, height / 842);
 
-// ✅ DOBRZE
-const double DefaultViewBoxWidth = 596;  // Szerokość viewBox bloku
-const double DefaultViewBoxHeight = 842; // Wysokość viewBox bloku
-var scale = Math.Min(w / DefaultViewBoxWidth, h / DefaultViewBoxHeight);
+// DOBRZE
+const double DefaultViewBoxWidth = 596;
+const double DefaultViewBoxHeight = 842;
+var scale = Math.Min(width / DefaultViewBoxWidth, height / DefaultViewBoxHeight);
 ```
 
-### Dokumentacja XML
+### Preferuj Nazwy Domenowe
 
-Każda publiczna klasa, metoda i właściwość musi mieć dokumentację XML:
+Używaj nazw oddających znaczenie w domenie:
+- `phaseLoad`
+- `lockedGroups`
+- `workspaceState`
+- `recentProjects`
+- `fieldDefinitions`
 
-```csharp
-/// <summary>
-/// Oblicza bilans faz i rozkład mocy na L1, L2, L3.
-/// </summary>
-/// <remarks>
-/// WAŻNE: Używa napięcia z CurrentProject.PowerConfig.
-/// Jeśli napięcie wynosi 0, prądy są ustawiane na 0.
-/// </remarks>
-/// <param name="symbols">Kolekcja symboli do analizy</param>
-/// <param name="project">Projekt zawierający konfigurację zasilania</param>
-/// <exception cref="ArgumentNullException">Jeśli symbols jest null</exception>
-public void RecalculatePhaseBalance(ObservableCollection<SymbolItem> symbols, Project? project)
-{
-}
-```
+Unikaj nazw typu:
+- `data`
+- `item2`
+- `temp`
+- `svc`
 
 ### Unikaj Magicznych Stringów
 
 ```csharp
-// ❌ ŹLE
+// ŹLE
 if (symbol.Type == "MCB" || symbol.Type == "RCD") { }
-if (theme == "Dark (Anthracite)") { }
 
-// ✅ DOBRZE
+// DOBRZE
 if (ModuleTypes.IsMcbOrRcd(symbol.Type)) { }
-if (theme == AvailableThemes.DarkAnthracite) { }
 
-// Lub użyj stałych:
 public static class ModuleTypes
 {
     public const string MCB = "MCB";
@@ -231,134 +240,144 @@ public static class ModuleTypes
 }
 ```
 
-### Unikaj Skomentowanego Kodu
+### Unikaj Zakomentowanego Kodu
 
-```csharp
-// ❌ ŹLE
-// public void OldMethod() { }
-// var x = 5; // może później?
-// if (someCondition) { }
+Usuń go.
 
-// ✅ DOBRZE
-// Użyj historii git aby znaleźć stary kod
-// Otwórz issue jeśli masz wątpliwości
-// Usuń go całkowicie
-```
+Jeśli nie jesteś pewien, skorzystaj z historii gita zamiast zostawiać martwy kod
+w pliku.
 
 ---
 
-## Wymagania Testów
+## Wymagania Dotyczące Testów
 
-### Minimum Testów Jednostkowych
+### Zasada Ogólna
 
-Każdy nowy ViewModel lub Service musi mieć co najmniej **5 testów jednostkowych**:
+Uruchamiaj najbardziej adekwatne testy dla subsystemu, którego dotyka zmiana.
+
+Jeśli zmiana jest szeroka albo ryzykowna, uruchom pełny zestaw:
+
+```powershell
+dotnet test Tests\Avalonia.Tests.csproj --no-restore
+```
+
+### Krytyczne Zestawy Testów
+
+Dla logiki elektrycznej:
+- `Tests/PhaseDistributionCalculatorTests.cs`
+- `Tests/ElectricalValidationTests.cs`
+- `Tests/PowerBalanceViewModelTests.cs`
+
+Dla schematu i canvas:
+- `Tests/SchematicLayoutEngineTests.cs`
+- `Tests/SchematicDragDropControllerTests.cs`
+- `Tests/SchematicViewModelTests.cs`
+
+Dla infrastruktury i bezpieczeństwa danych:
+- `Tests/UndoRedoTests.cs`
+- `Tests/ProjectRoundTripTests.cs`
+- `Tests/PdfExportTests.cs`
+
+### Minimum Dla Nowej Logiki
+
+Nowa logika powinna dostać celowane testy.
+
+Dla nowego `ViewModel` albo `Service` celuj co najmniej w pięć sensownych testów
+pokrywających:
+- inicjalizację
+- ścieżkę poprawną
+- niepoprawne albo brzegowe dane wejściowe
+- jeden przypadek podatny na regresję
+- jedną zmianę stanu albo scenariusz komendy
+
+### Przykładowy Kształt Testów
 
 ```csharp
-public class WireDrawingViewModelTests
+public class ProjectWorkspaceViewModelTests
 {
     [Fact]
-    public void Constructor_InitializesWithEmptyCollections()
+    public void Constructor_InitializesRecentProjects()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 
     [Fact]
-    public void StartDrawing_SetsDrawingState()
+    public async Task OpenProjectAsync_WithValidFile_LoadsProject()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 
     [Fact]
-    public void AddDrawingPoint_AddsPointToCollection()
+    public async Task SaveProjectAsync_WithoutCurrentProject_DoesNotThrow()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 
     [Fact]
-    public void CanFinishDrawing_RequiresAtLeastTwoPoints()
+    public async Task OpenRecentProjectAsync_WithMissingFile_ShowsExpectedHandling()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 
     [Fact]
-    public void CancelDrawing_ClearsPointsAndState()
+    public void UpdateLicenseState_RefreshesHomeScreenFlags()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 }
 ```
 
 ### Konwencja Nazewnictwa Testów
 
-```csharp
-// Format: [NazwaMetody]_[Scenariusz]_[OczekiwanyWynik]
-
-✅ Constructor_InitializesWithEmptyCollections()
-✅ AddDrawingPoint_WithValidPoint_AddsToCollection()
-✅ CalculateBalance_WithAsymmetricalLoad_ReturnsImbalancePercent()
-✅ GetColor_ForL1Phase_ReturnsCorrectHexCode()
-
-❌ Test1()
-❌ TestMethod()
-❌ Check()
+```text
+[Metoda]_[Scenariusz]_[OczekiwanyWynik]
 ```
 
-### Cel Pokrycia Testami
+Przykłady:
+- `Constructor_InitializesRecentProjects()`
+- `CreateBalancePlan_WithLockedGroups_ExcludesLockedLoads()`
+- `ApplyValue_WithRcdPreset_UpdatesExpectedFields()`
 
-- **Minimum 70%** pokrycia dla nowego kodu
-- **Testy jednostkowe** dla wszystkich publicznych metod
-- **Testy integracyjne** dla Services
+Unikaj nazw typu:
+- `Test1`
+- `Check`
+- `Works`
 
 ---
 
-## Standard Dokumentacji
+## Standardy Dokumentacji
 
 ### Co Dokumentować
 
-✅ **Dokumentuj:**
-- Publiczne klasy i metody
-- Złożone algorytmy lub logikę biznesową
-- Nie oczywiste decyzje projektowe
-- Wymagania konfiguracji
-- Znane ograniczenia lub obejścia
-
-❌ **Nie dokumentuj:**
-- Oczywiste właściwości getter/setter
-- Samowyjaśniające się nazwy metod
-- Proste implementacje pętli
-- Cechy języka
+- publiczne API z nieoczywistym zachowaniem
+- algorytmy wrażliwe domenowo
+- ważne ograniczenia projektowe
+- wymagania konfiguracyjne i workflow
+- znane ograniczenia albo tymczasowe kompromisy bezpieczeństwa
 
 ### Przykład Dokumentacji
 
 ```csharp
 /// <summary>
-/// Wykrywa nakładające się segmenty przewodów i stosuje offset 
-/// aby równoległe przewody się nie nakładały.
-/// Grupuje przewody z nakładającymi się segmentami i przypisuje symetryczne offsety.
+/// Tworzy plan bilansowania dla bieżącego zestawu symboli bez bezpośredniego
+/// uruchamiania animacji UI i bez mutowania stanu widoku.
 /// </summary>
 /// <remarks>
-/// Algorytm:
-/// 1. Zbierz wszystkie segmenty z każdego przewodu
-/// 2. Znajdź przewody z nakładającymi się segmentami (na podstawie odległości)
-/// 3. Pogrupuj nakładające się przewody w zestawy
-/// 4. Przypisz symetryczne offsety: -N/2, -N/2+1, ..., 0, ..., N/2-1, N/2
-///
-/// Wydajność: O(n²) gdzie n = liczba przewodów
+/// Ta metoda jest częścią pipeline'u bilansowania elektrycznego i powinna
+/// zachować obecny wynik elektryczny, jednocześnie oddzielając planowanie od
+/// wykonania.
 /// </remarks>
-public void RecalculateParallelOffsets()
+public BalancePlan CreateBalancePlan(
+    IReadOnlyList<SymbolItem> symbols,
+    Project project)
 {
 }
 ```
+
+### Utrzymuj Dokumentację W Prawdzie
+
+Jeśli zmieniasz:
+- granice architektury
+- workflow
+- liczbę testów
+- instrukcje setupu
+
+to zaktualizuj powiązane pliki markdown w tej samej zmianie, jeśli to praktyczne.
 
 ---
 
@@ -366,190 +385,126 @@ public void RecalculateParallelOffsets()
 
 ### Format Komunikatu Commitu
 
-```
+```text
 [KOMPONENT] Krótki opis
-
-Dłuższe wyjaśnienie dlaczego ta zmiana była niezbędna.
-Uwzględnij istotne szczegóły techniczne.
-
-Powiązane issues: #123, #456
 ```
 
-**Przykłady:**
+Przykłady:
+- `[Services] Ekstrakcja CircuitEditValueApplier`
+- `[ViewModel] Jawne wstrzyknięcie zależności workspace`
+- `[Docs] Aktualizacja quick start i code quality guides`
 
-```
-✅ [ViewModel] Wyodrębnianie WireDrawingViewModel z MainViewModel
+### Rozmiar Commitu
 
-Oddziela logikę rysowania przewodów do własnego ViewModel
-zgodnie z SRP. Poprawia testowalność i pozwala na ponowne
-użycie w innych projektach.
+- jeden commit powinien reprezentować jedną logiczną zmianę, tam gdzie to praktyczne
+- nie mieszaj refaktoru z nową funkcją, jeśli nie jest to wymagane
+- preferuj małe, czytelne sekwencje zamiast jednego wielkiego commitu
 
-Powiązane issues: #45
+Dobra sekwencja:
 
-✅ [Tests] Dodanie 8 testów dla WireDrawingViewModel
-
-Testy obejmują: inicjalizację, stan rysowania, dodawanie
-punktów, snap'owanie, i anulowanie.
-
-Naprawia: #89
-
-❌ "fix bug"
-❌ "update code"
-❌ "refactoring changes"
+```text
+1. [Tests] Dodanie pokrycia dla planowania bilansowania faz
+2. [Services] Ekstrakcja helpera wykonania bilansowania
+3. [Services] Przepięcie kalkulatora na helper
+4. [Docs] Aktualizacja notatek architektonicznych
 ```
 
-### Wielkość Commitu
+Zła sekwencja:
 
-- **Jeden commit = Jedna logiczna zmiana**
-- Trzymaj commity atomowe i poddawane recenzji
-- Nigdy nie mieszaj refaktoryzacji ze zmianami funkcji
-
-**Dobra sekwencja commitów:**
-```
-1. [Services] Ekstrakcja SvgHelper z GetDimensionsFromViewBox()
-2. [Services] Aktualizacja SymbolImportService aby używał SvgHelper
-3. [Services] Usunięcie duplikatów GetDimensionsFromViewBox()
-4. [Tests] Dodanie testów dla SvgHelper
-```
-
-**Źle:**
-```
-1. "refactoring everything, fix bugs, add features, update tests"
+```text
+1. refactor everything and fix bugs
 ```
 
 ### Nazewnictwo Gałęzi
 
-```
-feature/[opis]         → feature/wire-drawing-viewmodel
-bugfix/[opis]          → bugfix/null-reference-snap-service
-refactor/[opis]        → refactor/split-mainviewmodel
-docs/[opis]            → docs/add-contributing-guide
+Przykłady:
+- `feature/project-workspace-cleanup`
+- `bugfix/null-phase-indicator`
+- `refactor/phase-distribution-planner`
+- `docs/update-quick-start`
 
-✅ feature/split-mainviewmodel
-❌ f/split
-❌ new-feature
-```
+Unikaj:
+- `f/new`
+- `changes`
+- `test`
 
 ---
 
 ## Typowe Wzorce
 
-### Wstrzykiwanie Zależności (Dependency Injection)
+### Wstrzykiwanie Zależności
 
 ```csharp
-// ✅ DOBRZE - Luźne sprzężenie
+// DOBRZE
 public class MainViewModel
 {
-    private readonly ISymbolService _symbolService;
-    
-    public MainViewModel(ISymbolService symbolService)
+    private readonly RecentProjectsService _recentProjectsService;
+
+    public MainViewModel(RecentProjectsService recentProjectsService)
     {
-        _symbolService = symbolService;
+        _recentProjectsService = recentProjectsService;
     }
 }
 
-// W App.cs
-services.AddScoped<ISymbolService, SymbolService>();
-services.AddScoped<MainViewModel>();
-
-// ❌ ŹLE - Ciasne sprzężenie
+// ŹLE
 public class MainViewModel
 {
-    private var _service = new SymbolService(); // Trudne do testowania
+    private readonly RecentProjectsService _recentProjectsService =
+        new RecentProjectsService();
 }
 ```
 
-### Brak Duplikacji Kodu (DRY)
+### Wyciągaj Logikę Z Widoków
 
 ```csharp
-// ❌ ŹLE - Powielone w 3 miejscach
-// W SymbolImportService:
-var (w, h) = GetDimensionsFromViewBox(svg);
+// DOBRZE
+var fields = _fieldDefinitionProvider.GetDefinitions(symbol);
+_valueApplier.Apply(symbol, values);
 
-// W SchematicController:
-var (w, h) = GetDimensionsFromViewBox(svg);
-
-// W SvgModuleImporter:
-var (w, h) = GetDimensionsFromViewBox(svg);
-
-// ✅ DOBRZE - Scentralizowane w SvgHelper
-public static class SvgHelper
-{
-    public static (double Width, double Height) GetDimensionsFromViewBox(string svgContent)
-    {
-    }
-}
-
-// Używane wszędzie:
-var (w, h) = SvgHelper.GetDimensionsFromViewBox(svg);
+// ŹLE
+// Widok sam decyduje o polach, parsuje presety i mutuje obiekt domenowy
+// bezpośrednio w code-behind.
 ```
 
-### Wzorzec ObservableProperty
+### Oddzielaj Planowanie Od Wykonania
 
 ```csharp
-// ✅ DOBRZE - Używając MVVM Toolkit
+// DOBRZE
+var plan = _phaseDistributionCalculator.CreateBalancePlan(symbols, project);
+await _executionHelper.ApplyGreedyAssignmentsAsync(plan, delayMs);
+
+// ŹLE
+// Jedna duża metoda robi planowanie, animację zaznaczeń, opóźnienia i całą
+// logikę domenową inline.
+```
+
+### Observable Properties W MVVM Toolkit
+
+```csharp
 public partial class PowerBalanceViewModel : ObservableObject
 {
     [ObservableProperty]
-    private double _l1PowerW;
-    
-    [ObservableProperty]
     private double _phaseImbalancePercent;
-    
-    // Częściowa metoda dla logiki zmiany właściwości
-    partial void OnL1PowerWChanged(double oldValue, double newValue)
-    {
-        RecalculatePhaseBalance();
-    }
-}
 
-// ❌ ŹLE - Manualna implementacja właściwości
-public class PowerBalanceViewModel
-{
-    private double _l1PowerW;
-    public double L1PowerW
+    partial void OnPhaseImbalancePercentChanged(double oldValue, double newValue)
     {
-        get => _l1PowerW;
-        set
-        {
-            if (_l1PowerW != value)
-            {
-                _l1PowerW = value;
-                OnPropertyChanged(nameof(L1PowerW));
-                RecalculatePhaseBalance();
-            }
-        }
+        // Opcjonalna logika po zmianie
     }
 }
 ```
 
-### Bezpieczeństwo Null'a
+### Bezpieczeństwo Null
 
-```csharp
-// ✅ DOBRZE - Sprawdzenia pamiętające null
-if (_groupOverlaysContainer != null)
-{
-    _groupOverlayController = new GroupOverlayController(
-        ViewModel,
-        _groupOverlaysContainer,
-        () => ((App)Application.Current!).Services.GetRequiredService<IDialogService>(),
-        () => _groupOverlayController?.RegenerateOverlays());
-}
+Preferuj jawne sprawdzenia null i bezpieczne guard clause tam, gdzie kontenery
+UI albo stan projektu mogą nie istnieć.
 
-// ❌ ŹLE - Założenie że jest not-null
-var controller = new GroupOverlayController(
-    ViewModel,
-    _groupOverlaysContainer,  // Może być null!
-    ...
-);
-```
+Nie zakładaj, że opcjonalne referencje do widoku, stan bieżącego projektu albo
+ścieżki design-time zawsze są dostępne.
 
 ---
 
-## Pytania?
+## Pytania
 
-- Sprawdź istniejący kod dla wzorców
-- Pytaj w dyskusjach Pull Request
-- Odwołaj się do tego przewodnika w razie wątpliwości
-
-**Powodzenia! 🚀**
+- Najpierw sprawdź aktualne wzorce w istniejącym kodzie.
+- Przy większych zmianach użyj `AI_CONTEXT.md` i `ARCHITECTURE_MAP.md`.
+- Jeśli masz wątpliwości, wybierz mniejszą i bezpieczniejszą zmianę.

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -12,10 +13,16 @@ namespace DINBoard.Services.Pdf;
 
 /// <summary>
 /// Generuje schemat jednokreskowy (single-line diagram) do PDF
-/// â€” port SkiaSharp renderera z SingleLineDiagramControl.
+/// ASCII-safe port of the SkiaSharp renderer from SingleLineDiagramControl.
 /// </summary>
 public partial class PdfSingleLineDiagramService
 {
+    public sealed class RenderCache
+    {
+        internal SchematicLayout? Layout { get; set; }
+        internal Dictionary<int, byte[]?> FullPageImages { get; } = new();
+    }
+
     private readonly IModuleTypeService _moduleTypeService;
     private const float CircuitImageScale = 4.0f;
     private const float FullPageScale = 8.0f;
@@ -25,8 +32,10 @@ public partial class PdfSingleLineDiagramService
         _moduleTypeService = moduleTypeService ?? throw new ArgumentNullException(nameof(moduleTypeService));
     }
 
+    public RenderCache CreateRenderCache() => new();
+
     /// <summary>
-    /// Renderuje obwody elektryczne schematu (tylko czÄ™Ĺ›Ä‡ wektorowa - symbole i kable) do PNG
+    /// Renders the electrical circuits (vector-only: symbols and wires) to PNG.
     /// </summary>
     public static byte[]? RenderCircuitImage(SchematicLayout lay, int pageIndex, MainViewModel viewModel)
     {
@@ -34,12 +43,12 @@ public partial class PdfSingleLineDiagramService
 
         float pageW = (float)E.DrawW;
         
-        // Zmniejszamy wysokoĹ›Ä‡ by nie rysowaÄ‡ pustego terenu tabelki
+        // Reduce the height so we do not render the empty table area.
         float drawTop = (float)E.DrawT;
         float drawBottom = (float)E.YWireEnd + 50; 
         float actualH = drawBottom - drawTop;
 
-        float scale = CircuitImageScale; // wysoka rozdzielczoĹ›Ä‡ do eksportu
+        float scale = CircuitImageScale; // High export resolution.
         int imgW = Math.Max(1, (int)Math.Round(pageW * scale));
         int imgH = Math.Max(1, (int)Math.Round(actualH * scale));
 
@@ -48,7 +57,7 @@ public partial class PdfSingleLineDiagramService
         canvas.Clear(SKColors.Transparent);
         canvas.Scale(scale);
         
-        // PrzesuniÄ™cie lokalne - rysujemy od 0
+        // Local offset: render from 0.
         canvas.Translate(0, -drawTop);
 
         DrawCircuitVectors(canvas, lay, pageIndex);
@@ -57,8 +66,8 @@ public partial class PdfSingleLineDiagramService
     }
 
     /// <summary>
-    /// Rysuje same wektory obwodĂłw (urzÄ…dzenia, kable) na podanym pĹ‚Ăłtnie Skia.
-    /// UĹĽywane zarĂłwno do eksportu PNG (do PDF) jak i do podglÄ…du UI w SkiaRenderControl.
+    /// Draws only the circuit vectors (devices and wires) on the provided Skia canvas.
+    /// Used both for PNG export (for PDF) and for the UI preview in SkiaRenderControl.
     /// </summary>
     public static void DrawCircuitVectors(SKCanvas canvas, SchematicLayout lay, int pageIndex, float yOffset = 0, bool drawDinRailAxis = true)
     {
@@ -80,20 +89,29 @@ public partial class PdfSingleLineDiagramService
     }
 
     /// <summary>
-    /// Komponuje stronÄ™ schematu jednokreskowego w dokumencie QuestPDF (Hybryda: QuestPDF + Skia image).
+    /// Composes the single-line diagram page in QuestPDF (QuestPDF + Skia image hybrid).
     /// </summary>
-    public void ComposeSingleLineDiagram(IContainer container, MainViewModel viewModel)
+    public void ComposeSingleLineDiagram(IContainer container, MainViewModel viewModel, RenderCache? renderCache = null)
     {
         ArgumentNullException.ThrowIfNull(container);
         ArgumentNullException.ThrowIfNull(viewModel);
 
-        var engine = new SchematicLayoutEngine(_moduleTypeService);
-        var layout = engine.BuildLayout(viewModel.Symbols, viewModel.CurrentProject);
+        var layout = renderCache?.Layout;
+        if (layout == null)
+        {
+            var engine = new SchematicLayoutEngine(_moduleTypeService);
+            layout = engine.BuildLayout(viewModel.Symbols, viewModel.CurrentProject);
+
+            if (renderCache != null)
+            {
+                renderCache.Layout = layout;
+            }
+        }
         
         if (layout == null || layout.IsEmpty)
         {
             container.AlignCenter().AlignMiddle()
-                .Text("Brak obwodĂłw do wyĹ›wietlenia na schemacie jednokreskowym")
+                .Text("Brak obwod\u00F3w do wy\u015Bwietlenia na schemacie jednokreskowym")
                 .FontSize(10).FontColor("#6B7280");
             return;
         }
@@ -107,8 +125,22 @@ public partial class PdfSingleLineDiagramService
                     col.Item().PageBreak();
                 }
                 
-                // Renderujemy CAĹÄ„ stronÄ™ jako jeden obraz Skia
-                var fullPageImg = RenderFullPage(layout, pg, viewModel);
+                byte[]? fullPageImg;
+                if (renderCache != null && renderCache.FullPageImages.TryGetValue(pg, out var cachedImage))
+                {
+                    fullPageImg = cachedImage;
+                }
+                else
+                {
+                    // Render the full page as a single Skia image.
+                    fullPageImg = RenderFullPage(layout, pg, viewModel);
+
+                    if (renderCache != null)
+                    {
+                        renderCache.FullPageImages[pg] = fullPageImg;
+                    }
+                }
+
                 if (fullPageImg != null)
                 {
                     col.Item().Image(fullPageImg);
@@ -118,15 +150,15 @@ public partial class PdfSingleLineDiagramService
     }
 
     /// <summary>
-    /// Renderuje peĹ‚nÄ… stronÄ™ schematu (szablon + obwody + tabelÄ™ + tabelkÄ™ rysunkowÄ…) jako obraz PNG.
+    /// Renders the full diagram page (template + circuits + table + title block) as PNG.
     /// </summary>
     private static byte[] RenderFullPage(SchematicLayout lay, int pageIndex, MainViewModel viewModel)
     {
         float w = (float)E.PageW;
         float h = (float)E.PageH;
-        float scale = FullPageScale; // ZwiÄ™kszona rozdzielczoĹ›Ä‡ dla idealnej ostroĹ›ci PDF
+        float scale = FullPageScale; // Increased resolution for crisp PDF output.
 
-        // Zamieniamy szerokoĹ›Ä‡ z wysokoĹ›ciÄ…, by otrzymaÄ‡ obraz w orientacji pionowej (Portrait)
+        // Swap width and height to get portrait orientation.
         using var surface = CreatePortraitPageSurface(w, h, scale);
         var canvas = surface.Canvas;
         canvas.Clear(SKColors.White);

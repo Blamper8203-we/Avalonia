@@ -40,6 +40,7 @@ public partial class MainWindow : Window
     private Services.SchematicCanvasController? _canvasController;
     private Services.SchematicDragDropController? _dragDropController;
     private Services.SchematicDinRailController? _dinRailController;
+    private Views.ProjectPropertiesView? _projectPanel;
 
     // Skala szyny DIN - stosowana do importowanych modułów
     private double _dinRailScale = 0.20;
@@ -60,7 +61,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         CacheControls();
-        ViewModel = new MainViewModel();
+        ViewModel = new DesignMainViewModel();
         _symbolImportService = null;
         _projectService = null;
         _symbolParameterService = null;
@@ -96,6 +97,7 @@ public partial class MainWindow : Window
         {
             var undoRedoService = app.Services.GetRequiredService<UndoRedoService>();
             _moduleTypeService = app.Services.GetRequiredService<IModuleTypeService>();
+            var dialogService = app.Services.GetRequiredService<IDialogService>();
 
             _dragDropController = new Services.SchematicDragDropController(
                 ViewModel,
@@ -105,7 +107,8 @@ public partial class MainWindow : Window
                 _dragPreviewImage,
                 _symbolImportService,
                 undoRedoService,
-                _moduleTypeService)
+                _moduleTypeService,
+                dialogService)
             {
                 DinRailScale = _dinRailScale
             };
@@ -134,115 +137,147 @@ public partial class MainWindow : Window
         }
 
         this.KeyDown += MainWindow_KeyDown;
-
-        WeakReferenceMessenger.Default.Register<ThemeChangedMessage>(this, (_, message) =>
-        {
-            ApplyTheme(message.Value);
-        });
-
-        WeakReferenceMessenger.Default.Register<ShowToastMessage>(this, (r, message) =>
-        {
-            var toast = this.FindControl<Controls.ToastNotification>("Toast");
-            toast?.Show(message.Value.Title, message.Value.Message, message.Value.Type, message.Value.DurationMs);
-        });
-
-        WeakReferenceMessenger.Default.Register<SymbolsRefreshMessage>(this, (_, _) =>
-        {
-            foreach (var symbol in ViewModel.Symbols)
-            {
-                RefreshSymbolVisual(symbol);
-            }
-        });
-
-        WeakReferenceMessenger.Default.Register<DinRailRefreshMessage>(this, (_, _) =>
-        {
-            if (ViewModel.Schematic.IsDinRailVisible && !string.IsNullOrEmpty(ViewModel.Schematic.DinRailSvgContent) && _dinRailDisplay != null)
-            {
-                _dinRailDisplay.SetRail(ViewModel.Schematic.DinRailSvgContent, ViewModel.Schematic.DinRailSize.Width, ViewModel.Schematic.DinRailSize.Height);
-                Canvas.SetLeft(_dinRailDisplay, -ViewModel.Schematic.DinRailSize.Width / 2);
-                Canvas.SetTop(_dinRailDisplay, -ViewModel.Schematic.DinRailSize.Height / 2);
-            }
-
-            if (ViewModel.Schematic.DinRailScale > 0)
-            {
-                _dinRailScale = ViewModel.Schematic.DinRailScale;
-                if (_dragDropController != null)
-                {
-                    _dragDropController.DinRailScale = ViewModel.Schematic.DinRailScale;
-                    Services.AppLog.Info($"Przywrócono DinRailScale z projektu: {ViewModel.Schematic.DinRailScale:P0}");
-                }
-            }
-        });
-
-        // Initialize Canvas centering when window loads
         this.Loaded += InitializeCanvasTransform;
 
-        // Schemat jednokreskowy — DI + podpięcie ViewModel
-        if (_schematicDiagram != null)
+        RegisterMessengerHandlers();
+        InitializeSchematicDiagram();
+        InitializeProjectPanel();
+    }
+
+    private void RegisterMessengerHandlers()
+    {
+        WeakReferenceMessenger.Default.Register<ThemeChangedMessage>(this, (_, message) =>
+            OnThemeChangedMessage(message));
+
+        WeakReferenceMessenger.Default.Register<ShowToastMessage>(this, (_, message) =>
+            OnShowToastMessage(message));
+
+        WeakReferenceMessenger.Default.Register<SymbolsRefreshMessage>(this, (_, _) =>
+            OnSymbolsRefreshMessage());
+
+        WeakReferenceMessenger.Default.Register<DinRailRefreshMessage>(this, (_, _) =>
+            OnDinRailRefreshMessage());
+    }
+
+    private void OnThemeChangedMessage(ThemeChangedMessage message)
+    {
+        ApplyTheme(message.Value);
+    }
+
+    private void OnShowToastMessage(ShowToastMessage message)
+    {
+        var toast = this.FindControl<Controls.ToastNotification>("Toast");
+        toast?.Show(message.Value.Title, message.Value.Message, message.Value.Type, message.Value.DurationMs);
+    }
+
+    private void OnSymbolsRefreshMessage()
+    {
+        foreach (var symbol in ViewModel.Symbols)
+            RefreshSymbolVisual(symbol);
+    }
+
+    private void OnDinRailRefreshMessage()
+    {
+        if (ViewModel.Schematic.IsDinRailVisible && !string.IsNullOrEmpty(ViewModel.Schematic.DinRailSvgContent) && _dinRailDisplay != null)
         {
-            if (_moduleTypeService != null)
-                _schematicDiagram.SetModuleTypeService(_moduleTypeService);
-            _schematicDiagram.SetViewModel(ViewModel);
+            _dinRailDisplay.SetRail(ViewModel.Schematic.DinRailSvgContent, ViewModel.Schematic.DinRailSize.Width, ViewModel.Schematic.DinRailSize.Height);
+            Canvas.SetLeft(_dinRailDisplay, -ViewModel.Schematic.DinRailSize.Width / 2);
+            Canvas.SetTop(_dinRailDisplay, -ViewModel.Schematic.DinRailSize.Height / 2);
+        }
+        else if (_dinRailDisplay != null)
+        {
+            // Jawne czyszczenie — bez tego stara szyna DIN z poprzedniego projektu
+            // pozostaje widoczna po przejściu do nowego/pustego projektu
+            _dinRailDisplay.SvgContent = null;
+            _dinRailDisplay.Width = 0;
+            _dinRailDisplay.Height = 0;
         }
 
-        var projectPanel = this.FindControl<Views.ProjectPropertiesView>("ProjectPanel");
-        if (projectPanel != null)
+        if (ViewModel.Schematic.DinRailScale > 0)
         {
-            projectPanel.PropertiesChanged += (s, e) =>
+            _dinRailScale = ViewModel.Schematic.DinRailScale;
+            if (_dragDropController != null)
+            {
+                _dragDropController.DinRailScale = ViewModel.Schematic.DinRailScale;
+                Services.AppLog.Info($"Przywrócono DinRailScale z projektu: {ViewModel.Schematic.DinRailScale:P0}");
+            }
+        }
+    }
+
+    private void InitializeSchematicDiagram()
+    {
+        if (_schematicDiagram == null) return;
+
+        if (_moduleTypeService != null)
+            _schematicDiagram.SetModuleTypeService(_moduleTypeService);
+        _schematicDiagram.SetViewModel(ViewModel);
+    }
+
+    private void InitializeProjectPanel()
+    {
+        _projectPanel = this.FindControl<Views.ProjectPropertiesView>("ProjectPanel");
+        if (_projectPanel != null)
+        {
+            _projectPanel.PropertiesChanged += (s, e) =>
             {
                 if (ViewModel.Schematic.IsSheet2Active)
-                {
                     _schematicDiagram?.Rebuild();
-                }
             };
         }
 
-        ViewModel.Schematic.PropertyChanged += (s, e) =>
+        ViewModel.Schematic.PropertyChanged += OnSchematicPropertyChanged;
+    }
+
+    private void OnSchematicPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SchematicViewModel.IsSheet2Active))
         {
-            if (e.PropertyName == nameof(SchematicViewModel.IsSheet2Active))
+            if (ViewModel.Schematic.IsSheet2Active)
             {
-                if (ViewModel.Schematic.IsSheet2Active)
+                _schematicDiagram?.Rebuild();
+
+                if (_projectPanel != null && ViewModel.CurrentProject != null)
                 {
-                    _schematicDiagram?.Rebuild();
-                    
-                    // Załaduj dane do formularza przy wejściu do arkusza 2
-                    if (projectPanel != null && ViewModel.CurrentProject != null)
-                    {
-                        ViewModel.CurrentProject.Metadata ??= new ProjectMetadata();
-                        projectPanel.LoadMetadata(ViewModel.CurrentProject.Metadata);
-                    }
-                }
-                else
-                {
-                    // Zapis at the end is mostly a fallback now, as we save on TextChanged
-                    if (projectPanel != null && ViewModel.CurrentProject != null)
-                    {
-                        ViewModel.CurrentProject.Metadata ??= new ProjectMetadata();
-                        projectPanel.SaveMetadata(ViewModel.CurrentProject.Metadata);
-                    }
+                    ViewModel.CurrentProject.Metadata ??= new ProjectMetadata();
+                    _projectPanel.LoadMetadata(ViewModel.CurrentProject.Metadata);
                 }
             }
-            else if (e.PropertyName == nameof(SchematicViewModel.IsSingleLineLightTheme))
+            else
             {
-                if (_schematicDiagram == null) return;
-
-                var isLight = ViewModel.Schematic.IsSingleLineLightTheme;
-                _schematicDiagram.IsLightTheme = isLight;
-
-                var icon = this.FindControl<Material.Icons.Avalonia.MaterialIcon>("SchematicThemeIcon");
-                var label = this.FindControl<Avalonia.Controls.TextBlock>("SchematicThemeLabel");
-                if (isLight)
+                if (_projectPanel != null && ViewModel.CurrentProject != null)
                 {
-                    if (icon != null) icon.Kind = Material.Icons.MaterialIconKind.WeatherNight;
-                    if (label != null) label.Text = "Ciemny";
-                }
-                else
-                {
-                    if (icon != null) icon.Kind = Material.Icons.MaterialIconKind.WeatherSunny;
-                    if (label != null) label.Text = "Jasny";
+                    ViewModel.CurrentProject.Metadata ??= new ProjectMetadata();
+                    _projectPanel.SaveMetadata(ViewModel.CurrentProject.Metadata);
                 }
             }
-        };
+        }
+        else if (e.PropertyName == nameof(SchematicViewModel.IsSingleLineLightTheme))
+        {
+            if (_schematicDiagram == null) return;
+
+            var isLight = ViewModel.Schematic.IsSingleLineLightTheme;
+            _schematicDiagram.IsLightTheme = isLight;
+
+            var icon = this.FindControl<Material.Icons.Avalonia.MaterialIcon>("SchematicThemeIcon");
+            var label = this.FindControl<Avalonia.Controls.TextBlock>("SchematicThemeLabel");
+            if (isLight)
+            {
+                if (icon != null) icon.Kind = Material.Icons.MaterialIconKind.WeatherNight;
+                if (label != null) label.Text = "Ciemny";
+            }
+            else
+            {
+                if (icon != null) icon.Kind = Material.Icons.MaterialIconKind.WeatherSunny;
+                if (label != null) label.Text = "Jasny";
+            }
+        }
+        else if (e.PropertyName == nameof(SchematicViewModel.IsSheet4Active))
+        {
+            if (ViewModel.Schematic.IsSheet4Active)
+            {
+                _ = ViewModel.Exporter.EnsurePdfPreviewAsync();
+            }
+        }
     }
 
     private void OnCircuitWiringDiagramLoaded(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
@@ -369,6 +404,12 @@ public partial class MainWindow : Window
     private void BtnDinRail_Click(object? sender, RoutedEventArgs e)
     {
         _ = _dinRailController?.ShowAndGenerateAsync();
+    }
+
+    private async void BtnHelp_Click(object? sender, RoutedEventArgs e)
+    {
+        var dialog = new DINBoard.Dialogs.HelpDialog();
+        await dialog.ShowDialog(this);
     }
 
 

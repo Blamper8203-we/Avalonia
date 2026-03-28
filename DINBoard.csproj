@@ -10,6 +10,7 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <RootNamespace>DINBoard</RootNamespace>
     <AssemblyName>DINBoard</AssemblyName>
+    <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**;Benchmarks\**</DefaultItemExcludes>
     <NoWarn>CA1305;CA2007</NoWarn>
@@ -60,6 +61,11 @@
       <Link>Assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\image.png" />
+    <AvaloniaResource Include="Assets\app_icon.ico" />
   </ItemGroup>
 
 

@@ -89,6 +89,28 @@ public class CircuitListViewModelTests
     }
 
     [Fact]
+    public void IsCircuitElement_WhenModuleIsDinBusbar12P_ReturnsFalse()
+    {
+        // Arrange
+        var busbar = new SymbolItem
+        {
+            Type = "Listwy",
+            Label = "Szyna pradowa 12P",
+            VisualPath = "modules/szyna_pradowa_12p.svg"
+        };
+        _moduleTypeServiceMock.Setup(m => m.IsPhaseIndicator(busbar)).Returns(false);
+        _moduleTypeServiceMock.Setup(m => m.IsRcd(busbar)).Returns(false);
+
+        var viewModel = new CircuitListViewModel(_symbols, _moduleTypeServiceMock.Object);
+
+        // Act
+        var result = viewModel.IsCircuitElement(busbar);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
     public void RefreshList_SortsCircuitsByXCoordinateLinearly()
     {
         // Arrange

@@ -217,8 +217,8 @@
     <sys:String x:Key="SectionDocumentData">Dane dokumentu</sys:String>
     <sys:String x:Key="LabelDocNumber">Numer rysunku:</sys:String>
     <sys:String x:Key="WatermarkDocNumber">np. E-SCH-001</sys:String>
-    <sys:String x:Key="LabelDocAuthor">Projektant:</sys:String>
-    <sys:String x:Key="WatermarkDocAuthor">inż. Anna Nowak</sys:String>
+    <sys:String x:Key="LabelDocAuthor">Autor dokumentacji:</sys:String>
+    <sys:String x:Key="WatermarkDocAuthor">np. Jan Kowalski</sys:String>
     <sys:String x:Key="LabelDocDesignerId">Nr uprawnień:</sys:String>
     <sys:String x:Key="WatermarkDocDesignerId">np. MAZ/1234/PWBE/19</sys:String>
     <sys:String x:Key="LabelDocRevision">Rewizja:</sys:String>
@@ -232,7 +232,7 @@
     <sys:String x:Key="ErrorInvalidFile">Błąd wczytywania: nieprawidłowy plik</sys:String>
     
     <!-- Empty State -->
-    <sys:String x:Key="EmptyStateTitle">Wygeneruj szynę DIN aby rozpocząć projektowanie</sys:String>
+    <sys:String x:Key="EmptyStateTitle">Wygeneruj szyne DIN aby rozpoczac prace</sys:String>
     <sys:String x:Key="EmptyStateHint">Kliknij przycisk "Szyna DIN" na pasku narzędzi</sys:String>
     
     <!-- Status Bar -->

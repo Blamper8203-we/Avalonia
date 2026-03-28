@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using DINBoard.Services;
+using DINBoard.Services.Pdf;
 using DINBoard.ViewModels;
 using DINBoard.Models;
 
@@ -15,6 +16,39 @@ namespace Avalonia.Tests;
 /// </summary>
 public class MainViewModelTests
 {
+    [Fact]
+    public void Constructor_DefaultCtor_ShouldInitializeChildViewModels()
+    {
+        var vm = CreateTestViewModel();
+
+        Assert.NotNull(vm.Validation);
+        Assert.NotNull(vm.Schematic);
+        Assert.NotNull(vm.CircuitList);
+        Assert.NotNull(vm.Layout);
+        Assert.NotNull(vm.Exporter);
+        Assert.NotNull(vm.Workspace);
+        Assert.NotNull(vm.ModuleManager);
+        Assert.NotNull(vm.RecentProjects);
+        Assert.NotNull(vm.License);
+    }
+
+    [Fact]
+    public void Constructor_RuntimeCtor_ShouldInitializeRuntimeState()
+    {
+        var vm = CreateTestViewModelWithServices();
+
+        Assert.NotNull(vm.Validation);
+        Assert.NotNull(vm.Schematic);
+        Assert.NotNull(vm.CircuitList);
+        Assert.NotNull(vm.Layout);
+        Assert.NotNull(vm.Exporter);
+        Assert.NotNull(vm.Workspace);
+        Assert.NotNull(vm.ModuleManager);
+        Assert.NotNull(vm.CurrentProject);
+        Assert.Equal("Nowy projekt", vm.CurrentProject!.Name);
+        Assert.False(vm.HasUnsavedChanges);
+    }
+
     [Fact]
     public void RecalculateModuleNumbers_ShouldAssignZeroToRcd()
     {
@@ -460,7 +494,7 @@ public class MainViewModelTests
     public void DuplicateSelectedCommand_WhenNoMarkedSelection_ShouldCloneSelectedSymbol()
     {
         // Arrange
-        var vm = CreateTestViewModel();
+        var vm = CreateTestViewModelWithServices();
         var selected = new SymbolItem { Id = "single", Type = "MCB", X = 10, Y = 20, Width = 30, Height = 20 };
         vm.Symbols.Add(selected);
         vm.SelectedSymbol = selected;
@@ -478,6 +512,7 @@ public class MainViewModelTests
         Assert.NotNull(vm.SelectedSymbol);
         Assert.Equal(clone.Id, vm.SelectedSymbol!.Id);
         Assert.Contains("Skopiowano 1", vm.StatusMessage);
+        Assert.True(vm.HasUnsavedChanges);
     }
 
     [Fact]
@@ -500,7 +535,7 @@ public class MainViewModelTests
     public void DuplicateSelectedCommand_ShouldCloneSelectedSymbolsWithGroupOffset()
     {
         // Arrange
-        var vm = CreateTestViewModel();
+        var vm = CreateTestViewModelWithServices();
         var first = new SymbolItem { Id = "s1", Type = "MCB", Group = "G1", X = 10, Y = 20, Width = 30, Height = 20, IsSelected = true };
         var second = new SymbolItem { Id = "s2", Type = "MCB", Group = "G1", X = 60, Y = 20, Width = 20, Height = 20, IsSelected = true };
 
@@ -525,13 +560,14 @@ public class MainViewModelTests
         Assert.NotNull(vm.SelectedSymbol);
         Assert.True(vm.SelectedSymbol!.IsSelected);
         Assert.Contains("Skopiowano 2", vm.StatusMessage);
+        Assert.True(vm.HasUnsavedChanges);
     }
 
     [Fact]
     public void DeleteSelectedCommand_WhenNoMarkedSelection_ShouldRemoveSelectedSymbolOnly()
     {
         // Arrange
-        var vm = CreateTestViewModel();
+        var vm = CreateTestViewModelWithServices();
         var selected = new SymbolItem { Id = "sel", Type = "MCB", X = 0, Y = 0 };
         var other = new SymbolItem { Id = "other", Type = "MCB", X = 50, Y = 0 };
         vm.Symbols.Add(selected);
@@ -545,13 +581,14 @@ public class MainViewModelTests
         Assert.DoesNotContain(selected, vm.Symbols);
         Assert.Contains(other, vm.Symbols);
         Assert.Null(vm.SelectedSymbol);
+        Assert.True(vm.HasUnsavedChanges);
     }
 
     [Fact]
     public void DeleteSelectedCommand_WhenMarkedSelectionExists_ShouldRemoveAllMarked()
     {
         // Arrange
-        var vm = CreateTestViewModel();
+        var vm = CreateTestViewModelWithServices();
         var first = new SymbolItem { Id = "s1", Type = "MCB", X = 0, Y = 0, IsSelected = true };
         var second = new SymbolItem { Id = "s2", Type = "MCB", X = 20, Y = 0, IsSelected = true };
         var remaining = new SymbolItem { Id = "s3", Type = "MCB", X = 40, Y = 0 };
@@ -568,6 +605,7 @@ public class MainViewModelTests
         Assert.DoesNotContain(second, vm.Symbols);
         Assert.Contains(remaining, vm.Symbols);
         Assert.Null(vm.SelectedSymbol);
+        Assert.True(vm.HasUnsavedChanges);
     }
 
     [Fact]
@@ -603,10 +641,13 @@ public class MainViewModelTests
         var validationService = new ElectricalValidationService();
         var pdfExportService = new PdfExportService(moduleTypeService, validationService, symbolImportService, new SvgProcessor());
         var bomExportService = new BomExportService(moduleTypeService);
+        var latexExportService = new LatexExportService(moduleTypeService, validationService);
         var busbarGenerator = new PowerBusbarGenerator();
         var busbarPlacementService = new BusbarPlacementService(symbolImportService, projectService, busbarGenerator);
+        var licenseService = new LicenseService();
+        var recentProjectsService = new RecentProjectsService();
 
-        return new MainViewModel(
+        return new MainViewModel(new MainViewModelDeps(
             projectService,
             dialogService,
             undoRedoService,
@@ -616,7 +657,10 @@ public class MainViewModelTests
             validationService,
             pdfExportService,
             bomExportService,
-            busbarPlacementService);
+            latexExportService,
+            busbarPlacementService,
+            licenseService,
+            recentProjectsService));
     }
 
     private sealed class TestDialogService : IDialogService

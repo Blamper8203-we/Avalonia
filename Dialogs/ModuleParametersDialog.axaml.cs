@@ -15,10 +15,7 @@ public partial class ModuleParametersDialog : Window
         InitializeComponent();
     }
 
-    private void InitializeComponent()
-    {
-        global::Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
+
 
     public ModuleParametersDialog(Dictionary<string, string> currentParameters) : this()
     {
@@ -74,7 +71,7 @@ public partial class ModuleParametersDialog : Window
         var textBox = new TextBox
         {
             Text = value,
-            Watermark = $"Wpisz wartość dla {labelText}"
+            Watermark = $"Wpisz wartoĹ›Ä‡ dla {labelText}"
         };
 
         _inputs[key] = textBox;

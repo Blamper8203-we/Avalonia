@@ -62,46 +62,8 @@ public partial class PdfSingleLineDiagramService
     // ETYKIETY KABLI PRZY PRZEWODACH
     static void DrawCableLabels(SKCanvas c, SchematicLayout lay, int pageIndex, float yo)
     {
-        var devs = lay.Devices.Where(d => d.Page == pageIndex).ToList();
-        foreach (var d in devs)
-        {
-            if (d.Children.Count > 0)
-            {
-                foreach (var ch in d.Children)
-                {
-                    DrawSingleCableLabel(c, ch, yo);
-                }
-            }
-            else if (d.NodeType == SchematicNodeType.MCB)
-            {
-                DrawSingleCableLabel(c, d, yo);
-            }
-        }
+        // Wyłączone na życzenie UX:
+        // pionowe etykiety przekroju/typu kabla przy przewodach nie są rysowane.
     }
 
-    static void DrawSingleCableLabel(SKCanvas c, SchematicNode n, float yo)
-    {
-        string spec = n.CableSpec ?? "";
-        string cableType = n.CableType ?? "";
-        if (string.IsNullOrEmpty(spec) && string.IsNullOrEmpty(cableType)) return;
-
-        string label = !string.IsNullOrEmpty(spec) ? spec : cableType;
-        float cx = (float)n.X + NW / 2;
-        float mcbBottom = (float)n.Y + NH + 8;
-
-        using var font = new SKFont(
-            SKTypeface.FromFamilyName(
-                "Segoe UI",
-                SKFontStyleWeight.Bold,
-                SKFontStyleWidth.Normal,
-                SKFontStyleSlant.Upright),
-            8.5f);
-        using var paint = new SKPaint { Color = CTxtDes, IsAntialias = true };
-
-        c.Save();
-        c.Translate(cx + 8, mcbBottom + 10);
-        c.RotateDegrees(-90);
-        c.DrawText(label, 0, 0, SKTextAlign.Right, font, paint);
-        c.Restore();
-    }
 }

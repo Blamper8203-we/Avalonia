@@ -22,10 +22,13 @@ public class LayoutViewModelTests
         var validationService = new DINBoard.Services.ElectricalValidationService();
         var pdfExportService = new DINBoard.Services.PdfExportService(typeService, validationService, importService, new DINBoard.Services.SvgProcessor());
         var bomExportService = new DINBoard.Services.BomExportService(typeService);
+        var latexExportService = new DINBoard.Services.Pdf.LatexExportService(typeService, validationService);
         var busbarGenerator = new DINBoard.Services.PowerBusbarGenerator();
         var busbarPlacementService = new DINBoard.Services.BusbarPlacementService(importService, projectService, busbarGenerator);
+        var licenseService = new DINBoard.Services.LicenseService();
+        var recentProjectsService = new DINBoard.Services.RecentProjectsService();
         
-        return new MainViewModel(projectService, dialogService, undoRedoService, typeService, importService, persistenceService, validationService, pdfExportService, bomExportService, busbarPlacementService);
+        return new MainViewModel(new MainViewModelDeps(projectService, dialogService, undoRedoService, typeService, importService, persistenceService, validationService, pdfExportService, bomExportService, latexExportService, busbarPlacementService, licenseService, recentProjectsService));
     }
 
     [Fact]

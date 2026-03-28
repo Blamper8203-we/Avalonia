@@ -19,17 +19,15 @@ public class ProjectThemeViewModelTests
     }
 
     [Fact]
-    public void AvailableThemes_ContainsFourThemes()
+    public void AvailableThemes_ContainsTwoThemes()
     {
         // Arrange & Act
         var vm = new ProjectThemeViewModel();
 
         // Assert
-        Assert.Equal(4, vm.AvailableThemes.Count);
+        Assert.Equal(2, vm.AvailableThemes.Count);
         Assert.Contains("Jasny", vm.AvailableThemes);
         Assert.Contains("Ciemny (Antracyt)", vm.AvailableThemes);
-        Assert.Contains("Ciemny (Granat)", vm.AvailableThemes);
-        Assert.Contains("Ciemny (Czerń)", vm.AvailableThemes);
     }
 
     [Fact]

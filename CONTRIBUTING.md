@@ -1,6 +1,10 @@
 # Contributing to DINBoard
 
-Thank you for your interest in contributing to DINBoard! This document provides guidelines and best practices for contributing to this project.
+Thank you for contributing to DINBoard.
+
+This repository contains both ordinary desktop application code and
+domain-sensitive engineering logic, so contribution quality matters more than
+raw speed.
 
 ## Table of Contents
 
@@ -16,87 +20,103 @@ Thank you for your interest in contributing to DINBoard! This document provides 
 
 ## Code Architecture
 
-### Single Responsibility Principle (SRP)
+### Single Responsibility Principle
 
-Every class should have **one reason to change**. If you're writing more than one responsibility, consider splitting it.
+Each class should have one clear reason to change.
 
-**Class Size Limits:**
-- **Maximum 300 lines** per class
-- **Maximum 50 lines** per method
-- If a class exceeds these limits → **refactor immediately**
+If a change introduces a second concern, prefer extracting it instead of making
+an existing class absorb more responsibility.
 
-**Pragmatic interpretation (traffic light):**
-- 🟢 **0-300 lines**: healthy
-- 🟡 **301-450 lines**: warning zone, add split plan in PR
-- 🔴 **451+ lines**: split/refactor required before adding responsibilities
+### Pragmatic Class Size Limits
 
-If 2+ answers below are "No", split before merge:
-- Does this class still have one reason to change?
-- Can core logic be unit-tested without UI/file-system dependencies?
-- Does new logic belong in a dedicated Service instead?
-- Is DI preserved (no new unnecessary `new` in View/ViewModel)?
+- target: `<= 300` lines per class
+- warning zone: `301-450` lines
+- refactor required before adding more responsibility: `451+` lines
+- target: `<= 50` lines per method where practical
 
-**Good Example:**
+Treat those numbers as guardrails, not as the only quality metric.
+
+Before growing a large class, ask:
+- does this class still have one reason to change
+- can I test its core logic without UI or file-system dependencies
+- did I add a concern that belongs in a dedicated Service
+- did I increase coupling by adding new `new` calls in a View or ViewModel
+
+### Good Example
+
 ```csharp
-// ✅ GOOD - Focused responsibility
-public partial class WireDrawingViewModel : ObservableObject
+// GOOD - focused responsibility
+public partial class ProjectWorkspaceViewModel : ObservableObject
 {
-    // Only wire drawing logic
-    public void AddDrawingPoint(Point point) { }
-    public void StartDrawing() { }
-    public void FinishDrawing() { }
+    public async Task SaveProjectAsync()
+    {
+        // Project lifecycle and workspace concerns only
+    }
+
+    public async Task OpenProjectAsync()
+    {
+        // Project lifecycle and workspace concerns only
+    }
 }
 ```
 
-**Bad Example:**
+### Bad Example
+
 ```csharp
-// ❌ BAD - Too many responsibilities
+// BAD - one coordinator accumulating unrelated concerns
 public partial class MainViewModel : ObservableObject
 {
-    // Contains: wire drawing, power balance, validation, export, undo/redo...
-    public void DrawWire() { }
-    public void CalculatePowerBalance() { }
-    public void ValidateCircuit() { }
-    public void ExportPDF() { }
-    // ... 1000+ lines
+    public async Task OpenProjectAsync() { }
+    public async Task ExportPdfAsync() { }
+    public void RecalculatePhaseBalance() { }
+    public void ApplyCircuitEditPreset() { }
+    public void RebuildSchematicLayout() { }
 }
 ```
 
 ### Layered Architecture
 
+```text
+Models/              -> Domain and project state
+|- SymbolItem.cs
+|- Circuit.cs
+`- Project.cs
+
+ViewModels/          -> UI state, commands, orchestration
+|- MainViewModel.cs
+|- ProjectWorkspaceViewModel.cs
+|- PowerBalanceViewModel.cs
+`- LayoutViewModel.cs
+
+Views/               -> UI only
+|- MainWindow.axaml
+|- Views/CircuitEditPanelView.axaml
+`- Views/ModulesPaletteView.axaml
+
+Services/            -> Shared domain, technical, and infrastructure logic
+|- PhaseDistributionCalculator.cs
+|- ProjectPersistenceService.cs
+|- CircuitEditFieldDefinitionProvider.cs
+`- CircuitEditValueApplier.cs
+
+Helpers/             -> Supporting utilities
+|- LocalizationHelper.cs
+`- SvgHelper.cs
+
+Tests/               -> Behavior and regression coverage
+|- Tests/PowerBalanceViewModelTests.cs
+|- Tests/PhaseDistributionCalculatorTests.cs
+`- Tests/ViewModels/ProjectWorkspaceViewModelTests.cs
 ```
-Models/              → Data (SymbolItem, WireConnection, Circuit)
-├─ SymbolItem.cs
-├─ WireConnection.cs
-└─ Project.cs
 
-ViewModels/          → Application Logic (Coordinator + Specialists)
-├─ MainViewModel.cs         (Coordinator - coordinates other VMs)
-├─ WireDrawingViewModel.cs  (Wire drawing logic)
-├─ PowerBalanceViewModel.cs (Power calculations)
-└─ ProjectThemeViewModel.cs (UI theme settings)
+### Architecture Rules That Matter
 
-Views/               → UI Layer (XAML + Code-behind)
-├─ MainWindow.xaml
-├─ MainWindow.xaml.cs
-└─ ModulesPaletteView.xaml
-
-Services/            → Business Logic (One Interface = One Responsibility)
-├─ ISymbolImporter.cs       (Imports symbols)
-├─ ISymbolValidator.cs      (Validates circuits)
-├─ IPdfExporter.cs          (Exports to PDF)
-└─ SymbolImportService.cs   (Implementation)
-
-Helpers/             → Utilities & Constants
-├─ SvgHelper.cs     (SVG operations)
-├─ PathHelper.cs    (Path operations)
-└─ Constants.cs
-
-Tests/               → Unit Tests (Mirror structure)
-├─ WireDrawingViewModelTests.cs
-├─ PowerBalanceViewModelTests.cs
-└─ SvgHelperTests.cs
-```
+- Views should remain visual.
+- ViewModels should orchestrate UI state and commands.
+- Services should hold domain, technical, or infrastructure logic.
+- Do not move business logic into code-behind.
+- Do not silently change electrical formulas, validation rules, persistence,
+  undo/redo behavior, or exported data.
 
 ---
 
@@ -104,61 +124,59 @@ Tests/               → Unit Tests (Mirror structure)
 
 ### Pre-Submission Checklist
 
-Every PR must pass ALL checks before merging:
+Every non-trivial PR should satisfy these checks:
 
-```
-☐ Code compiles without errors
-☐ No new warnings (CS0*)
-☐ Class size < 300 lines
-☐ Method size < 50 lines
-☐ No code duplication (DRY principle)
-☐ All public methods have XML documentation
-☐ Unit tests written for new features
-☐ Test coverage > 70%
-☐ Git commit messages are clear and descriptive
-☐ No debug code (Console.WriteLine, TODO comments for hacky solutions)
+```text
+[ ] Code builds
+[ ] Relevant tests were run
+[ ] Risky logic has targeted tests or characterization coverage
+[ ] No silent behavior change in critical areas
+[ ] Class and method growth is justified
+[ ] No dead code or debug leftovers
+[ ] Documentation updated if architecture or workflow changed
 ```
 
 ### PR Title Format
 
-```
+```text
 [COMPONENT] Brief description
+```
 
 Examples:
-✅ [ViewModel] Split MainViewModel into specialized ViewModels
-✅ [Services] Extract SVG utilities to SvgHelper
-✅ [Tests] Add unit tests for WireDrawingViewModel
-❌ "fix"
-❌ "refactoring"
-❌ "update"
-```
+- `[ViewModel] Simplify MainViewModel construction`
+- `[Services] Extract field definitions from CircuitEditPanelView`
+- `[Tests] Add phase distribution planner coverage`
+
+Avoid vague titles like:
+- `fix`
+- `update`
+- `refactoring`
 
 ### PR Description Template
 
 ```markdown
-## What does this PR do?
-Brief summary of changes.
+## What
+Brief summary of the change.
 
-## Why?
-Motivation and context.
+## Why
+Problem, risk, or motivation.
 
-## How?
-Technical approach and key changes.
+## How
+Smallest safe approach used.
 
 ## Testing
-How to verify the changes work correctly.
+Tests run and manual checks performed.
 
-## Related Issues
-Closes #123
-
-## Screenshots (if applicable)
-Before/After screenshots.
-
-## Checklist
-- [ ] Passes all checks
-- [ ] Tests added
-- [ ] Documentation updated
+## Notes
+Anything reviewers should pay special attention to.
 ```
+
+### Review Expectations
+
+- keep changes reviewable
+- avoid mixing broad refactors with feature work unless the task requires it
+- call out manual smoke-test steps when UI behavior may be affected
+- if the change touches a critical subsystem, explain current behavior and risk
 
 ---
 
@@ -167,63 +185,55 @@ Before/After screenshots.
 ### Naming Conventions
 
 ```csharp
-// ✅ GOOD - Clear, descriptive names
-var symbolData = symbolService.GetSymbolData();
-void CalculatePhaseBalance(int voltage, string phase, bool includeDefaults);
-private List<string> availableThemes;
+// GOOD
+var projectMetadata = projectService.GetProjectMetadata();
+void RecalculatePhaseBalance(Project project, IReadOnlyList<SymbolItem> symbols);
+private readonly RecentProjectsService _recentProjectsService;
 private const double DefaultViewBoxWidth = 596;
 
-// ❌ BAD - Ambiguous, cryptic
+// BAD
 var x = GetData();
 void Calculate(int a, string b, bool c);
-private List<string> lst;
-private const double VIEWBOX_W = 596; // What is this?
+private readonly RecentProjectsService _svc;
+private const double VIEWBOX_W = 596;
 ```
 
-### Constants - Never Hardcode Magic Numbers
+### Avoid Magic Numbers
 
 ```csharp
-// ❌ BAD
-var scale = Math.Min(w / 596, h / 842); // What are 596 and 842?
+// BAD
+var scale = Math.Min(width / 596, height / 842);
 
-// ✅ GOOD
-const double DefaultViewBoxWidth = 596;  // Distribution block viewBox width
-const double DefaultViewBoxHeight = 842; // Distribution block viewBox height
-var scale = Math.Min(w / DefaultViewBoxWidth, h / DefaultViewBoxHeight);
+// GOOD
+const double DefaultViewBoxWidth = 596;
+const double DefaultViewBoxHeight = 842;
+var scale = Math.Min(width / DefaultViewBoxWidth, height / DefaultViewBoxHeight);
 ```
 
-### XML Documentation
+### Prefer Descriptive Domain Names
 
-Every public class, method, and property must have XML documentation:
+Use names that reflect the domain:
+- `phaseLoad`
+- `lockedGroups`
+- `workspaceState`
+- `recentProjects`
+- `fieldDefinitions`
 
-```csharp
-/// <summary>
-/// Calculates phase balance and power distribution across L1, L2, L3.
-/// </summary>
-/// <remarks>
-/// IMPORTANT: Uses the voltage from CurrentProject.PowerConfig.
-/// If voltage is 0, currents are set to 0.
-/// </remarks>
-/// <param name="symbols">Collection of symbols to analyze</param>
-/// <param name="project">Project containing power configuration</param>
-/// <exception cref="ArgumentNullException">If symbols is null</exception>
-public void RecalculatePhaseBalance(ObservableCollection<SymbolItem> symbols, Project? project)
-{
-}
-```
+Avoid names like:
+- `data`
+- `item2`
+- `temp`
+- `svc`
 
 ### Avoid Magic Strings
 
 ```csharp
-// ❌ BAD
+// BAD
 if (symbol.Type == "MCB" || symbol.Type == "RCD") { }
-if (theme == "Dark (Anthracite)") { }
 
-// ✅ GOOD
+// GOOD
 if (ModuleTypes.IsMcbOrRcd(symbol.Type)) { }
-if (theme == AvailableThemes.DarkAnthracite) { }
 
-// Or use constants:
 public static class ModuleTypes
 {
     public const string MCB = "MCB";
@@ -233,131 +243,141 @@ public static class ModuleTypes
 
 ### Avoid Commented-Out Code
 
-```csharp
-// ❌ BAD
-// public void OldMethod() { }
-// var x = 5; // maybe use later?
-// if (someCondition) { }
+Delete it.
 
-// ✅ GOOD
-// Use git history to find old code
-// Create an issue if unsure about removal
-// Remove it completely
-```
+If you are unsure, rely on git history instead of leaving inactive code in the
+file.
 
 ---
 
 ## Testing Requirements
 
+### General Rule
+
+Run the most relevant tests for the subsystem you touched.
+
+If the change is broad or risky, run the whole suite:
+
+```powershell
+dotnet test Tests\Avalonia.Tests.csproj --no-restore
+```
+
+### Critical Suites
+
+For electrical logic:
+- `Tests/PhaseDistributionCalculatorTests.cs`
+- `Tests/ElectricalValidationTests.cs`
+- `Tests/PowerBalanceViewModelTests.cs`
+
+For schematic and canvas:
+- `Tests/SchematicLayoutEngineTests.cs`
+- `Tests/SchematicDragDropControllerTests.cs`
+- `Tests/SchematicViewModelTests.cs`
+
+For infrastructure and data safety:
+- `Tests/UndoRedoTests.cs`
+- `Tests/ProjectRoundTripTests.cs`
+- `Tests/PdfExportTests.cs`
+
 ### Unit Test Minimum
 
-Every new ViewModel or Service must have at least **5 unit tests**:
+New logic should come with focused tests.
+
+For a new ViewModel or Service, aim for at least five meaningful tests that
+cover:
+- initialization
+- happy path behavior
+- invalid or edge input
+- one regression-prone case
+- one state transition or command scenario
+
+### Example Test Shape
 
 ```csharp
-public class WireDrawingViewModelTests
+public class ProjectWorkspaceViewModelTests
 {
     [Fact]
-    public void Constructor_InitializesWithEmptyCollections()
+    public void Constructor_InitializesRecentProjects()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 
     [Fact]
-    public void StartDrawing_SetsDrawingState()
+    public async Task OpenProjectAsync_WithValidFile_LoadsProject()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 
     [Fact]
-    public void AddDrawingPoint_AddsPointToCollection()
+    public async Task SaveProjectAsync_WithoutCurrentProject_DoesNotThrow()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 
     [Fact]
-    public void CanFinishDrawing_RequiresAtLeastTwoPoints()
+    public async Task OpenRecentProjectAsync_WithMissingFile_ShowsExpectedHandling()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 
     [Fact]
-    public void CancelDrawing_ClearsPointsAndState()
+    public void UpdateLicenseState_RefreshesHomeScreenFlags()
     {
-        // Arrange
-        // Act
-        // Assert
     }
 }
 ```
 
 ### Test Naming Convention
 
-```csharp
-// Format: [MethodName]_[Scenario]_[ExpectedResult]
-
-✅ Constructor_InitializesWithEmptyCollections()
-✅ AddDrawingPoint_WithValidPoint_AddsToCollection()
-✅ CalculateBalance_WithAsymmetricalLoad_ReturnsImbalancePercent()
-✅ GetColor_ForL1Phase_ReturnsCorrectHexCode()
-
-❌ Test1()
-❌ TestMethod()
-❌ Check()
+```text
+[Method]_[Scenario]_[ExpectedResult]
 ```
 
-### Test Coverage Target
+Examples:
+- `Constructor_InitializesRecentProjects()`
+- `CreateBalancePlan_WithLockedGroups_ExcludesLockedLoads()`
+- `ApplyValue_WithRcdPreset_UpdatesExpectedFields()`
 
-- **Minimum 70%** code coverage for new code
-- **Unit tests** for all public methods
-- **Integration tests** for Services
+Avoid names like:
+- `Test1`
+- `Check`
+- `Works`
 
 ---
 
 ## Documentation Standards
 
-### What to Document
+### Document These Things
 
-✅ **DO document:**
-- Public classes and methods
-- Complex algorithms or business logic
-- Non-obvious design decisions
-- Configuration requirements
-- Known limitations or workarounds
-
-❌ **DON'T document:**
-- Obvious getter/setter properties
-- Self-explanatory method names
-- Simple loop implementations
-- Language features
+- public APIs with non-obvious behavior
+- domain-sensitive algorithms
+- important design constraints
+- configuration and workflow expectations
+- known limitations or temporary safety tradeoffs
 
 ### Documentation Example
 
 ```csharp
 /// <summary>
-/// Detects overlapping wire segments and applies offset so parallel wires don't overlap.
-/// Groups wires that share segments and assigns symmetric offsets.
+/// Creates a balance plan for the current set of symbols without directly
+/// applying UI animation or mutating view state.
 /// </summary>
 /// <remarks>
-/// Algorithm:
-/// 1. Collect all segments from each wire
-/// 2. Find wires with overlapping segments (proximity-based)
-/// 3. Group overlapping wires into bundles
-/// 4. Assign symmetric offsets: -N/2, -N/2+1, ..., 0, ..., N/2-1, N/2
-///
-/// Performance: O(n²) where n = number of wires
+/// This method is part of the electrical balancing pipeline and should preserve
+/// the current electrical result while keeping planning separate from execution.
 /// </remarks>
-public void RecalculateParallelOffsets()
+public BalancePlan CreateBalancePlan(
+    IReadOnlyList<SymbolItem> symbols,
+    Project project)
 {
 }
 ```
+
+### Keep Docs Honest
+
+If you change:
+- architecture boundaries
+- workflow
+- test counts
+- setup instructions
+
+then update the related markdown files in the same change where practical.
 
 ---
 
@@ -365,68 +385,48 @@ public void RecalculateParallelOffsets()
 
 ### Commit Message Format
 
-```
+```text
 [COMPONENT] Brief description
-
-Longer explanation of why this change was necessary.
-Include relevant technical details.
-
-Related issues: #123, #456
 ```
 
-**Examples:**
-
-```
-✅ [ViewModel] Extract WireDrawingViewModel from MainViewModel
-
-Separates wire drawing logic into its own ViewModel following SRP.
-This improves testability and allows reuse in other projects.
-
-Related issues: #45
-
-✅ [Tests] Add 8 unit tests for WireDrawingViewModel
-
-Tests cover: initialization, drawing state, point addition, 
-snapping, and cancellation.
-
-Fixes: #89
-
-❌ "fix bug"
-❌ "update code"
-❌ "refactoring changes"
-```
+Examples:
+- `[Services] Extract CircuitEditValueApplier`
+- `[ViewModel] Inject workspace dependencies explicitly`
+- `[Docs] Update quick start and code quality guides`
 
 ### Commit Size
 
-- **One commit = One logical change**
-- Keep commits atomic and reviewable
-- Never mix refactoring with feature changes
+- one commit should represent one logical change where practical
+- do not mix refactor and feature work unless required
+- prefer small, reviewable sequences over one giant commit
 
-**Good commit sequence:**
-```
-1. [Services] Extract SvgHelper with GetDimensionsFromViewBox()
-2. [Services] Update SymbolImportService to use SvgHelper
-3. [Services] Remove duplicate GetDimensionsFromViewBox() methods
-4. [Tests] Add tests for SvgHelper
+Good sequence:
+
+```text
+1. [Tests] Add coverage for phase distribution planning
+2. [Services] Extract balance execution helper
+3. [Services] Route calculator through helper
+4. [Docs] Update architecture notes
 ```
 
-**Bad:**
-```
-1. "refactor everything, fix bugs, add features, update tests"
+Bad sequence:
+
+```text
+1. refactor everything and fix bugs
 ```
 
 ### Branch Naming
 
-```
-feature/[description]      → feature/wire-drawing-viewmodel
-bugfix/[description]       → bugfix/null-reference-snap-service
-refactor/[description]     → refactor/split-mainviewmodel
-docs/[description]         → docs/add-contributing-guide
+Examples:
+- `feature/project-workspace-cleanup`
+- `bugfix/null-phase-indicator`
+- `refactor/phase-distribution-planner`
+- `docs/update-quick-start`
 
-✅ feature/split-mainviewmodel
-❌ f/split
-❌ new-feature
-```
+Avoid:
+- `f/new`
+- `changes`
+- `test`
 
 ---
 
@@ -435,119 +435,76 @@ docs/[description]         → docs/add-contributing-guide
 ### Dependency Injection
 
 ```csharp
-// ✅ GOOD - Loose coupling
+// GOOD
 public class MainViewModel
 {
-    private readonly ISymbolService _symbolService;
-    
-    public MainViewModel(ISymbolService symbolService)
+    private readonly RecentProjectsService _recentProjectsService;
+
+    public MainViewModel(RecentProjectsService recentProjectsService)
     {
-        _symbolService = symbolService;
+        _recentProjectsService = recentProjectsService;
     }
 }
 
-// In App.cs
-services.AddScoped<ISymbolService, SymbolService>();
-services.AddScoped<MainViewModel>();
-
-// ❌ BAD - Tight coupling
+// BAD
 public class MainViewModel
 {
-    private var _service = new SymbolService(); // Hard to test
+    private readonly RecentProjectsService _recentProjectsService =
+        new RecentProjectsService();
 }
 ```
 
-### No Code Duplication (DRY)
+### Extract Logic Out Of Views
 
 ```csharp
-// ❌ BAD - Duplicated in 3 places
-// In SymbolImportService:
-var (w, h) = GetDimensionsFromViewBox(svg);
+// GOOD
+var fields = _fieldDefinitionProvider.GetDefinitions(symbol);
+_valueApplier.Apply(symbol, values);
 
-// In SchematicController:
-var (w, h) = GetDimensionsFromViewBox(svg);
-
-// In SvgModuleImporter:
-var (w, h) = GetDimensionsFromViewBox(svg);
-
-// ✅ GOOD - Centralized in SvgHelper
-public static class SvgHelper
-{
-    public static (double Width, double Height) GetDimensionsFromViewBox(string svgContent)
-    {
-    }
-}
-
-// Used everywhere:
-var (w, h) = SvgHelper.GetDimensionsFromViewBox(svg);
+// BAD
+// View decides field definitions, parses presets, and mutates the domain object
+// inline in code-behind.
 ```
 
-### Observable Property Pattern
+### Separate Planning From Execution
 
 ```csharp
-// ✅ GOOD - Using MVVM Toolkit
+// GOOD
+var plan = _phaseDistributionCalculator.CreateBalancePlan(symbols, project);
+await _executionHelper.ApplyGreedyAssignmentsAsync(plan, delayMs);
+
+// BAD
+// One large method does planning, selection animation, delays, and all domain
+// calculations inline.
+```
+
+### MVVM Toolkit Observable Properties
+
+```csharp
 public partial class PowerBalanceViewModel : ObservableObject
 {
     [ObservableProperty]
-    private double _l1PowerW;
-    
-    [ObservableProperty]
     private double _phaseImbalancePercent;
-    
-    // Partial method for property change logic
-    partial void OnL1PowerWChanged(double oldValue, double newValue)
-    {
-        RecalculatePhaseBalance();
-    }
-}
 
-// ❌ BAD - Manual property implementation
-public class PowerBalanceViewModel
-{
-    private double _l1PowerW;
-    public double L1PowerW
+    partial void OnPhaseImbalancePercentChanged(double oldValue, double newValue)
     {
-        get => _l1PowerW;
-        set
-        {
-            if (_l1PowerW != value)
-            {
-                _l1PowerW = value;
-                OnPropertyChanged(nameof(L1PowerW));
-                RecalculatePhaseBalance();
-            }
-        }
+        // Optional follow-up logic
     }
 }
 ```
 
 ### Null Safety
 
-```csharp
-// ✅ GOOD - Null-aware checks
-if (_groupOverlaysContainer != null)
-{
-    _groupOverlayController = new GroupOverlayController(
-        ViewModel,
-        _groupOverlaysContainer,
-        () => ((App)Application.Current!).Services.GetRequiredService<IDialogService>(),
-        () => _groupOverlayController?.RegenerateOverlays());
-}
+Prefer explicit null checks and safe guard clauses when UI containers or project
+state may be absent.
 
-// ❌ BAD - Assuming non-null
-var controller = new GroupOverlayController(
-    ViewModel,
-    _groupOverlaysContainer,  // Could be null!
-    ...
-);
-```
+Do not assume that optional View references, current project state, or
+design-time paths always exist.
 
 ---
 
-## Questions?
+## Questions
 
-- Check existing code for patterns
-- Ask in Pull Request discussions
-- Reference this guide when in doubt
-
-**Happy coding! 🚀**
+- Check existing code for current patterns first.
+- Use `AI_CONTEXT.md` and `ARCHITECTURE_MAP.md` before bigger changes.
+- When in doubt, choose the smaller and safer change.

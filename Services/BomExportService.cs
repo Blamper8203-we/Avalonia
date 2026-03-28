@@ -54,7 +54,7 @@ public class BomExportService
             if (!string.IsNullOrWhiteSpace(project.Metadata.Address))
                 sb.AppendLine($"Adres obiektu: {project.Metadata.Address}");
             if (!string.IsNullOrWhiteSpace(project.Metadata.Company) || !string.IsNullOrWhiteSpace(project.Metadata.Contractor))
-                sb.AppendLine($"Wykonawca: {project.Metadata.Company ?? project.Metadata.Contractor}");
+                sb.AppendLine($"Wykonawca: {project.Metadata.Contractor ?? project.Metadata.Company}");
             if (!string.IsNullOrWhiteSpace(project.Metadata.Author))
                 sb.AppendLine($"Projektant: {project.Metadata.Author}");
         }

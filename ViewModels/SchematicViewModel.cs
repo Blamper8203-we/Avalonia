@@ -62,6 +62,9 @@ public partial class SchematicViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSheet3Active;
 
+    [ObservableProperty]
+    private bool _isSheet4Active;
+
     private bool _suppressSheetSync;
 
     partial void OnCurrentSheetIndexChanged(int value)
@@ -70,6 +73,7 @@ public partial class SchematicViewModel : ObservableObject
         IsSheet1Active = value == 0;
         IsSheet2Active = value == 1;
         IsSheet3Active = value == 2;
+        IsSheet4Active = value == 3;
         _suppressSheetSync = false;
         WeakReferenceMessenger.Default.Send(new NavigateToSheetMessage(value));
     }
@@ -92,6 +96,12 @@ public partial class SchematicViewModel : ObservableObject
         CurrentSheetIndex = 2;
     }
 
+    partial void OnIsSheet4ActiveChanged(bool value)
+    {
+        if (_suppressSheetSync || !value) return;
+        CurrentSheetIndex = 3;
+    }
+
     [RelayCommand]
     public void SwitchToSheet1() => CurrentSheetIndex = 0;
 
@@ -100,6 +110,9 @@ public partial class SchematicViewModel : ObservableObject
 
     [RelayCommand]
     public void SwitchToSheet3() => CurrentSheetIndex = 2;
+
+    [RelayCommand]
+    public void SwitchToSheet4() => CurrentSheetIndex = 3;
 
     // === CIRCUIT REFERENCES ===
 
@@ -158,8 +171,7 @@ public partial class SchematicViewModel : ObservableObject
 
             _mainViewModel.RecalculatePhaseBalance();
             _mainViewModel.RecalculateValidation();
-            _projectService?.MarkAsChanged();
-            _mainViewModel.HasUnsavedChanges = true;
+            _mainViewModel.MarkProjectAsChanged();
 
             _mainViewModel.StatusMessage = "Automatycznie zbalansowano fazy";
         }
@@ -192,8 +204,7 @@ public partial class SchematicViewModel : ObservableObject
 
         _mainViewModel.RecalculatePhaseBalance();
         _mainViewModel.RecalculateValidation();
-        _projectService?.MarkAsChanged();
-        _mainViewModel.HasUnsavedChanges = true;
+        _mainViewModel.MarkProjectAsChanged();
 
         _mainViewModel.StatusMessage = "Cofnięto bilansowanie faz";
     }

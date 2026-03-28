@@ -5,7 +5,6 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using DINBoard.Models;
 using DINBoard.Services;
-using DINBoard.ViewModels;
 using DINBoard.Constants;
 using Material.Icons;
 using Material.Icons.Avalonia;
@@ -50,17 +49,14 @@ public partial class CircuitEditDialog : Window
         InitializeComponent();
     }
 
-    private void InitializeComponent()
-    {
-        global::Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
+
 
     public CircuitEditDialog(SymbolItem symbol) : this()
     {
         ArgumentNullException.ThrowIfNull(symbol);
         _symbol = symbol;
 
-        var moduleType = GroupViewModel.GetSymbolType(symbol, _moduleTypeService);
+        var moduleType = _moduleTypeService.GetModuleTypeName(symbol);
         var isRcd = moduleType == "RCD";
         var isSpd = moduleType == "SPD";
         var isFr = moduleType == "FR";
@@ -441,7 +437,7 @@ public partial class CircuitEditDialog : Window
     }
 
     /// <summary>
-    /// Parsuje preset SPD (np. "T1+T2 275V 25kA") i ustawia wartości na symbolu
+    /// Parsuje preset SPD (np. "T1+T2 275V 25kA") i ustawia wartoĹ›ci na symbolu
     /// </summary>
     private static void ParseAndApplySpdPreset(SymbolItem symbol, string preset)
     {

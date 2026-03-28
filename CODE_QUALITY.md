@@ -1,257 +1,132 @@
-# DINBoard Code Quality & Governance
+# DINBoard Code Quality
 
-This document outlines the complete system to prevent code mess and maintain code quality.
+This document describes the quality guardrails that are actually present in the
+repository today and the habits that keep DINBoard maintainable.
 
-## 📚 Documentation
+## Core Documents
 
-- **[QUICK_START.md](./QUICK_START.md)** - Start here! Daily workflow
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - English contribution guide
-- **[CONTRIBUTING.pl.md](./CONTRIBUTING.pl.md)** - Polish contribution guide  
-- **[PREVENTING_CODE_MESS.md](./PREVENTING_CODE_MESS.md)** - Deep dive into prevention system
+- [START_HERE.md](./START_HERE.md)
+- [QUICK_START.md](./QUICK_START.md)
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [CONTRIBUTING.pl.md](./CONTRIBUTING.pl.md)
+- [AI_CONTEXT.md](./AI_CONTEXT.md)
+- [ARCHITECTURE_MAP.md](./ARCHITECTURE_MAP.md)
+- [PREVENTING_CODE_MESS.md](./PREVENTING_CODE_MESS.md)
 
-## 🎯 The System at a Glance
+## What Is Really Enforced Today
 
-```
-┌─────────────────────────────────────────────────┐
-│        CODE QUALITY AUTOMATION PIPELINE          │
-└─────────────────────────────────────────────────┘
+### In Source Control
 
-Developer writes code
-    ↓
-Git Hook (pre-commit)
-├─ Builds
-├─ Tests pass
-├─ Code style OK
-├─ No debug code
-└─ Commit message format
+- analyzers enabled in `DINBoard.csproj`
+- `.editorconfig`
+- `.stylecop.json`
+- architecture and workflow documentation
+- automated tests in `Tests/Avalonia.Tests.csproj`
 
-    ↓ PASS → Commit created
-    ↓ FAIL → Developer fixes issues
+### By Team Discipline
 
-GitHub Push
-    ↓
-GitHub Actions (CI/CD)
-├─ Full build
-├─ All tests
-├─ Code analysis
-├─ Coverage check
-└─ PR validation
+- small, reviewable changes
+- targeted test execution for touched subsystems
+- no silent behavior changes in critical engineering logic
+- keeping Views thin and logic in ViewModels and Services
+- keeping documentation aligned with the real repo state
 
-    ↓ PASS → PR ready for review
-    ↓ FAIL → Pipeline shows what's wrong
+## What Is Not Committed Today
 
-Code Review
-├─ Required code owner approval
-├─ Conversation resolution
-└─ Final checks
+These items are referenced by some older wording, but are not currently present
+in the repository:
 
-    ↓ APPROVED → Can merge
-    ↓ REJECTED → Address feedback
+- `.github` workflow files
+- `.githooks` hook scripts
+- extra `docs/` process folders
 
-Merge to main/develop
-    ↓
-✅ Clean, tested, reviewed code deployed!
-```
+So the quality system is currently based on code structure, analyzers, tests,
+and review discipline, not on repository-hosted CI automation.
 
-## 🚀 Quick Links
+## Architectural Guardrails
 
-### For New Developers
-1. Read [QUICK_START.md](./QUICK_START.md)
-2. Run initial setup commands
-3. Start writing code
+The most important rules are:
 
-### For Code Quality
-- Python/Rules: `/CONTRIBUTING.md`
-- Automatic checks: `.github/workflows/code-quality.yml`
-- Auto-formatting: `.editorconfig`
-- Style rules: `.stylecop.json`
+- preserve current behavior unless the task explicitly asks for a change
+- do not move business logic into Views or code-behind
+- keep electrical calculations, validation, persistence, undo/redo, canvas, and
+  PDF export changes very small and very explicit
+- prefer extraction of responsibilities over broad rewrites
+- prefer dependency injection over ad-hoc `new` in Views and ViewModels
 
-### For Code Review
-- Template: `.github/pull_request_template.md`
-- Owners: `.github/CODEOWNERS`
-- Requirements: `.github/BRANCH_PROTECTION.md`
+## Pragmatic Class Size Policy
 
-## ✅ What's Enforced
+Treat the line-count rule as a guardrail, not a law:
 
-### Code Level
-- ✅ **Max 300 lines per class** (automatic warning)
-- ✅ **Max 50 lines per method** (automatic warning)
-- ✅ **Public methods have documentation** (enforced)
-- ✅ **No code duplication** (DRY principle)
-- ✅ **Consistent naming** (camelCase, PascalCase)
-- ✅ **No magic numbers** (constants required)
+- `0-300` lines: healthy if SRP is intact
+- `301-450` lines: warning zone, document split points in review
+- `451+` lines: do not add new responsibilities without refactoring first
 
-### Class Size Policy (Pragmatic)
+The more important question is still responsibility: one class should have one
+clear reason to change.
 
-The 300-line class limit is a practical guardrail, not a hard law. Use this traffic-light rule:
+## Split-Or-Keep Checklist
 
-- 🟢 **0-300 lines**: Healthy. No action needed if SRP is preserved.
-- 🟡 **301-450 lines**: Warning zone. Add a short note in PR and plan split points.
-- 🔴 **451+ lines**: Refactor required before adding more responsibilities.
+Before merging changes to a large class, ask:
 
-Use these as team heuristics together with SRP/testability, not as isolated metrics.
+- does the class still have one reason to change
+- can I test its core logic without UI or file-system dependencies
+- did I add a new concern that belongs in a dedicated Service
+- did I introduce new `new` calls in a View or ViewModel that should be DI
+- if the class is already large, did I identify a safe extraction point
 
-### Split-or-Keep Checklist (for PRs)
+If multiple answers are "no", split the work before growing the class further.
 
-Before merging a change that touches a large class, answer:
+## Testing Expectations
 
-- Does this class still have one reason to change?
-- Can I unit-test core logic without UI/file-system dependencies?
-- Did I add a new concern (export, validation, rendering, persistence) that belongs in a Service?
-- Does this change increase coupling (new `new` calls in View/ViewModel) instead of DI?
-- If class is 301+ lines, did I document planned extraction points in PR?
+- run the relevant tests for the subsystem you touched
+- add tests for new logic or for refactors in risky areas
+- use descriptive test names
+- run the whole suite for broad or risky changes
 
-If 2+ answers are "No", split the class before merge.
+Important suites to keep in mind:
+- `Tests/PhaseDistributionCalculatorTests.cs`
+- `Tests/ElectricalValidationTests.cs`
+- `Tests/SchematicLayoutEngineTests.cs`
+- `Tests/SchematicDragDropControllerTests.cs`
+- `Tests/SchematicViewModelTests.cs`
+- `Tests/PowerBalanceViewModelTests.cs`
+- `Tests/UndoRedoTests.cs`
+- `Tests/PdfExportTests.cs`
+- `Tests/ProjectRoundTripTests.cs`
 
-### Testing Level
-- ✅ **Min 5 tests per ViewModel**
-- ✅ **Min 70% code coverage** (for new code)
-- ✅ **All tests passing** (required for merge)
-- ✅ **Descriptive test names** (format enforced)
+Current suite status captured in this repo state:
+- `311` passing tests on `2026-03-17`
 
-### Git Level
-- ✅ **Clear commit messages** ([COMPONENT] format)
-- ✅ **Atomic commits** (one logical change)
-- ✅ **No direct commits to main** (PR required)
-- ✅ **No force pushes** (branch protection)
+## Review Expectations
 
-### Review Level
-- ✅ **Code owner approval required**
-- ✅ **All conversations resolved**
-- ✅ **Branch up to date with main**
-- ✅ **No merge without passing checks**
+- one commit should represent one logical change where practical
+- do not mix broad refactor and new feature work unless the task requires it
+- call out manual smoke-test steps when UI behavior may be affected
+- if a change touches critical engineering logic, explain the current behavior,
+  the problem, and the safety strategy
 
-## 🛠️ Tools & Scripts
+## Concrete Signs Of Health
 
-### Git Hooks (`.githooks/`)
-```bash
-pre-commit   → Runs before commit
-```
+Compared with older architecture drift, the repo now has:
+- child ViewModel responsibilities extracted from `MainViewModel`
+- `ProjectWorkspaceViewModel` handling project lifecycle concerns
+- `CircuitEditPanelView` relying on field-definition and value-application
+  services instead of carrying more domain logic in the view
+- `PhaseDistributionCalculator` split into smaller planning and execution
+  helpers while preserving the electrical result
+- `311` passing automated tests
 
-### GitHub Actions (`.github/workflows/`)
-```
-code-quality.yml     → Build + test + analysis
-enforce-review.yml   → PR requirements
-weekly-cleanup.yml   → Maintenance tasks
-```
+## Day-To-Day Workflow
 
-### Configuration Files
-```
-.editorconfig        → Code style rules
-.stylecop.json       → C# analysis rules
-.github/CODEOWNERS   → Review assignment
-```
+1. Read the architecture docs if the change is bigger than trivial.
+2. Identify the subsystem and its risk level.
+3. Make the smallest safe change.
+4. Run the relevant tests.
+5. Update docs if architecture or process moved.
 
-## 📊 Results
+## Version
 
-### Before System (❌ Chaos)
-- 1300-line MainViewModel
-- No tests
-- Duplicate code everywhere
-- Random naming
-- 15+ compiler warnings
-- Refactoring every 6 months
-
-### After System (✅ Order)
-- 4 focused ViewModels (300 lines each)
-- 22 unit tests
-- Zero duplicates
-- Consistent naming
-- Zero compiler warnings
-- Code stays clean forever
-
-## 🎓 Best Practices
-
-### DO ✅
-- Write small, focused classes
-- Add tests for new code
-- Document public APIs
-- Keep commits atomic
-- Reference issues in PRs
-- Ask for clarification in reviews
-
-### DON'T ❌
-- Create huge classes (>300 lines)
-- Skip tests
-- Use magic numbers
-- Create monster commits
-- Bypass git hooks
-- Force merge without approval
-
-## 🔄 Workflow Example
-
-```bash
-# 1. Start feature
-git checkout -b feature/add-power-balance-tests
-
-# 2. Write code (max 300 lines/class, 50 lines/method)
-# ... edit files ...
-
-# 3. Add tests (min 5)
-# ... create *Tests.cs ...
-
-# 4. Add documentation
-/// <summary>...
-
-# 5. Commit
-git add .
-git commit -m "[Tests] Add unit tests for PowerBalanceViewModel"
-# → Git hook runs automatically, checks everything
-
-# 6. Push
-git push origin feature/add-power-balance-tests
-
-# 7. Create PR
-# → GitHub Actions run, validate everything
-# → PR template appears with checklist
-# → Code owner review required
-
-# 8. Fix feedback if any
-# ... address review comments ...
-
-# 9. Merge
-# → All checks passing
-# → Approved by code owner
-# → Branch up to date
-# → Ready to merge!
-```
-
-## 📞 Support
-
-**Questions about:**
-- Development: See QUICK_START.md
-- Code style: See CONTRIBUTING.md or .editorconfig
-- Contribution: See CONTRIBUTING.md
-- Prevention system: See PREVENTING_CODE_MESS.md
-
-**Need help?** Ask in team chat with:
-- What you're trying to do
-- What error you got
-- Which file you're working on
-
-## 🎯 Key Metrics
-
-Track these to ensure system is working:
-
-```
-Metric                  Target      Current
-─────────────────────────────────────────
-Class size              < 300       ✅
-Method size             < 50        ✅
-Test coverage           > 70%       ✅
-Tests per ViewModel     > 5         ✅
-Code duplication        0%          ✅
-Compiler warnings       0           ✅
-PR approval time        < 24h       ✅
-Merge conflicts         Rare        ✅
-```
-
-## 📝 Version
-
-- **System Version**: 1.0
-- **Last Updated**: 2024
-- **Compliance**: GitHub best practices + Microsoft C# standards
-
----
-
-**Remember:** This system exists to help you write better code faster! 🚀
+- system version: `1.2`
+- last updated: `2026-03-17`
+- scope: current repository state, not aspirational future automation

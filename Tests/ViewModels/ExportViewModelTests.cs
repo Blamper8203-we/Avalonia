@@ -3,6 +3,7 @@ using System;
 using System.Threading.Tasks;
 using DINBoard.Models;
 using DINBoard.Services;
+using DINBoard.Services.Pdf;
 using DINBoard.ViewModels;
 using Moq;
 using Xunit;
@@ -32,10 +33,13 @@ namespace DINBoard.Tests.ViewModels
             var validationService = new ElectricalValidationService();
             var pdfExportService = new PdfExportService(_moduleTypeMock.Object, validationService, importSvc, new SvgProcessor());
             var bomExportService = new BomExportService(_moduleTypeMock.Object);
+            var latexExportService = new LatexExportService(_moduleTypeMock.Object, validationService);
             var busbarGenerator = new PowerBusbarGenerator();
             var busbarPlacementService = new BusbarPlacementService(importSvc, _projectServiceMock.Object, busbarGenerator);
+            var licenseService = new LicenseService();
+            var recentProjectsService = new RecentProjectsService();
 
-            _mainViewModel = new MainViewModel(
+            _mainViewModel = new MainViewModel(new MainViewModelDeps(
                 _projectServiceMock.Object,
                 _dialogServiceMock.Object,
                 _undoRedoMock.Object,
@@ -45,10 +49,13 @@ namespace DINBoard.Tests.ViewModels
                 validationService,
                 pdfExportService,
                 bomExportService,
-                busbarPlacementService);
+                latexExportService,
+                busbarPlacementService,
+                licenseService,
+                recentProjectsService));
 
             _mainViewModel.CurrentProject = new Project { Name = "Test Project" };
-            _sut = new ExportViewModel(_mainViewModel, _dialogServiceMock.Object, pdfExportService, bomExportService);
+            _sut = new ExportViewModel(_mainViewModel, _dialogServiceMock.Object, pdfExportService, bomExportService, latexExportService);
         }
 
         [Fact]
@@ -57,7 +64,8 @@ namespace DINBoard.Tests.ViewModels
             // Assert
             var pdfExportService = new PdfExportService(_moduleTypeMock.Object, new ElectricalValidationService(), new SymbolImportService(), new SvgProcessor());
             var bomExportService = new BomExportService(_moduleTypeMock.Object);
-            Assert.Throws<ArgumentNullException>(() => new ExportViewModel(null!, _dialogServiceMock.Object, pdfExportService, bomExportService));
+            var latexExportService = new LatexExportService(_moduleTypeMock.Object, new ElectricalValidationService());
+            Assert.Throws<ArgumentNullException>(() => new ExportViewModel(null!, _dialogServiceMock.Object, pdfExportService, bomExportService, latexExportService));
         }
 
         [Fact]
@@ -66,7 +74,8 @@ namespace DINBoard.Tests.ViewModels
             // Assert
             var pdfExportService = new PdfExportService(_moduleTypeMock.Object, new ElectricalValidationService(), new SymbolImportService(), new SvgProcessor());
             var bomExportService = new BomExportService(_moduleTypeMock.Object);
-            Assert.Throws<ArgumentNullException>(() => new ExportViewModel(_mainViewModel, null!, pdfExportService, bomExportService));
+            var latexExportService = new LatexExportService(_moduleTypeMock.Object, new ElectricalValidationService());
+            Assert.Throws<ArgumentNullException>(() => new ExportViewModel(_mainViewModel, null!, pdfExportService, bomExportService, latexExportService));
         }
 
         [Fact]

@@ -42,7 +42,7 @@ public partial class PdfSingleLineDiagramService
 
     static void DrawPL(SKCanvas c, float cx, ref int n, float yo, float labelOffsetX = 0)
     {
-        DrawPathNumberLabel(c, n.ToString(), cx + labelOffsetX, Y(yo, E.YPathNums) - 2);
+        DrawPathNumberLabel(c, n.ToString(), cx + labelOffsetX, Y(yo, E.YPathNums) - 10);
         using var gp = Stroke(CGrid, 0.4f);
         gp.PathEffect = SKPathEffect.CreateDash(new[] { 2f, 2f }, 0);
         c.DrawLine(cx, Y(yo, E.YPathNums + 8), cx, Y(yo, E.YLabelTop), gp);

@@ -4,6 +4,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using DINBoard.ViewModels;
+using DINBoard.Services;
 
 namespace DINBoard.Services.Pdf;
 
@@ -21,7 +22,12 @@ public class PdfConnectionService
     private static readonly string LightBg = "#F3F4F6";
     private const float S = 0.75f; // UiToPdfScale
 
-    private static readonly ModuleTypeService _moduleTypeService = new();
+    private readonly IModuleTypeService _moduleTypeService;
+
+    public PdfConnectionService(IModuleTypeService moduleTypeService)
+    {
+        _moduleTypeService = moduleTypeService ?? throw new ArgumentNullException(nameof(moduleTypeService));
+    }
 
     // Standardowe prądy znamionowe wyłączników [A]
     private static readonly int[] StandardBreakers = { 16, 20, 25, 32, 40, 50, 63, 80, 100, 125 };
@@ -50,29 +56,40 @@ public class PdfConnectionService
         _ => $"SBI {mainBreakerAmps}A gG"
     };
 
+    internal static double CalculateDesignCurrent(double calculatedPowerW, double lineVoltageV, bool isThreePhase, double cosPhi = 0.9)
+    {
+        if (calculatedPowerW <= 0 || lineVoltageV <= 0 || cosPhi <= 0)
+        {
+            return 0;
+        }
+
+        var phaseVoltageV = lineVoltageV / Math.Sqrt(3);
+        return isThreePhase
+            ? calculatedPowerW / (lineVoltageV * Math.Sqrt(3) * cosPhi)
+            : calculatedPowerW / (phaseVoltageV * cosPhi);
+    }
+
     public void ComposeConnectionPage(IContainer container, DINBoard.ViewModels.MainViewModel viewModel, PdfExportOptions options)
     {
         ArgumentNullException.ThrowIfNull(container);
         ArgumentNullException.ThrowIfNull(viewModel);
 
-        // === OBLICZENIA ===
-        var allMcbs = viewModel.Symbols
-            .Where(s => s != null && _moduleTypeService.IsMcb(s))
-            .ToList();
+        // === OBLICZENIA — spójne z PowerBalanceViewModel ===
+        var dist = PhaseDistributionCalculator.CalculateTotalDistribution(viewModel.Symbols);
+        double powerL1 = dist.L1PowerW;
+        double powerL2 = dist.L2PowerW;
+        double powerL3 = dist.L3PowerW;
+        double totalPower = powerL1 + powerL2 + powerL3;
 
-        double totalPower = allMcbs.Sum(m => m.PowerW);
-        double powerL1 = allMcbs.Where(m => m.Phase == "L1").Sum(m => m.PowerW);
-        double powerL2 = allMcbs.Where(m => m.Phase == "L2").Sum(m => m.PowerW);
-        double powerL3 = allMcbs.Where(m => m.Phase == "L3").Sum(m => m.PowerW);
-
-        bool isThreePhase = powerL2 > 0 || powerL3 > 0;
-        double simultaneity = 0.6;
+        double simultaneity = viewModel.PowerBalance.SimultaneityFactor;
         double calcPower = totalPower * simultaneity;
 
-        // Prąd obliczeniowy
-        double calcCurrent = isThreePhase
-            ? calcPower / (400.0 * 1.732)
-            : calcPower / 230.0;
+        var lineVoltage = viewModel.CurrentProject?.PowerConfig?.Voltage ?? 400;
+        var phaseVoltage = lineVoltage / Math.Sqrt(3);
+        bool isThreePhase = viewModel.CurrentProject?.PowerConfig?.Phases == 3;
+
+        // Prad obliczeniowy — spojny z PowerBalanceViewModel/ElectricalValidationService.
+        double calcCurrent = CalculateDesignCurrent(calcPower, lineVoltage, isThreePhase);
 
         // Dobór wyłącznika głównego (następny standard powyżej prądu obliczeniowego)
         int mainBreakerAmps = StandardBreakers.FirstOrDefault(a => a >= calcCurrent);
@@ -81,7 +98,7 @@ public class PdfConnectionService
         string mainBreakerType = isThreePhase ? $"S304 B{mainBreakerAmps} 4P" : $"S302 B{mainBreakerAmps} 2P";
         var (wlzCrossSection, wlzDescription) = GetWlzCable(mainBreakerAmps);
         string preMeterBreaker = GetPreMeterBreaker(mainBreakerAmps);
-        string supplyType = isThreePhase ? "3-fazowe 3x400V/230V TN-S" : "1-fazowe 230V TN-S";
+        string supplyType = isThreePhase ? $"3-fazowe 3x{lineVoltage}V/{phaseVoltage:N0}V TN-S" : $"1-fazowe {phaseVoltage:N0}V TN-S";
         string meterType = isThreePhase ? "Licznik 3-fazowy" : "Licznik 1-fazowy";
         int wireCount = isThreePhase ? 5 : 3;
 
@@ -105,7 +122,7 @@ public class PdfConnectionService
 
                     AddParamRow(table, "Rodzaj zasilania:", supplyType);
                     AddParamRow(table, "Układ sieci:", "TN-S");
-                    AddParamRow(table, "Napięcie znamionowe:", isThreePhase ? "3x 400V / 230V" : "230V");
+                    AddParamRow(table, "Napięcie znamionowe:", isThreePhase ? $"3x {lineVoltage}V / {phaseVoltage:N0}V" : $"{phaseVoltage:N0}V");
                     AddParamRow(table, "Częstotliwość:", "50 Hz");
                     AddParamRow(table, "Moc zainstalowana:", $"{totalPower:N0} W ({totalPower / 1000:N2} kW)");
                     AddParamRow(table, "Współczynnik jednoczesności:", $"{simultaneity:P0}");
@@ -176,8 +193,8 @@ public class PdfConnectionService
                     c.Spacing(8);
                     c.Item().Text("ROZKŁAD OBCIĄŻEŃ NA FAZY").FontSize(14 * S).Bold().FontColor(AccentBlue);
 
+                    double asymmetry = PhaseDistributionCalculator.CalculateImbalancePercent(powerL1, powerL2, powerL3);
                     double maxPhase = Math.Max(powerL1, Math.Max(powerL2, powerL3));
-                    double asymmetry = maxPhase > 0 ? (maxPhase - Math.Min(powerL1, Math.Min(powerL2, powerL3))) / maxPhase * 100 : 0;
 
                     c.Item().Row(row =>
                     {

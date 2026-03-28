@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -9,6 +10,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Svg.Skia;
+using DINBoard.Services;
 
 namespace DINBoard.Views;
 
@@ -18,15 +20,15 @@ public partial class ModulesPaletteView : UserControl
     {
         public required string Name { get; set; }
         public required string Description { get; set; }
-        public required string Type { get; set; } // "FR", "SPD", "RCD", "MCB"
-        public string IconKind { get; set; } = "HelpCircle"; // Material Design Icon fallback
+        public required string Type { get; set; }
+        public string IconKind { get; set; } = "HelpCircle";
 
         /// <summary>
         /// Common image source for both Bitmaps (PNG/JPG) and SVGs.
         /// Avalonia Image control can display any IImage.
         /// </summary>
         public IImage? Visual { get; set; }
-        public string? FilePath { get; set; } // Added for Drag & Drop
+        public string? FilePath { get; set; }
 
         public bool HasVisual => Visual != null;
     }
@@ -66,11 +68,6 @@ public partial class ModulesPaletteView : UserControl
     public ModulesPaletteView()
     {
         InitializeComponent();
-
-        // IMPORTANT: Do NOT set DataContext = this, as it breaks binding inheritance from MainWindow.
-        // Internal bindings use #PaletteRoot reference instead.
-        // DataContext = this;
-
         LoadAllModules();
     }
 
@@ -104,7 +101,7 @@ public partial class ModulesPaletteView : UserControl
     }
 
     /// <summary>
-    /// Przeładowuje wszystkie moduły z dysku (np. po imporcie nowych modułów).
+    /// Przeładowuje wszystkie moduły z dysku.
     /// </summary>
     public void ReloadModules()
     {
@@ -123,7 +120,9 @@ public partial class ModulesPaletteView : UserControl
     private void AddCategory(string name, ObservableCollection<PaletteItem> items)
     {
         if (Categories.Any(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+        {
             return;
+        }
 
         Categories.Add(new ModuleCategory(name, items));
     }
@@ -131,7 +130,10 @@ public partial class ModulesPaletteView : UserControl
     private void LoadAdditionalCategories()
     {
         var modulesRoot = ResolveModulesRoot();
-        if (!Directory.Exists(modulesRoot)) return;
+        if (!Directory.Exists(modulesRoot))
+        {
+            return;
+        }
 
         var known = new HashSet<string>(DefaultCategoryNames, StringComparer.OrdinalIgnoreCase);
 
@@ -139,7 +141,9 @@ public partial class ModulesPaletteView : UserControl
         {
             var name = Path.GetFileName(dir);
             if (string.IsNullOrWhiteSpace(name) || known.Contains(name))
+            {
                 continue;
+            }
 
             var items = new ObservableCollection<PaletteItem>();
             LoadModulesFromFolder(name, items);
@@ -157,19 +161,17 @@ public partial class ModulesPaletteView : UserControl
 
     private static string ResolveModulesRoot()
     {
-        // Prefer project root (folder with .csproj) to avoid bin\Debug output paths
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir != null)
         {
             var dirName = dir.Name;
             if (!dirName.Equals("bin", StringComparison.OrdinalIgnoreCase) &&
-                !dirName.Equals("obj", StringComparison.OrdinalIgnoreCase))
+                !dirName.Equals("obj", StringComparison.OrdinalIgnoreCase) &&
+                dir.EnumerateFiles("*.csproj").Any())
             {
-                if (dir.EnumerateFiles("*.csproj").Any())
-                {
-                    return Path.Combine(dir.FullName, "Assets", "Modules");
-                }
+                return Path.Combine(dir.FullName, "Assets", "Modules");
             }
+
             dir = dir.Parent;
         }
 
@@ -220,47 +222,57 @@ public partial class ModulesPaletteView : UserControl
 
     private void LoadModulesFromFolder(string category, ObservableCollection<PaletteItem> collection)
     {
-        string modulesPath = GetModulesPath(category);
+        var modulesPath = GetModulesPath(category);
 
-        if (Directory.Exists(modulesPath))
+        if (!Directory.Exists(modulesPath))
         {
-            var files = Directory.EnumerateFiles(modulesPath).Where(IsSupportedModuleFile);
-            foreach (var file in files)
+            return;
+        }
+
+        var files = Directory.EnumerateFiles(modulesPath).Where(IsSupportedModuleFile);
+        foreach (var file in files)
+        {
+            var ext = Path.GetExtension(file);
+            var name = Path.GetFileNameWithoutExtension(file);
+
+            if (collection.Any(i => i.Name == name))
             {
-                var ext = Path.GetExtension(file);
-                var name = Path.GetFileNameWithoutExtension(file);
+                continue;
+            }
 
-                if (collection.Any(i => i.Name == name)) continue;
+            var item = new PaletteItem
+            {
+                Name = name,
+                Description = "Moduł użytkownika",
+                Type = category,
+                FilePath = file
+            };
 
-                var item = new PaletteItem
+            try
+            {
+                if (ext.Equals(".svg", StringComparison.OrdinalIgnoreCase))
                 {
-                    Name = name,
-                    Description = "Moduł użytkownika",
-                    Type = category,
-                    FilePath = file
-                };
-
-                try
-                {
-                    if (ext.Equals(".svg", StringComparison.OrdinalIgnoreCase))
+                    var content = File.ReadAllText(file);
+                    var svgSource = SvgSource.LoadFromSvg(content);
+                    if (svgSource != null)
                     {
-                        var content = File.ReadAllText(file);
-                        var svgSource = SvgSource.LoadFromSvg(content);
-                        if (svgSource != null)
-                        {
-                            item.Visual = new SvgImage { Source = svgSource };
-                        }
-                    }
-                    else if (ext.Equals(".png", StringComparison.OrdinalIgnoreCase) || ext.Equals(".jpg", StringComparison.OrdinalIgnoreCase) || ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
-                    {
-                        using var fs = File.OpenRead(file);
-                        item.Visual = new Bitmap(fs);
+                        item.Visual = new SvgImage { Source = svgSource };
                     }
                 }
-                catch { /* Ignore bad files */ }
-
-                collection.Add(item);
+                else if (ext.Equals(".png", StringComparison.OrdinalIgnoreCase)
+                    || ext.Equals(".jpg", StringComparison.OrdinalIgnoreCase)
+                    || ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
+                {
+                    using var fs = File.OpenRead(file);
+                    item.Visual = new Bitmap(fs);
+                }
             }
+            catch
+            {
+                // Ignore bad files while loading the palette.
+            }
+
+            collection.Add(item);
         }
     }
 
@@ -273,71 +285,148 @@ public partial class ModulesPaletteView : UserControl
         set => SetValue(IsModulesEnabledProperty, value);
     }
 
-    private void DeleteModule_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private IDialogService? GetDialogService()
     {
-        if (sender is MenuItem menuItem && menuItem.DataContext is PaletteItem item)
+        return (Application.Current as App)?.Services.GetService(typeof(IDialogService)) as IDialogService;
+    }
+
+    private async Task<bool> ConfirmDeletionAsync(string title, string message)
+    {
+        var dialogService = GetDialogService();
+        if (dialogService == null)
         {
-            // Remove from the appropriate category collection
-            foreach (var category in Categories)
-            {
-                if (category.Items.Remove(item))
-                {
-                    // If it's a file-based module, delete the file
-                    if (!string.IsNullOrEmpty(item.FilePath) && File.Exists(item.FilePath))
-                    {
-                        try
-                        {
-                            File.Delete(item.FilePath);
-                        }
-                        catch { /* Ignore file deletion errors */ }
-                    }
-                    break;
-                }
-            }
+            AppLog.Warn($"Anulowano operację destrukcyjną \"{title}\", bo IDialogService nie jest dostępny.");
+            return false;
+        }
+
+        return await dialogService.ShowConfirmAsync(title, message).ConfigureAwait(true);
+    }
+
+    private async Task ShowDeletionErrorAsync(string title, string message, Exception exception)
+    {
+        AppLog.Error(message, exception);
+
+        var dialogService = GetDialogService();
+        if (dialogService != null)
+        {
+            await dialogService.ShowMessageAsync(title, $"{message}\n\n{exception.Message}").ConfigureAwait(true);
         }
     }
 
-    private void DeleteCategory_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private static string BuildModuleDeletionMessage(PaletteItem item)
     {
-        if (sender is MenuItem menuItem && menuItem.DataContext is ModuleCategory category)
+        if (!string.IsNullOrWhiteSpace(item.FilePath))
         {
-            // Usuń folder z dysku (wraz z plikami modułów)
-            var folderPath = GetModulesPath(category.Name);
-            if (Directory.Exists(folderPath))
-            {
-                try
-                {
-                    Directory.Delete(folderPath, recursive: true);
-                }
-                catch { /* Ignore deletion errors */ }
-            }
-
-            Categories.Remove(category);
+            return $"Czy na pewno chcesz usunąć moduł \"{item.Name}\"?\nPlik modułu zostanie usunięty z dysku.";
         }
+
+        return $"Czy na pewno chcesz usunąć moduł \"{item.Name}\" z palety?";
+    }
+
+    private static string BuildCategoryDeletionMessage(string categoryName, bool deletesFolder)
+    {
+        if (deletesFolder)
+        {
+            return $"Czy na pewno chcesz usunąć kategorię \"{categoryName}\"?\nFolder kategorii i wszystkie moduły w tej kategorii zostaną usunięte z dysku.";
+        }
+
+        return $"Czy na pewno chcesz usunąć kategorię \"{categoryName}\" z palety?";
+    }
+
+    private async void DeleteModule_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: PaletteItem item })
+        {
+            return;
+        }
+
+        if (!await ConfirmDeletionAsync("Usuń moduł", BuildModuleDeletionMessage(item)).ConfigureAwait(true))
+        {
+            return;
+        }
+
+        var category = Categories.FirstOrDefault(c => c.Items.Contains(item));
+        if (category == null)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(item.FilePath) && File.Exists(item.FilePath))
+        {
+            try
+            {
+                File.Delete(item.FilePath);
+            }
+            catch (Exception ex)
+            {
+                await ShowDeletionErrorAsync(
+                    "Błąd usuwania modułu",
+                    $"Nie udało się usunąć modułu \"{item.Name}\".",
+                    ex).ConfigureAwait(true);
+                return;
+            }
+        }
+
+        category.Items.Remove(item);
+    }
+
+    private async void DeleteCategory_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: ModuleCategory category })
+        {
+            return;
+        }
+
+        var folderPath = GetModulesPath(category.Name);
+        var deletesFolder = Directory.Exists(folderPath);
+
+        if (!await ConfirmDeletionAsync("Usuń kategorię", BuildCategoryDeletionMessage(category.Name, deletesFolder)).ConfigureAwait(true))
+        {
+            return;
+        }
+
+        if (deletesFolder)
+        {
+            try
+            {
+                Directory.Delete(folderPath, recursive: true);
+            }
+            catch (Exception ex)
+            {
+                await ShowDeletionErrorAsync(
+                    "Błąd usuwania kategorii",
+                    $"Nie udało się usunąć kategorii \"{category.Name}\".",
+                    ex).ConfigureAwait(true);
+                return;
+            }
+        }
+
+        Categories.Remove(category);
     }
 
     private async void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        // Only start drag on left mouse button; right-click opens context menu
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            return;
-
-        // CRITICAL BLOCK: If modules are disabled (no DIN rail), DO NOT START DRAG.
-        if (!IsModulesEnabled)
         {
-            e.Handled = true; // Stop event propagation
             return;
         }
 
-        var border = sender as Border;
-        if (border?.DataContext is PaletteItem item)
+        if (!IsModulesEnabled)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (sender is Border { DataContext: PaletteItem item })
         {
             var dragData = new DataTransfer();
             dragData.Add(DataTransferItem.Create(DragDropFormats.ModuleType, item.Type));
             dragData.Add(DataTransferItem.Create(DragDropFormats.ModuleName, item.Name));
 
             if (!string.IsNullOrEmpty(item.FilePath))
+            {
                 dragData.Add(DataTransferItem.Create(DragDropFormats.ModuleFilePath, item.FilePath));
+            }
 
             await DragDrop.DoDragDropAsync(e, dragData, DragDropEffects.Copy);
         }

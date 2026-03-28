@@ -12,7 +12,6 @@ using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using DINBoard.Constants;
 using DINBoard.Models;
 using DINBoard.Services;
 using DINBoard.ViewModels.Messages;
@@ -51,10 +50,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public bool HasRecentProjects => RecentProjects.Count > 0;
 
-    // Services moved to Workspace
-    // private readonly LicenseService _licenseService = new();
-    // private readonly RecentProjectsService _recentProjectsService = new();
-
     // === INJECTED VIEWMODELS ===
 
     [ObservableProperty]
@@ -92,9 +87,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     // === PROJECT ===
 
-    public ExportViewModel Exporter { get; }
-    public ProjectWorkspaceViewModel Workspace { get; }
-    public SymbolManagerViewModel ModuleManager { get; }
+    public ExportViewModel Exporter { get; private set; } = null!;
+    public ProjectWorkspaceViewModel Workspace { get; private set; } = null!;
+    public SymbolManagerViewModel ModuleManager { get; private set; } = null!;
 
     [ObservableProperty]
     private Project? _currentProject;
@@ -138,6 +133,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ProjectFileName));
     }
 
+    public void MarkProjectAsChanged()
+    {
+        _projectService?.MarkAsChanged();
+        HasUnsavedChanges = _projectService?.HasUnsavedChanges ?? true;
+        Exporter?.MarkPdfPreviewDirty();
+    }
+
+    public void MarkProjectAsSaved()
+    {
+        HasUnsavedChanges = false;
+    }
+
     // === SERVICES ===
     private readonly IProjectService? _projectService;
 
@@ -151,6 +158,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IElectricalValidationService _electricalValidationService;
     private readonly PdfExportService _pdfExportService;
     private readonly BomExportService _bomExportService;
+    private readonly LatexExportService _latexExportService;
     private readonly BusbarPlacementService? _busbarPlacementService;
 
     // === CONSTRUCTORS ===
@@ -158,6 +166,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Design-time constructor — serwisy infrastrukturalne mogą być null.</summary>
     public MainViewModel()
     {
+        var licenseService = new LicenseService();
+        var recentProjectsService = new RecentProjectsService();
         _projectService = null;
         _dialogService = null;
         _undoRedoService = null;
@@ -167,81 +177,83 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _electricalValidationService = new ElectricalValidationService();
         _pdfExportService = new PdfExportService(_moduleTypeService, _electricalValidationService, _symbolImportService, new SvgProcessor());
         _bomExportService = new BomExportService(_moduleTypeService);
+        _latexExportService = new LatexExportService(_moduleTypeService, _electricalValidationService);
         _busbarPlacementService = null;
+        InitializeChildViewModels(new DialogService(), null, null, licenseService, recentProjectsService, false);
+    }
+
+    public MainViewModel(MainViewModelDeps deps)
+    {
+        ArgumentNullException.ThrowIfNull(deps);
+
+        _projectService = deps.ProjectService ?? throw new ArgumentNullException(nameof(deps.ProjectService));
+        _dialogService = deps.DialogService ?? throw new ArgumentNullException(nameof(deps.DialogService));
+        _undoRedoService = deps.UndoRedoService ?? throw new ArgumentNullException(nameof(deps.UndoRedoService));
+        _moduleTypeService = deps.ModuleTypeService ?? throw new ArgumentNullException(nameof(deps.ModuleTypeService));
+        _symbolImportService = deps.SymbolImportService ?? throw new ArgumentNullException(nameof(deps.SymbolImportService));
+        _persistenceService = deps.PersistenceService ?? throw new ArgumentNullException(nameof(deps.PersistenceService));
+        _electricalValidationService = deps.ElectricalValidationService ?? throw new ArgumentNullException(nameof(deps.ElectricalValidationService));
+        _pdfExportService = deps.PdfExportService ?? throw new ArgumentNullException(nameof(deps.PdfExportService));
+        _bomExportService = deps.BomExportService ?? throw new ArgumentNullException(nameof(deps.BomExportService));
+        _latexExportService = deps.LatexExportService ?? throw new ArgumentNullException(nameof(deps.LatexExportService));
+        _busbarPlacementService = deps.BusbarPlacementService ?? throw new ArgumentNullException(nameof(deps.BusbarPlacementService));
+
+        InitializeChildViewModels(_dialogService, _projectService, _undoRedoService, deps.LicenseService, deps.RecentProjectsService, true);
+        InitializeRuntimeState();
+    }
+
+    private void InitializeChildViewModels(
+        IDialogService exporterDialogService,
+        IProjectService? schematicProjectService,
+        UndoRedoService? symbolManagerUndoRedoService,
+        LicenseService licenseService,
+        RecentProjectsService recentProjectsService,
+        bool markProjectAsChangedOnLayout)
+    {
         Validation = new ValidationViewModel(_electricalValidationService);
-        Schematic = new SchematicViewModel(this);
+        Schematic = new SchematicViewModel(this, schematicProjectService);
         CircuitList = new CircuitListViewModel(Symbols, _moduleTypeService);
-        Exporter = new ExportViewModel(this, new DialogService(), _pdfExportService, _bomExportService);
-        Layout = new LayoutViewModel(this, () => 
-        { 
-            PowerBalance.RecalculatePhaseBalance(Symbols, CurrentProject); 
-            RecalculateValidation(); 
-        });
-
-        Workspace = new ProjectWorkspaceViewModel(this);
-        ModuleManager = new SymbolManagerViewModel(this);
-
+        Exporter = new ExportViewModel(this, exporterDialogService, _pdfExportService, _bomExportService, _latexExportService);
+        Layout = new LayoutViewModel(this, CreateLayoutRefreshAction(markProjectAsChangedOnLayout));
+        Workspace = new ProjectWorkspaceViewModel(this, licenseService, recentProjectsService, _projectService, _dialogService, _persistenceService);
+        ModuleManager = new SymbolManagerViewModel(this, symbolManagerUndoRedoService);
         Workspace.RefreshHomeScreenData();
     }
 
-    public MainViewModel(
-        IProjectService projectService,
-        IDialogService dialogService,
-        UndoRedoService undoRedoService,
-        IModuleTypeService moduleTypeService,
-        SymbolImportService symbolImportService,
-        ProjectPersistenceService persistenceService,
-        IElectricalValidationService electricalValidationService,
-        PdfExportService pdfExportService,
-        BomExportService bomExportService,
-        BusbarPlacementService busbarPlacementService)
+    private Action CreateLayoutRefreshAction(bool markProjectAsChangedOnLayout)
     {
-        _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
-        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
-        _undoRedoService = undoRedoService ?? throw new ArgumentNullException(nameof(undoRedoService));
-        _moduleTypeService = moduleTypeService ?? throw new ArgumentNullException(nameof(moduleTypeService));
-        _symbolImportService = symbolImportService ?? throw new ArgumentNullException(nameof(symbolImportService));
-        _persistenceService = persistenceService ?? throw new ArgumentNullException(nameof(persistenceService));
-        _electricalValidationService = electricalValidationService ?? throw new ArgumentNullException(nameof(electricalValidationService));
-        _pdfExportService = pdfExportService ?? throw new ArgumentNullException(nameof(pdfExportService));
-        _bomExportService = bomExportService ?? throw new ArgumentNullException(nameof(bomExportService));
-        _busbarPlacementService = busbarPlacementService ?? throw new ArgumentNullException(nameof(busbarPlacementService));
+        return () =>
+        {
+            PowerBalance.RecalculatePhaseBalance(Symbols, CurrentProject);
+            RecalculateValidation();
 
-        Validation = new ValidationViewModel(_electricalValidationService);
-        Schematic = new SchematicViewModel(this, _projectService);
-        CircuitList = new CircuitListViewModel(Symbols, _moduleTypeService);
-        Exporter = new ExportViewModel(this, _dialogService, _pdfExportService, _bomExportService);
-        Workspace = new ProjectWorkspaceViewModel(this, _projectService, _dialogService, _persistenceService);
-        ModuleManager = new SymbolManagerViewModel(this, _undoRedoService);
-        Layout = new LayoutViewModel(this, () => 
-        { 
-            PowerBalance.RecalculatePhaseBalance(Symbols, CurrentProject); 
-            RecalculateValidation(); 
-            _projectService?.MarkAsChanged();
-        });
+            if (markProjectAsChangedOnLayout)
+            {
+                MarkProjectAsChanged();
+            }
+        };
+    }
 
-        Workspace.RefreshHomeScreenData();
-
-        _undoRedoService.StateChanged += () =>
+    private void InitializeRuntimeState()
+    {
+        _undoRedoService!.StateChanged += () =>
         {
             UndoCommand.NotifyCanExecuteChanged();
             RedoCommand.NotifyCanExecuteChanged();
         };
 
-        // Hook up theme changed callback
         ProjectTheme.OnThemeChanged += (theme) =>
         {
             WeakReferenceMessenger.Default.Send(new ThemeChangedMessage(theme));
             StatusMessage = $"Zmieniono motyw: {theme}";
         };
 
+        // Przypisanie CurrentProject wyzwala OnCurrentProjectChanged → RecalculateValidation()
         CurrentProject = new Project
         {
             Name = "Nowy projekt",
             PowerConfig = new PowerSupplyConfig()
         };
-
-        RecalculateValidation();
     }
 
     // === VALIDATION ===
@@ -268,9 +280,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         RecalculateValidation();
         RecalculatePhaseBalance();
+        Exporter?.MarkPdfPreviewDirty(clearCurrentPreview: true);
     }
 
-    partial void OnSymbolsChanged(ObservableCollection<SymbolItem> oldValue, ObservableCollection<SymbolItem> newValue)
+    partial void OnHasUnsavedChangesChanged(bool value)
+    {
+        if (_projectService != null)
+        {
+            _projectService.HasUnsavedChanges = value;
+        }
+    }
+
+    partial void OnSymbolsChanged(ObservableCollection<SymbolItem>? oldValue, ObservableCollection<SymbolItem> newValue)
     {
         if (oldValue != null)
         {
@@ -324,15 +345,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             RecalculatePhaseBalance();
             RecalculateValidation();
-            _projectService?.MarkAsChanged();
+            MarkProjectAsChanged();
         }
     }
 
 
     private void PowerConfig_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        RecalculatePhaseBalance();
         RecalculateValidation();
-        _projectService?.MarkAsChanged();
+        MarkProjectAsChanged();
     }
 
     [ObservableProperty]
@@ -410,7 +432,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         Symbols.Add(symbol);
         RecalculateModuleNumbers();
         StatusMessage = $"Dodano szynę prądową {pinCount}P";
-        _projectService?.MarkAsChanged();
+        MarkProjectAsChanged();
     }
 
     // === GROUPS & MODULE NUMBERS ===
@@ -461,4 +483,3 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GC.SuppressFinalize(this);
     }
 }
-

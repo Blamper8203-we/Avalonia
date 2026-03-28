@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using DINBoard.Constants;
@@ -19,6 +22,7 @@ public sealed class SchematicDragDropController
     private readonly SymbolImportService _importService;
     private readonly UndoRedoService _undoRedoService;
     private readonly IModuleTypeService _moduleTypeService;
+    private readonly IDialogService? _dialogService;
     private readonly SchematicSnapService _snapService = new();
     private bool _handlersAttached;
 
@@ -32,7 +36,8 @@ public sealed class SchematicDragDropController
         Image dragPreviewImage,
         SymbolImportService importService,
         UndoRedoService undoRedoService,
-        IModuleTypeService moduleTypeService)
+        IModuleTypeService moduleTypeService,
+        IDialogService? dialogService = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _canvasContainer = canvasContainer ?? throw new ArgumentNullException(nameof(canvasContainer));
@@ -42,6 +47,7 @@ public sealed class SchematicDragDropController
         _importService = importService ?? throw new ArgumentNullException(nameof(importService));
         _undoRedoService = undoRedoService ?? throw new ArgumentNullException(nameof(undoRedoService));
         _moduleTypeService = moduleTypeService ?? throw new ArgumentNullException(nameof(moduleTypeService));
+        _dialogService = dialogService;
     }
 
     public void AttachInputHandlers()
@@ -89,9 +95,9 @@ public sealed class SchematicDragDropController
         HandleDragLeave();
     }
 
-    private void OnCanvasDrop(object? sender, DragEventArgs e)
+    private async void OnCanvasDrop(object? sender, DragEventArgs e)
     {
-        HandleDrop(e);
+        await HandleDropAsync(e);
     }
 
     /// <summary>
@@ -240,6 +246,11 @@ public sealed class SchematicDragDropController
 
     public void HandleDrop(DragEventArgs e)
     {
+        HandleDropAsync(e).GetAwaiter().GetResult();
+    }
+
+    public async Task HandleDropAsync(DragEventArgs e)
+    {
         ArgumentNullException.ThrowIfNull(e);
         _dragPreviewBorder.IsVisible = false;
 
@@ -272,14 +283,7 @@ public sealed class SchematicDragDropController
             var poleCount = _moduleTypeService.GetPoleCount(newSymbol);
             if (poleCount != ModulePoleCount.Unknown)
             {
-                newSymbol.Phase = poleCount switch
-                {
-                    ModulePoleCount.P4 => "L1+L2+L3",
-                    ModulePoleCount.P3 => "L1+L2+L3",
-                    ModulePoleCount.P2 => "L1",
-                    ModulePoleCount.P1 => "L1",
-                    _ => "L1"
-                };
+                newSymbol.Phase = _moduleTypeService.GetDefaultPhaseForPoleCount(poleCount);
                 AppLog.Info($"Auto-faza: {moduleName} -> {poleCount} -> {newSymbol.Phase}");
             }
 
@@ -436,6 +440,7 @@ public sealed class SchematicDragDropController
             // _viewModel.Symbols.Add(newSymbol);
             _undoRedoService.Execute(new DINBoard.Services.AddSymbolCommand(_viewModel.Symbols, newSymbol));
             _viewModel.RecalculateModuleNumbers();
+            await PromptInductionOvenGroupScenarioAsync(newSymbol);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -457,6 +462,112 @@ public sealed class SchematicDragDropController
             AppLog.Error($"Błąd drop symbolu: {moduleFilePath}", ex);
             _viewModel.StatusMessage = $"Błąd: {ex.Message}";
         }
+    }
+
+    private async Task PromptInductionOvenGroupScenarioAsync(SymbolItem newSymbol)
+    {
+        if (_dialogService == null || string.IsNullOrWhiteSpace(newSymbol.Group))
+        {
+            return;
+        }
+
+        var groupSymbols = _viewModel.Symbols
+            .Where(symbol => string.Equals(symbol.Group, newSymbol.Group, StringComparison.Ordinal))
+            .ToList();
+
+        if (groupSymbols.Count < 2)
+        {
+            return;
+        }
+
+        var rcd4PHead = groupSymbols.FirstOrDefault(symbol =>
+            IsRcdSymbol(symbol) && _moduleTypeService.GetPoleCount(symbol) == ModulePoleCount.P4);
+        if (rcd4PHead == null)
+        {
+            return;
+        }
+
+        if (TryGetScenarioFlag(rcd4PHead, GroupScenarioConstants.InductionWithOvenPrompted))
+        {
+            return;
+        }
+
+        var pattern = DetectInductionOvenPattern(groupSymbols);
+        if (pattern == InductionOvenGroupPattern.None)
+        {
+            return;
+        }
+
+        string message = pattern switch
+        {
+            InductionOvenGroupPattern.Rcd4PWithMcb2PAnd1P =>
+                "Wykryto grupę: RCD 4P + MCB 2P + MCB 1P.\nCzy to układ indukcja (2F) + piekarnik (1F)?\nPo potwierdzeniu pojawi się kalkulator doboru zabezpieczeń.",
+            InductionOvenGroupPattern.Rcd4PWithMcb3P =>
+                "Wykryto grupę: RCD 4P + MCB 3P.\nCzy to układ indukcja (L1+L2) + piekarnik (L3)?\nPo potwierdzeniu pojawi się kalkulator doboru zabezpieczeń.",
+            _ => string.Empty
+        };
+
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        bool accepted = await _dialogService.ShowConfirmAsync("Indukcja + piekarnik", message);
+
+        foreach (var symbol in groupSymbols)
+        {
+            symbol.Parameters[GroupScenarioConstants.InductionWithOvenPrompted] = "true";
+            symbol.Parameters[GroupScenarioConstants.InductionWithOvenEnabled] = accepted ? "true" : "false";
+            symbol.Parameters[GroupScenarioConstants.InductionWithOvenPattern] = pattern.ToString();
+        }
+
+        _viewModel.MarkProjectAsChanged();
+
+        if (accepted)
+        {
+            _viewModel.StatusMessage = "Włączono kalkulator: indukcja + piekarnik";
+        }
+    }
+
+    private InductionOvenGroupPattern DetectInductionOvenPattern(IReadOnlyList<SymbolItem> groupSymbols)
+    {
+        var mcbs = groupSymbols.Where(symbol => _moduleTypeService.IsMcb(symbol)).ToList();
+        if (mcbs.Count == 0)
+        {
+            return InductionOvenGroupPattern.None;
+        }
+
+        bool hasMcb3P = mcbs.Any(symbol => _moduleTypeService.GetPoleCount(symbol) == ModulePoleCount.P3);
+        if (hasMcb3P)
+        {
+            return InductionOvenGroupPattern.Rcd4PWithMcb3P;
+        }
+
+        bool hasMcb2P = mcbs.Any(symbol => _moduleTypeService.GetPoleCount(symbol) == ModulePoleCount.P2);
+        bool hasMcb1P = mcbs.Any(symbol => _moduleTypeService.GetPoleCount(symbol) == ModulePoleCount.P1);
+        if (hasMcb2P && hasMcb1P)
+        {
+            return InductionOvenGroupPattern.Rcd4PWithMcb2PAnd1P;
+        }
+
+        return InductionOvenGroupPattern.None;
+    }
+
+    private static bool TryGetScenarioFlag(SymbolItem symbol, string key)
+    {
+        if (!symbol.Parameters.TryGetValue(key, out var raw))
+        {
+            return false;
+        }
+
+        return bool.TryParse(raw, out var parsed) && parsed;
+    }
+
+    private enum InductionOvenGroupPattern
+    {
+        None = 0,
+        Rcd4PWithMcb2PAnd1P = 1,
+        Rcd4PWithMcb3P = 2
     }
 
     private static (double Width, double Height) CalculateTerminalDimensions(string? moduleName, double currentWidth, double currentHeight)

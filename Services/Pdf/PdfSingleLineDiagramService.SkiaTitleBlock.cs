@@ -24,7 +24,7 @@ public partial class PdfSingleLineDiagramService
         canvas.DrawRect(tbX, tbY, tbW, tbH, bg);
 
         // Ramka
-        using var border = Stroke(CFrame, 0.8f);
+        using var border = Stroke(CFrame, 0.65f);
         canvas.DrawRect(tbX, tbY, tbW, tbH, border);
 
         // Podział na sekcje pionowe

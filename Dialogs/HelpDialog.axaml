@@ -1,0 +1,795 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        x:Class="DINBoard.Dialogs.HelpDialog"
+        Title="{DynamicResource DialogHelpTitle}"
+        Width="980"
+        Height="760"
+        MinWidth="860"
+        MinHeight="640"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="{DynamicResource PanelBackground}">
+
+    <Window.Styles>
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Margin" Value="0,0,10,12"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+        <Style Selector="TabItem:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+        </Style>
+        <Style Selector="TabItem:selected">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+        </Style>
+        <Style Selector="Border.help-card">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="18"/>
+        </Style>
+        <Style Selector="Button.help-nav-card">
+            <Setter Property="Background" Value="#101923"/>
+            <Setter Property="BorderBrush" Value="#2D3D4D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="Button.help-nav-card:pointerover">
+            <Setter Property="Background" Value="#152334"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+        </Style>
+        <Style Selector="Border.help-chip">
+            <Setter Property="Background" Value="#10273A"/>
+            <Setter Property="BorderBrush" Value="#1D4566"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="999"/>
+            <Setter Property="Padding" Value="10,6"/>
+        </Style>
+        <Style Selector="Border.help-step-badge">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+        </Style>
+        <Style Selector="Border.help-key-badge">
+            <Setter Property="Background" Value="#141D2A"/>
+            <Setter Property="BorderBrush" Value="#294764"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="MinWidth" Value="116"/>
+        </Style>
+        <Style Selector="TextBlock.help-section-title">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+        <Style Selector="TextBlock.help-hero-title">
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="TextBlock.help-hero-subtitle">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#B8C3D1"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="22"/>
+        </Style>
+        <Style Selector="TextBlock.help-body">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="20"/>
+        </Style>
+        <Style Selector="TextBlock.help-item">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="20"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Border Grid.Row="0"
+                Padding="18,16"
+                BorderBrush="{DynamicResource PanelBorder}"
+                BorderThickness="0,0,0,1">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#101720" Offset="0"/>
+                    <GradientStop Color="#16263B" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Border Width="44"
+                        Height="44"
+                        CornerRadius="12"
+                        Background="{DynamicResource AccentBlue}">
+                    <mi:MaterialIcon Kind="HelpCircleOutline"
+                                     Width="24"
+                                     Height="24"
+                                     Foreground="White"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{DynamicResource DialogHelpTitle}"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                    <TextBlock Text="{DynamicResource DialogHelpSubtitle}"
+                               FontSize="12"
+                               Foreground="#AEB8C5"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="2"
+                        Click="BtnClose_Click"
+                        Background="#0F1720"
+                        BorderBrush="#314051"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="8"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top">
+                    <mi:MaterialIcon Kind="Close"
+                                     Width="16"
+                                     Height="16"
+                                     Foreground="White"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="16,16,16,12" ColumnDefinitions="280,*" ColumnSpacing="16">
+            <StackPanel Spacing="16">
+                <Border Classes="help-card"
+                        Padding="20"
+                        BorderBrush="#2E4152">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#0F1722" Offset="0"/>
+                            <GradientStop Color="#122437" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="DINBoard Help Center"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"/>
+                        <TextBlock Classes="help-body"
+                                   Text="Tutaj użytkownik ma dostać wszystko, czego potrzebuje do pracy: szybki start, opis interfejsu, skróty i odpowiedzi na najczęstsze problemy."
+                                   Foreground="#C6D3DF"/>
+                        <Border Classes="help-chip" HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="CheckCircleOutline" Width="14" Height="14" Foreground="#9EF0CD"/>
+                                <TextBlock Text="Instrukcja w aplikacji" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="help-card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="help-section-title" Text="Chcę zrobić to teraz"/>
+
+                        <Button Classes="help-nav-card" Click="NavigateToTab_Click" Tag="0">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Border Width="38" Height="38" CornerRadius="11" Background="#17314A">
+                                    <mi:MaterialIcon Kind="RocketLaunchOutline" Width="18" Height="18" Foreground="#8CC4FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Text="Zacząć projekt" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Otwórz instrukcję i przejdź przez pełny workflow krok po kroku." Classes="help-body"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+
+                        <Button Classes="help-nav-card" Click="NavigateToTab_Click" Tag="1">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Border Width="38" Height="38" CornerRadius="11" Background="#203A23">
+                                    <mi:MaterialIcon Kind="ViewDashboardOutline" Width="18" Height="18" Foreground="#B7F0A3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Text="Zrozumieć interfejs" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Sprawdź, do czego służy każda część programu i gdzie czego szukać." Classes="help-body"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+
+                        <Button Classes="help-nav-card" Click="NavigateToTab_Click" Tag="2">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Border Width="38" Height="38" CornerRadius="11" Background="#17314A">
+                                    <mi:MaterialIcon Kind="KeyboardOutline" Width="18" Height="18" Foreground="#8CC4FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Text="Pracować szybciej" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Zobacz skróty, które najbardziej przyspieszają codzienną pracę." Classes="help-body"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+
+                        <Button Classes="help-nav-card" Click="NavigateToTab_Click" Tag="3">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Border Width="38" Height="38" CornerRadius="11" Background="#442024">
+                                    <mi:MaterialIcon Kind="CommentQuestionOutline" Width="18" Height="18" Foreground="#FFB2B9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Text="Rozwiązać problem" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Przejdź do FAQ i sprawdź najczęstsze blokery oraz checklistę przed eksportem." Classes="help-body"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="help-card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="help-section-title" Text="Najważniejsze teraz"/>
+                        <TextBlock Classes="help-item" Text="1. Uzupełnij dane projektu po lewej stronie."/>
+                        <TextBlock Classes="help-item" Text="2. Ustaw zasilanie przed bilansem."/>
+                        <TextBlock Classes="help-item" Text="3. Wygeneruj szynę DIN przed dodawaniem modułów."/>
+                        <TextBlock Classes="help-item" Text="4. Przed eksportem sprawdź Walidację."/>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="help-card">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="help-section-title" Text="Co znajdziesz po prawej"/>
+                        <TextBlock Classes="help-item" Text="Instrukcja: pełny przebieg pracy od projektu do eksportu."/>
+                        <TextBlock Classes="help-item" Text="Obszary programu: do czego służy każda część interfejsu."/>
+                        <TextBlock Classes="help-item" Text="Skróty: najważniejsze kombinacje do codziennej pracy."/>
+                        <TextBlock Classes="help-item" Text="FAQ: szybkie odpowiedzi na typowe blokery."/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <TabControl x:Name="HelpTabs" Grid.Column="1" Background="Transparent">
+            <TabItem Header="{DynamicResource HelpTabManual}">
+                <ScrollViewer Margin="0,4,0,0">
+                    <StackPanel Spacing="16">
+                        <Border Classes="help-card"
+                                Padding="22"
+                                BorderBrush="#304152">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#0E1723" Offset="0"/>
+                                    <GradientStop Color="#122238" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+
+                            <Grid ColumnDefinitions="*,290" ColumnSpacing="18">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Classes="help-hero-title" Text="Szybki start w DINBoard"/>
+                                    <TextBlock Classes="help-hero-subtitle" Text="{DynamicResource HelpManualIntroText}"/>
+
+                                    <WrapPanel Orientation="Horizontal" ItemHeight="36">
+                                        <Border Classes="help-chip" Margin="0,0,10,10">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <mi:MaterialIcon Kind="FileDocumentEdit" Width="14" Height="14" Foreground="#8CC4FF"/>
+                                                <TextBlock Text="{DynamicResource HeaderProjectProperties}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Classes="help-chip" Margin="0,0,10,10">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <mi:MaterialIcon Kind="FlashOutline" Width="14" Height="14" Foreground="#FFD08A"/>
+                                                <TextBlock Text="{DynamicResource HeaderPowerConfig}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Classes="help-chip" Margin="0,0,10,10">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <mi:MaterialIcon Kind="ScaleBalance" Width="14" Height="14" Foreground="#91E4B8"/>
+                                                <TextBlock Text="{DynamicResource HeaderPowerBalance}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Classes="help-chip" Margin="0,0,10,10">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <mi:MaterialIcon Kind="FilePdfBox" Width="14" Height="14" Foreground="#FF9F9F"/>
+                                                <TextBlock Text="{DynamicResource MenuExportPdf}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </WrapPanel>
+                                </StackPanel>
+
+                                <Border Grid.Column="1"
+                                        Classes="help-card"
+                                        Background="#0F1822"
+                                        BorderBrush="#2A3C4D"
+                                        Padding="16">
+                                    <StackPanel Spacing="10">
+                                        <TextBlock Text="Najkrótsza ścieżka"
+                                                   FontSize="13"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"/>
+                                        <TextBlock Classes="help-body" Text="Jeśli chcesz szybko przejść od pustego projektu do dokumentacji, trzymaj się tej kolejności:" Foreground="#C3CFDB"/>
+                                        <TextBlock Classes="help-item" Text="1. Projekt"/>
+                                        <TextBlock Classes="help-item" Text="2. Zasilanie"/>
+                                        <TextBlock Classes="help-item" Text="3. Szyna DIN"/>
+                                        <TextBlock Classes="help-item" Text="4. Moduły"/>
+                                        <TextBlock Classes="help-item" Text="5. Schemat"/>
+                                        <TextBlock Classes="help-item" Text="6. Bilans i walidacja"/>
+                                        <TextBlock Classes="help-item" Text="7. Zapis i eksport"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <Border Classes="help-card">
+                            <StackPanel>
+                                <TextBlock Classes="help-section-title" Text="{DynamicResource HelpManualWorkflowTitle}"/>
+                                <WrapPanel Orientation="Horizontal" ItemWidth="445">
+                                    <Border Classes="help-card" Margin="0,0,14,14" Padding="14" Width="445">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <Border Classes="help-step-badge">
+                                                <TextBlock Text="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpManualStep1}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Classes="help-card" Margin="0,0,14,14" Padding="14" Width="445">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <Border Classes="help-step-badge">
+                                                <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpManualStep2}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Classes="help-card" Margin="0,0,14,14" Padding="14" Width="445">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <Border Classes="help-step-badge">
+                                                <TextBlock Text="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpManualStep3}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Classes="help-card" Margin="0,0,14,14" Padding="14" Width="445">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <Border Classes="help-step-badge">
+                                                <TextBlock Text="4" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpManualStep4}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Classes="help-card" Margin="0,0,14,14" Padding="14" Width="445">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <Border Classes="help-step-badge">
+                                                <TextBlock Text="5" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpManualStep5}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Classes="help-card" Margin="0,0,14,14" Padding="14" Width="445">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <Border Classes="help-step-badge">
+                                                <TextBlock Text="6" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpManualStep6}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Classes="help-card" Margin="0,0,14,14" Padding="14" Width="445">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <Border Classes="help-step-badge">
+                                                <TextBlock Text="7" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpManualStep7}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Classes="help-card" Margin="0,0,14,14" Padding="14" Width="445">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <Border Classes="help-step-badge">
+                                                <TextBlock Text="8" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpManualStep8}"/>
+                                        </Grid>
+                                    </Border>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="1.1*,0.9*" ColumnSpacing="16">
+                            <Border Grid.Column="0" Classes="help-card">
+                                <StackPanel>
+                                    <TextBlock Classes="help-section-title" Text="{DynamicResource HelpManualTipsTitle}"/>
+                                    <StackPanel Spacing="10">
+                                        <TextBlock Classes="help-item" Text="{DynamicResource HelpManualTip1}"/>
+                                        <TextBlock Classes="help-item" Text="{DynamicResource HelpManualTip2}"/>
+                                        <TextBlock Classes="help-item" Text="{DynamicResource HelpManualTip3}"/>
+                                        <TextBlock Classes="help-item" Text="{DynamicResource HelpManualTip4}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Classes="help-card"
+                                    Background="#111A24"
+                                    BorderBrush="#2B3C4D">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Najważniejsze po zmianach"
+                                               FontSize="13"
+                                               FontWeight="Bold"
+                                               Foreground="White"/>
+                                    <TextBlock Classes="help-item" Text="Po zmianie obwodów wróć do zakładki Bilans i sprawdź obciążenia faz."/>
+                                    <TextBlock Classes="help-item" Text="Po balansowaniu zawsze zajrzyj do Walidacji, zanim zapiszesz dokumentację końcową."/>
+                                    <TextBlock Classes="help-item" Text="Jeżeli w eksporcie brakuje danych opisowych, sprawdź Właściwości Projektu po lewej stronie."/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="{DynamicResource HelpTabAreas}">
+                <ScrollViewer Margin="0,4,0,0">
+                    <StackPanel Spacing="16">
+                        <Border Classes="help-card"
+                                Padding="20"
+                                Background="#101721"
+                                BorderBrush="#2B3A4A">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                <Border Width="46" Height="46" CornerRadius="14" Background="#15304A">
+                                    <mi:MaterialIcon Kind="ViewDashboardOutline"
+                                                     Width="24"
+                                                     Height="24"
+                                                     Foreground="#8CC4FF"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock Text="Najważniejsze części interfejsu"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                    <TextBlock Classes="help-body"
+                                               Text="Ta zakładka pokazuje, za co odpowiadają główne obszary programu. Dzięki temu łatwiej szybko odnaleźć właściwe miejsce pracy bez szukania funkcji po całym interfejsie."
+                                               Foreground="#C3CFDB"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <WrapPanel Orientation="Horizontal" ItemWidth="450">
+                            <Border Classes="help-card" Margin="0,0,14,14" Width="450">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#1E3A5F">
+                                        <mi:MaterialIcon Kind="HomeOutline" Width="20" Height="20" Foreground="#A8D4FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="help-section-title" Text="{DynamicResource HelpAreaStartTitle}"/>
+                                        <TextBlock Classes="help-body" Text="{DynamicResource HelpAreaStartText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Classes="help-card" Margin="0,0,14,14" Width="450">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#2B3F1F">
+                                        <mi:MaterialIcon Kind="ViewModule" Width="20" Height="20" Foreground="#B7F0A3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="help-section-title" Text="{DynamicResource HelpAreaModulesTitle}"/>
+                                        <TextBlock Classes="help-body" Text="{DynamicResource HelpAreaModulesText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Classes="help-card" Margin="0,0,14,14" Width="450">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#3C2F18">
+                                        <mi:MaterialIcon Kind="FileDocumentEdit" Width="20" Height="20" Foreground="#FFD590" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="help-section-title" Text="{DynamicResource HelpAreaPropertiesTitle}"/>
+                                        <TextBlock Classes="help-body" Text="{DynamicResource HelpAreaPropertiesText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Classes="help-card" Margin="0,0,14,14" Width="450">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#222B45">
+                                        <mi:MaterialIcon Kind="FileTreeOutline" Width="20" Height="20" Foreground="#AEBFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="help-section-title" Text="{DynamicResource HelpAreaSheetsTitle}"/>
+                                        <TextBlock Classes="help-body" Text="{DynamicResource HelpAreaSheetsText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Classes="help-card" Margin="0,0,14,14" Width="450">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#2D324A">
+                                        <mi:MaterialIcon Kind="FlashOutline" Width="20" Height="20" Foreground="#9FCEFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="help-section-title" Text="{DynamicResource HelpAreaConfigTitle}"/>
+                                        <TextBlock Classes="help-body" Text="{DynamicResource HelpAreaConfigText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Classes="help-card" Margin="0,0,14,14" Width="450">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#16352E">
+                                        <mi:MaterialIcon Kind="ScaleBalance" Width="20" Height="20" Foreground="#9EF0CD" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="help-section-title" Text="{DynamicResource HelpAreaBalanceTitle}"/>
+                                        <TextBlock Classes="help-body" Text="{DynamicResource HelpAreaBalanceText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Classes="help-card" Margin="0,0,14,14" Width="450">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#442024">
+                                        <mi:MaterialIcon Kind="AlertCircleOutline" Width="20" Height="20" Foreground="#FFB2B9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="help-section-title" Text="{DynamicResource HelpAreaValidationTitle}"/>
+                                        <TextBlock Classes="help-body" Text="{DynamicResource HelpAreaValidationText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Classes="help-card" Margin="0,0,14,14" Width="450">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#263547">
+                                        <mi:MaterialIcon Kind="FileDocumentEdit" Width="20" Height="20" Foreground="#A7D1FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="help-section-title" Text="{DynamicResource HelpAreaCircuitEditTitle}"/>
+                                        <TextBlock Classes="help-body" Text="{DynamicResource HelpAreaCircuitEditText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Border Classes="help-card" Margin="0,0,14,14" Width="450">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Width="42" Height="42" CornerRadius="12" Background="#472629">
+                                        <mi:MaterialIcon Kind="FilePdfBox" Width="20" Height="20" Foreground="#FFB3B3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="help-section-title" Text="{DynamicResource HelpAreaExportTitle}"/>
+                                        <TextBlock Classes="help-body" Text="{DynamicResource HelpAreaExportText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="{DynamicResource HelpTabShortcuts}">
+                <ScrollViewer Margin="0,4,0,0">
+                    <StackPanel Spacing="16">
+                        <Border Classes="help-card"
+                                Padding="20"
+                                Background="#101721"
+                                BorderBrush="#2B3A4A">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                <Border Width="46" Height="46" CornerRadius="14" Background="#16304B">
+                                    <mi:MaterialIcon Kind="KeyboardOutline"
+                                                     Width="24"
+                                                     Height="24"
+                                                     Foreground="#8CC4FF"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock Text="Najczęściej używane skróty"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                    <TextBlock Classes="help-body"
+                                               Text="Ta zakładka zbiera skróty, które realnie przyspieszają codzienną pracę: tworzenie projektu, zapis, cofanie zmian, edycję i eksport dokumentacji."
+                                               Foreground="#C3CFDB"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Grid ColumnDefinitions="1*,1*" ColumnSpacing="16">
+                            <Border Grid.Column="0" Classes="help-card">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Classes="help-section-title" Text="Projekt i pliki"/>
+
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="12">
+                                        <Border Classes="help-key-badge">
+                                            <TextBlock Text="Ctrl+N" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpShortcutDescNewProject}"/>
+
+                                        <Border Grid.Row="1" Classes="help-key-badge">
+                                            <TextBlock Text="Ctrl+O" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpShortcutDescOpenProject}"/>
+
+                                        <Border Grid.Row="2" Classes="help-key-badge">
+                                            <TextBlock Text="Ctrl+S" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpShortcutDescSaveProject}"/>
+
+                                        <Border Grid.Row="3" Classes="help-key-badge">
+                                            <TextBlock Text="Ctrl+Shift+S" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpShortcutDescSaveAs}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Classes="help-card">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Classes="help-section-title" Text="Edycja i poprawki"/>
+
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="12">
+                                        <Border Classes="help-key-badge">
+                                            <TextBlock Text="Ctrl+Z" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpShortcutDescUndo}"/>
+
+                                        <Border Grid.Row="1" Classes="help-key-badge">
+                                            <TextBlock Text="Ctrl+Y" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpShortcutDescRedo}"/>
+
+                                        <Border Grid.Row="2" Classes="help-key-badge">
+                                            <TextBlock Text="Ctrl+D" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpShortcutDescDuplicate}"/>
+
+                                        <Border Grid.Row="3" Classes="help-key-badge">
+                                            <TextBlock Text="Delete" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpShortcutDescDelete}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="1.1*,0.9*" ColumnSpacing="16">
+                            <Border Grid.Column="0" Classes="help-card">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Classes="help-section-title" Text="Eksport"/>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                        <Border Classes="help-key-badge">
+                                            <TextBlock Text="Ctrl+P" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="1" Classes="help-item" Text="{DynamicResource HelpShortcutDescExportPdf}"/>
+                                    </Grid>
+                                    <TextBlock Classes="help-body" Text="Po eksporcie warto jeszcze raz sprawdzić, czy dane w Właściwościach Projektu i wyniki Walidacji są aktualne."/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Classes="help-card"
+                                    Background="#111A24"
+                                    BorderBrush="#2B3C4D">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Warto pamiętać"
+                                               FontSize="13"
+                                               FontWeight="Bold"
+                                               Foreground="White"/>
+                                    <TextBlock Classes="help-item" Text="{DynamicResource HelpHintText}"/>
+                                    <TextBlock Classes="help-item" Text="Najbardziej opłaca się używać skrótów przy zapisie, cofnięciu zmian i eksporcie PDF."/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="FAQ">
+                <ScrollViewer Margin="0,4,0,0">
+                    <StackPanel Spacing="16">
+                        <Border Classes="help-card"
+                                Padding="20"
+                                Background="#101721"
+                                BorderBrush="#2B3A4A">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                <Border Width="46" Height="46" CornerRadius="14" Background="#17314A">
+                                    <mi:MaterialIcon Kind="CommentQuestionOutline"
+                                                     Width="24"
+                                                     Height="24"
+                                                     Foreground="#8CC4FF"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock Text="Najczęstsze pytania i problemy"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                    <TextBlock Classes="help-body"
+                                               Text="Ta zakładka zbiera typowe sytuacje, które potrafią zatrzymać pracę. Chodzi o szybkie dojście do rozwiązania, bez zgadywania gdzie kliknąć."
+                                               Foreground="#C3CFDB"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border Classes="help-card">
+                            <StackPanel Spacing="10">
+                                <TextBlock Classes="help-section-title" Text="Nie mogę dodać modułów"/>
+                                <TextBlock Classes="help-body" Text="Najczęściej oznacza to, że nie została jeszcze wygenerowana szyna DIN. Wejdź w narzędzia, wygeneruj szynę, a potem wróć do panelu Moduły."/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="help-card">
+                            <StackPanel Spacing="10">
+                                <TextBlock Classes="help-section-title" Text="Panel edycji obwodu jest pusty"/>
+                                <TextBlock Classes="help-body" Text="Zaznacz moduł ponownie albo użyj dwukliku na elemencie. Panel Edycja obwodu pokazuje dane tylko dla aktywnego, edytowalnego obiektu."/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="help-card">
+                            <StackPanel Spacing="10">
+                                <TextBlock Classes="help-section-title" Text="Walidacja pokazuje błędy po zmianach"/>
+                                <TextBlock Classes="help-body" Text="Po zmianach w obwodach albo konfiguracji wróć do Bilansu, odśwież rozkład faz, a następnie jeszcze raz przejrzyj Walidację. Część komunikatów wynika ze starego stanu pośredniego."/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="help-card">
+                            <StackPanel Spacing="10">
+                                <TextBlock Classes="help-section-title" Text="PDF nie zawiera pełnych danych projektu"/>
+                                <TextBlock Classes="help-body" Text="Sprawdź panel Właściwości Projektu. Brak nazwy, numeru rysunku, autora albo rewizji zwykle oznacza niepełny nagłówek dokumentacji."/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="help-card">
+                            <StackPanel Spacing="10">
+                                <TextBlock Classes="help-section-title" Text="Co sprawdzić przed finalnym eksportem"/>
+                                <TextBlock Classes="help-item" Text="1. Czy dane projektu są kompletne."/>
+                                <TextBlock Classes="help-item" Text="2. Czy konfiguracja zasilania jest zgodna z projektem."/>
+                                <TextBlock Classes="help-item" Text="3. Czy bilans faz jest aktualny."/>
+                                <TextBlock Classes="help-item" Text="4. Czy Walidacja nie pokazuje błędów krytycznych."/>
+                                <TextBlock Classes="help-item" Text="5. Czy projekt został zapisany po ostatnich zmianach."/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            </TabControl>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Padding="16,12"
+                Background="{DynamicResource PanelHeaderBackground}"
+                BorderBrush="{DynamicResource PanelBorder}"
+                BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="Pomoc została przygotowana jako szybkie centrum orientacyjne dla codziennej pracy z DINBoard."
+                           FontSize="11"
+                           Foreground="{DynamicResource TextTertiary}"
+                           VerticalAlignment="Center"/>
+                <Button Grid.Column="1"
+                        Classes="accent"
+                        Width="110"
+                        Click="BtnClose_Click"
+                        Content="{DynamicResource DialogOk}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

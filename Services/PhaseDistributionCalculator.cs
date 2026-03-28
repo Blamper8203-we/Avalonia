@@ -123,7 +123,7 @@ public static class PhaseDistributionCalculator
     /// Jednostka bilansowania — może być pojedynczy MCB lub grupa RCD 2P + MCBs.
     /// Cała jednostka dostaje jedną fazę.
     /// </summary>
-    private class BalanceUnit
+    internal sealed class BalanceUnit
     {
         public List<SymbolItem> Symbols { get; } = new();
         public double TotalWeight { get; set; }
@@ -133,6 +133,37 @@ public static class PhaseDistributionCalculator
             ? Symbols[0].Label ?? Symbols[0].Id
             : $"RCD-grupa ({Symbols.Count} szt.)";
     }
+
+    internal sealed record PhaseIndicatorAssignment(SymbolItem Symbol, string Phase);
+
+    internal sealed class BalancePlan
+    {
+        public Dictionary<string, string> Snapshot { get; } = new();
+        public List<PhaseIndicatorAssignment> PhaseIndicatorAssignments { get; } = new();
+        public List<BalanceUnit> Units { get; } = new();
+        public List<SymbolItem> WorkingSymbols { get; } = new();
+        public double[] Loads { get; } = new double[3];
+        public int RcdCount { get; set; }
+    }
+
+    internal sealed record RefinementMoveCandidate(
+        SymbolItem Mcb,
+        BalanceUnit SourceUnit,
+        BalanceUnit? TargetRcdUnit,
+        double Weight,
+        bool IsStandalone);
+
+    internal sealed record RefinementSwapCandidate(
+        BalanceUnit HeavyUnit,
+        BalanceUnit LightUnit,
+        double ResultingImbalance);
+
+    private static readonly string[] PhaseNames = { "L1", "L2", "L3" };
+    private const double TargetImbalancePercent = 3.0;
+    private const double MinRefinementDiff = 0.01;
+    private const double MinSwapImprovementPercent = 0.5;
+    private const int MaxMoveRefinementSteps = 50;
+    private const int MaxSwapRefinementSteps = 30;
 
     private static bool IsSinglePhase(SymbolItem s)
     {
@@ -197,6 +228,527 @@ public static class PhaseDistributionCalculator
     private static double GetSymbolWeight(SymbolItem s, BalanceMode mode, int voltage = 230)
         => GetWeight(s.PowerW, mode, voltage);
 
+    internal static BalancePlan CreateBalancePlan(
+        IEnumerable<SymbolItem> allSymbols,
+        BalanceMode mode = BalanceMode.Current,
+        BalanceScope scope = BalanceScope.OnlyUnlocked,
+        int voltage = 230)
+    {
+        var plan = new BalancePlan();
+        var sourceSymbols = allSymbols.ToList();
+
+        foreach (var symbol in sourceSymbols)
+        {
+            plan.Snapshot[symbol.Id] = symbol.Phase;
+        }
+
+        plan.WorkingSymbols.AddRange(sourceSymbols);
+
+        var phaseIndicators = sourceSymbols.Where(IsPhaseIndicator).ToList();
+        for (int i = 0; i < phaseIndicators.Count; i++)
+        {
+            plan.PhaseIndicatorAssignments.Add(
+                new PhaseIndicatorAssignment(phaseIndicators[i], PhaseNames[i % PhaseNames.Length]));
+        }
+
+        plan.WorkingSymbols.RemoveAll(IsPhaseIndicator);
+
+        var symbolList = plan.WorkingSymbols;
+        var rcdMap = new Dictionary<string, SymbolItem>();
+        var mcbsByRcd = new Dictionary<string, List<SymbolItem>>();
+
+        foreach (var symbol in symbolList)
+        {
+            if (IsGroupHeadSymbol(symbol))
+            {
+                rcdMap[symbol.Id] = symbol;
+            }
+        }
+
+        plan.RcdCount = rcdMap.Count;
+
+        foreach (var symbol in symbolList)
+        {
+            if (!string.IsNullOrEmpty(symbol.RcdSymbolId) && rcdMap.ContainsKey(symbol.RcdSymbolId))
+            {
+                if (!mcbsByRcd.TryGetValue(symbol.RcdSymbolId, out var list))
+                {
+                    list = new List<SymbolItem>();
+                    mcbsByRcd[symbol.RcdSymbolId] = list;
+                }
+
+                list.Add(symbol);
+            }
+        }
+
+        var processedSymbolIds = new HashSet<string>();
+
+        // MCB z PowerW>0 -> waga z pradu/mocy; MCB z PowerW=0 -> waga 0.
+        // Grupy z zerowa moca dostaja mikroskopijna wage, zeby nadal trafic na faze.
+        const double ZeroPowerUnitWeight = 0.001;
+
+        foreach (var kvp in rcdMap)
+        {
+            var rcd = kvp.Value;
+            if (!IsRcdSinglePhase(rcd))
+            {
+                continue;
+            }
+
+            var mcbs = mcbsByRcd.TryGetValue(rcd.Id, out var list) ? list : new List<SymbolItem>();
+            bool anyLocked = rcd.IsPhaseLocked || mcbs.Any(m => m.IsPhaseLocked);
+            if (scope == BalanceScope.OnlyUnlocked && anyLocked)
+            {
+                double weight = mcbs.Sum(m => GetSymbolWeight(m, mode, voltage));
+                var phase = rcd.Phase?.ToUpperInvariant();
+                if (phase == "L2")
+                {
+                    plan.Loads[1] += weight;
+                }
+                else if (phase == "L3")
+                {
+                    plan.Loads[2] += weight;
+                }
+                else
+                {
+                    plan.Loads[0] += weight;
+                }
+
+                processedSymbolIds.Add(rcd.Id);
+                foreach (var mcb in mcbs)
+                {
+                    processedSymbolIds.Add(mcb.Id);
+                }
+
+                continue;
+            }
+
+            var unit = new BalanceUnit();
+            unit.Symbols.Add(rcd);
+            unit.Symbols.AddRange(mcbs);
+            double powerWeight = mcbs.Sum(m => GetSymbolWeight(m, mode, voltage));
+            unit.TotalWeight = powerWeight > 0 ? powerWeight : ZeroPowerUnitWeight * Math.Max(mcbs.Count, 1);
+
+            plan.Units.Add(unit);
+            processedSymbolIds.Add(rcd.Id);
+            foreach (var mcb in mcbs)
+            {
+                processedSymbolIds.Add(mcb.Id);
+            }
+        }
+
+        foreach (var kvp in rcdMap)
+        {
+            var rcd = kvp.Value;
+            if (IsRcdSinglePhase(rcd))
+            {
+                continue;
+            }
+
+            processedSymbolIds.Add(rcd.Id);
+
+            var mcbs = mcbsByRcd.TryGetValue(rcd.Id, out var list) ? list : new List<SymbolItem>();
+            foreach (var mcb in mcbs)
+            {
+                processedSymbolIds.Add(mcb.Id);
+
+                if (!IsSinglePhase(mcb))
+                {
+                    continue;
+                }
+
+                double weight = GetSymbolWeight(mcb, mode, voltage);
+                if (scope == BalanceScope.OnlyUnlocked && mcb.IsPhaseLocked)
+                {
+                    var phase = mcb.Phase?.ToUpperInvariant();
+                    if (phase == "L2")
+                    {
+                        plan.Loads[1] += weight;
+                    }
+                    else if (phase == "L3")
+                    {
+                        plan.Loads[2] += weight;
+                    }
+                    else
+                    {
+                        plan.Loads[0] += weight;
+                    }
+
+                    continue;
+                }
+
+                var unit = new BalanceUnit();
+                unit.Symbols.Add(mcb);
+                unit.TotalWeight = weight > 0 ? weight : ZeroPowerUnitWeight;
+                plan.Units.Add(unit);
+            }
+        }
+
+        foreach (var symbol in symbolList)
+        {
+            if (processedSymbolIds.Contains(symbol.Id))
+            {
+                continue;
+            }
+
+            if (!IsSinglePhase(symbol))
+            {
+                if (symbol.PowerW > 0)
+                {
+                    var dist = DistributePower(symbol.PowerW, symbol.Phase);
+                    plan.Loads[0] += GetWeight(dist.L1PowerW, mode, voltage);
+                    plan.Loads[1] += GetWeight(dist.L2PowerW, mode, voltage);
+                    plan.Loads[2] += GetWeight(dist.L3PowerW, mode, voltage);
+                }
+
+                continue;
+            }
+
+            double weight = GetSymbolWeight(symbol, mode, voltage);
+            if (scope == BalanceScope.OnlyUnlocked && symbol.IsPhaseLocked)
+            {
+                var phase = symbol.Phase?.ToUpperInvariant();
+                if (phase == "L2")
+                {
+                    plan.Loads[1] += weight;
+                }
+                else if (phase == "L3")
+                {
+                    plan.Loads[2] += weight;
+                }
+                else
+                {
+                    plan.Loads[0] += weight;
+                }
+
+                continue;
+            }
+
+            var unit = new BalanceUnit();
+            unit.Symbols.Add(symbol);
+            unit.TotalWeight = weight > 0 ? weight : ZeroPowerUnitWeight;
+            plan.Units.Add(unit);
+        }
+
+        plan.Units.Sort((a, b) => b.TotalWeight.CompareTo(a.TotalWeight));
+        return plan;
+    }
+
+    private static void ApplyPhaseIndicatorAssignments(BalancePlan plan)
+    {
+        foreach (var assignment in plan.PhaseIndicatorAssignments)
+        {
+            assignment.Symbol.Phase = assignment.Phase;
+        }
+    }
+
+    private static void LogBalancePlan(BalancePlan plan, BalanceMode mode, BalanceScope scope)
+    {
+        AppLog.Debug($"BalancePhases: RCDs={plan.RcdCount}, units={plan.Units.Count}, base L1={plan.Loads[0]:F0} L2={plan.Loads[1]:F0} L3={plan.Loads[2]:F0}, scope={scope}, mode={mode}");
+        foreach (var unit in plan.Units)
+        {
+            double unitPowerW = unit.Symbols.Sum(symbol => symbol.PowerW);
+            AppLog.Debug($"  Unit: {unit.Label}, weight={unit.TotalWeight:F2}, powerW={unitPowerW:F0}, symbols={unit.Symbols.Count}");
+        }
+    }
+
+    private static BalanceUnit? FindTargetRcdUnit(IEnumerable<BalanceUnit> units, string lightPhase)
+        => units
+            .Where(unit => unit.Symbols.Count > 0
+                && string.Equals(unit.Symbols[0].Phase, lightPhase, StringComparison.OrdinalIgnoreCase)
+                && unit.Symbols.Any(IsGroupHeadSymbol))
+            .OrderBy(unit => unit.TotalWeight)
+            .FirstOrDefault();
+
+    private static void ConsiderMoveCandidate(
+        IEnumerable<SymbolItem> movableSymbols,
+        BalanceUnit sourceUnit,
+        BalanceUnit? targetRcdUnit,
+        bool isStandalone,
+        double diff,
+        double idealWeight,
+        BalanceMode mode,
+        int voltage,
+        ref RefinementMoveCandidate? bestCandidate,
+        ref double bestFit)
+    {
+        foreach (var mcb in movableSymbols)
+        {
+            double weight = GetSymbolWeight(mcb, mode, voltage);
+            if (weight <= 0 || weight > diff)
+            {
+                continue;
+            }
+
+            double fit = Math.Abs(weight - idealWeight);
+            if (fit < bestFit)
+            {
+                bestFit = fit;
+                bestCandidate = new RefinementMoveCandidate(mcb, sourceUnit, targetRcdUnit, weight, isStandalone);
+            }
+        }
+    }
+
+    internal static RefinementMoveCandidate? FindBestMoveCandidate(
+        IEnumerable<BalanceUnit> units,
+        string heavyPhase,
+        string lightPhase,
+        double diff,
+        double idealWeight,
+        BalanceMode mode,
+        int voltage)
+    {
+        var targetRcdUnit = FindTargetRcdUnit(units, lightPhase);
+        RefinementMoveCandidate? bestCandidate = null;
+        double bestFit = double.MaxValue;
+
+        foreach (var unit in units)
+        {
+            if (unit.Symbols.Count == 0)
+            {
+                continue;
+            }
+
+            if (!string.Equals(unit.Symbols[0].Phase, heavyPhase, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            bool hasRcd = unit.Symbols.Any(IsGroupHeadSymbol);
+            if (hasRcd)
+            {
+                if (targetRcdUnit == null)
+                {
+                    continue;
+                }
+
+                var movable = unit.Symbols
+                    .Where(symbol => !IsGroupHeadSymbol(symbol) && IsSinglePhase(symbol) && symbol.PowerW > 0)
+                    .ToList();
+                if (movable.Count <= 1)
+                {
+                    continue;
+                }
+
+                ConsiderMoveCandidate(
+                    movable,
+                    unit,
+                    targetRcdUnit,
+                    false,
+                    diff,
+                    idealWeight,
+                    mode,
+                    voltage,
+                    ref bestCandidate,
+                    ref bestFit);
+            }
+            else
+            {
+                var movable = unit.Symbols
+                    .Where(symbol => IsSinglePhase(symbol) && symbol.PowerW > 0)
+                    .ToList();
+
+                ConsiderMoveCandidate(
+                    movable,
+                    unit,
+                    null,
+                    true,
+                    diff,
+                    idealWeight,
+                    mode,
+                    voltage,
+                    ref bestCandidate,
+                    ref bestFit);
+            }
+        }
+
+        return bestCandidate;
+    }
+
+    private static void ApplyMoveCandidate(
+        RefinementMoveCandidate candidate,
+        string lightPhase,
+        int heavyIdx,
+        int lightIdx,
+        double[] loads)
+    {
+        if (candidate.IsStandalone)
+        {
+            candidate.Mcb.Phase = lightPhase;
+            candidate.SourceUnit.TotalWeight -= candidate.Weight;
+        }
+        else if (candidate.TargetRcdUnit != null)
+        {
+            var targetRcd = candidate.TargetRcdUnit.Symbols.First(symbol => IsGroupHeadSymbol(symbol));
+
+            candidate.SourceUnit.Symbols.Remove(candidate.Mcb);
+            candidate.SourceUnit.TotalWeight -= candidate.Weight;
+
+            candidate.TargetRcdUnit.Symbols.Add(candidate.Mcb);
+            candidate.TargetRcdUnit.TotalWeight += candidate.Weight;
+
+            candidate.Mcb.Phase = targetRcd.Phase;
+            candidate.Mcb.RcdSymbolId = targetRcd.Id;
+            candidate.Mcb.Group = targetRcd.Group;
+
+            CompactGroup(candidate.SourceUnit.Symbols);
+            CompactGroup(candidate.TargetRcdUnit.Symbols);
+        }
+
+        loads[heavyIdx] -= candidate.Weight;
+        loads[lightIdx] += candidate.Weight;
+    }
+
+    private static List<BalanceUnit> GetStandaloneUnitsForPhase(IEnumerable<BalanceUnit> units, string phase)
+        => units
+            .Where(unit => unit.Symbols.Count > 0
+                && !unit.Symbols.Any(IsGroupHeadSymbol)
+                && string.Equals(unit.Symbols[0].Phase, phase, StringComparison.OrdinalIgnoreCase)
+                && unit.TotalWeight > 0)
+            .ToList();
+
+    internal static RefinementSwapCandidate? FindBestSwapCandidate(
+        IEnumerable<BalanceUnit> units,
+        double[] loads,
+        string heavyPhase,
+        string lightPhase,
+        int heavyIdx,
+        int lightIdx,
+        double currentImbalance)
+    {
+        var heavyStandalone = GetStandaloneUnitsForPhase(units, heavyPhase);
+        var lightStandalone = GetStandaloneUnitsForPhase(units, lightPhase);
+        RefinementSwapCandidate? bestCandidate = null;
+        double bestSwapImbalance = currentImbalance;
+
+        foreach (var heavyUnit in heavyStandalone)
+        {
+            foreach (var lightUnit in lightStandalone)
+            {
+                double[] testLoads = { loads[0], loads[1], loads[2] };
+                testLoads[heavyIdx] -= heavyUnit.TotalWeight;
+                testLoads[heavyIdx] += lightUnit.TotalWeight;
+                testLoads[lightIdx] -= lightUnit.TotalWeight;
+                testLoads[lightIdx] += heavyUnit.TotalWeight;
+
+                double testImbalance = CalculateImbalancePercent(testLoads[0], testLoads[1], testLoads[2]);
+                if (testImbalance < bestSwapImbalance - MinSwapImprovementPercent)
+                {
+                    bestSwapImbalance = testImbalance;
+                    bestCandidate = new RefinementSwapCandidate(heavyUnit, lightUnit, testImbalance);
+                }
+            }
+        }
+
+        return bestCandidate;
+    }
+
+    private static void ApplySwapCandidate(
+        RefinementSwapCandidate candidate,
+        string heavyPhase,
+        string lightPhase,
+        int heavyIdx,
+        int lightIdx,
+        double[] loads)
+    {
+        loads[heavyIdx] -= candidate.HeavyUnit.TotalWeight;
+        loads[heavyIdx] += candidate.LightUnit.TotalWeight;
+        loads[lightIdx] -= candidate.LightUnit.TotalWeight;
+        loads[lightIdx] += candidate.HeavyUnit.TotalWeight;
+
+        foreach (var symbol in candidate.HeavyUnit.Symbols)
+        {
+            symbol.Phase = lightPhase;
+        }
+
+        foreach (var symbol in candidate.LightUnit.Symbols)
+        {
+            symbol.Phase = heavyPhase;
+        }
+    }
+
+    private static bool NeedsRefinement(double[] loads)
+        => CalculateImbalancePercent(loads[0], loads[1], loads[2]) > TargetImbalancePercent;
+
+    private static async Task<bool> TryApplyMoveRefinementStepAsync(
+        IEnumerable<BalanceUnit> units,
+        double[] loads,
+        string[] phaseNames,
+        BalanceMode mode,
+        int voltage,
+        int step)
+    {
+        int heavyIdx = MaxIndex(loads);
+        int lightIdx = MinIndex(loads);
+        if (heavyIdx == lightIdx)
+        {
+            return false;
+        }
+
+        double diff = loads[heavyIdx] - loads[lightIdx];
+        if (diff < MinRefinementDiff)
+        {
+            return false;
+        }
+
+        double idealWeight = diff / 2.0;
+        var moveCandidate = FindBestMoveCandidate(
+            units,
+            phaseNames[heavyIdx],
+            phaseNames[lightIdx],
+            diff,
+            idealWeight,
+            mode,
+            voltage);
+        if (moveCandidate == null)
+        {
+            return false;
+        }
+
+        await PhaseDistributionExecutionHelper.ExecuteAnimatedChangeAsync(
+            new[] { moveCandidate.Mcb },
+            () => ApplyMoveCandidate(moveCandidate, phaseNames[lightIdx], heavyIdx, lightIdx, loads));
+
+        AppLog.Debug($"BalancePhases refinement #{step}: {(moveCandidate.IsStandalone ? "standalone" : "RCD→RCD")} {moveCandidate.Mcb.Label ?? moveCandidate.Mcb.Id} ({moveCandidate.Mcb.PowerW}W, w={moveCandidate.Weight:F2}) → {phaseNames[lightIdx]}, L1={loads[0]:F2} L2={loads[1]:F2} L3={loads[2]:F2}");
+        return true;
+    }
+
+    private static async Task<bool> TryApplySwapRefinementStepAsync(
+        IEnumerable<BalanceUnit> units,
+        double[] loads,
+        string[] phaseNames,
+        int step)
+    {
+        int heavyIdx = MaxIndex(loads);
+        int lightIdx = MinIndex(loads);
+        if (heavyIdx == lightIdx)
+        {
+            return false;
+        }
+
+        double currentImbalance = CalculateImbalancePercent(loads[0], loads[1], loads[2]);
+        var swapCandidate = FindBestSwapCandidate(
+            units,
+            loads,
+            phaseNames[heavyIdx],
+            phaseNames[lightIdx],
+            heavyIdx,
+            lightIdx,
+            currentImbalance);
+        if (swapCandidate == null)
+        {
+            return false;
+        }
+
+        var swapSymbols = swapCandidate.HeavyUnit.Symbols.Concat(swapCandidate.LightUnit.Symbols).ToList();
+        await PhaseDistributionExecutionHelper.ExecuteAnimatedChangeAsync(
+            swapSymbols,
+            () => ApplySwapCandidate(swapCandidate, phaseNames[heavyIdx], phaseNames[lightIdx], heavyIdx, lightIdx, loads));
+
+        AppLog.Debug($"BalancePhases swap #{step}: {swapCandidate.HeavyUnit.Label} ↔ {swapCandidate.LightUnit.Label}, imbalance={swapCandidate.ResultingImbalance:F1}%, L1={loads[0]:F2} L2={loads[1]:F2} L3={loads[2]:F2}");
+        return true;
+    }
+
     /// <summary>
     /// Automatycznie bilansuje obwody na fazy L1/L2/L3
     /// z uwzględnieniem grup RCD (MCBs pod RCD 2P muszą mieć tę samą fazę).
@@ -208,198 +760,68 @@ public static class PhaseDistributionCalculator
     /// 
     /// Zwraca snapshot do Undo.
     /// </summary>
+    private static async Task RunMoveRefinementAsync(
+        IEnumerable<BalanceUnit> units,
+        double[] loads,
+        string[] phaseNames,
+        BalanceMode mode,
+        int voltage)
+    {
+        for (int step = 0; step < MaxMoveRefinementSteps && NeedsRefinement(loads); step++)
+        {
+            bool appliedMove = await TryApplyMoveRefinementStepAsync(units, loads, phaseNames, mode, voltage, step);
+            if (!appliedMove)
+            {
+                break;
+            }
+        }
+
+        double imbalanceAfterMoves = CalculateImbalancePercent(loads[0], loads[1], loads[2]);
+        AppLog.Debug($"BalancePhases po move-refinement: L1={loads[0]:F0} L2={loads[1]:F0} L3={loads[2]:F0}, asymetria={imbalanceAfterMoves:F1}%");
+    }
+
+    private static async Task RunSwapRefinementAsync(
+        IEnumerable<BalanceUnit> units,
+        double[] loads,
+        string[] phaseNames)
+    {
+        for (int step = 0; step < MaxSwapRefinementSteps && NeedsRefinement(loads); step++)
+        {
+            bool appliedSwap = await TryApplySwapRefinementStepAsync(units, loads, phaseNames, step);
+            if (!appliedSwap)
+            {
+                break;
+            }
+        }
+    }
+
     public static async Task<Dictionary<string, string>> BalancePhasesAsync(
         IEnumerable<SymbolItem> allSymbols,
         BalanceMode mode = BalanceMode.Current,
         BalanceScope scope = BalanceScope.OnlyUnlocked,
         int voltage = 230)
     {
-        var symbolList = allSymbols.ToList();
+        var plan = CreateBalancePlan(allSymbols, mode, scope, voltage);
+        var snapshot = plan.Snapshot;
+        var symbolList = plan.WorkingSymbols;
+        var units = plan.Units;
+        var loads = plan.Loads;
 
-        // 1. Snapshot do Undo
-        var snapshot = new Dictionary<string, string>();
-        foreach (var s in symbolList)
-            snapshot[s.Id] = s.Phase;
+        ApplyPhaseIndicatorAssignments(plan);
 
         // 1b. Kontrolki faz — wyklucz z bilansowania, przypisz L1/L2/L3
-        var phaseIndicators = symbolList.Where(IsPhaseIndicator).ToList();
-        if (phaseIndicators.Count > 0)
+        if (plan.PhaseIndicatorAssignments.Count > 0)
         {
-            string[] phases = { "L1", "L2", "L3" };
-            for (int i = 0; i < phaseIndicators.Count; i++)
-                phaseIndicators[i].Phase = phases[i % 3];
-            symbolList = symbolList.Where(s => !IsPhaseIndicator(s)).ToList();
-            AppLog.Debug($"BalancePhases: wykluczono {phaseIndicators.Count} kontrolek faz (przypisano L1/L2/L3)");
+            AppLog.Debug($"BalancePhases: wykluczono {plan.PhaseIndicatorAssignments.Count} kontrolek faz (przypisano L1/L2/L3)");
         }
 
-        // 2. Zidentyfikuj RCD-y i ich podrzędne MCBs
-        var rcdMap = new Dictionary<string, SymbolItem>(); // rcdId → RCD symbol
-        var mcbsByRcd = new Dictionary<string, List<SymbolItem>>(); // rcdId → MCBs pod nim
+        LogBalancePlan(plan, mode, scope);
 
-        foreach (var s in symbolList)
-        {
-            if (IsGroupHeadSymbol(s))
-                rcdMap[s.Id] = s;
-        }
-
-        foreach (var s in symbolList)
-        {
-            if (!string.IsNullOrEmpty(s.RcdSymbolId) && rcdMap.ContainsKey(s.RcdSymbolId))
-            {
-                if (!mcbsByRcd.ContainsKey(s.RcdSymbolId))
-                    mcbsByRcd[s.RcdSymbolId] = new List<SymbolItem>();
-                mcbsByRcd[s.RcdSymbolId].Add(s);
-            }
-        }
-
-        // 3. Buduj jednostki bilansowania i stałe obciążenie bazowe
-        double baseL1 = 0, baseL2 = 0, baseL3 = 0;
-        var units = new List<BalanceUnit>();
-        var processedSymbolIds = new HashSet<string>();
-
-        // Waga = suma wag indywidualnych MCB (spójna z refinement).
-        // MCB z PowerW>0 → waga z prądu/mocy; MCB z PowerW=0 → waga 0 (nie wpływa na bilans mocy).
-        // Grupy z zerową mocą dostają mikroskopijną wagę żeby i tak trafiły na fazę.
-        const double ZeroPowerUnitWeight = 0.001;
-
-        // 3a. RCD 2P (jednofazowe) → atomowe grupy
-        foreach (var kvp in rcdMap)
-        {
-            var rcd = kvp.Value;
-            if (!IsRcdSinglePhase(rcd)) continue;
-
-            var mcbs = mcbsByRcd.TryGetValue(rcd.Id, out var list) ? list : new List<SymbolItem>();
-
-            bool anyLocked = rcd.IsPhaseLocked || mcbs.Any(m => m.IsPhaseLocked);
-            if (scope == BalanceScope.OnlyUnlocked && anyLocked)
-            {
-                double w = mcbs.Sum(m => GetSymbolWeight(m, mode, voltage));
-                var phase = rcd.Phase?.ToUpperInvariant();
-                if (phase == "L2") baseL2 += w;
-                else if (phase == "L3") baseL3 += w;
-                else baseL1 += w;
-
-                processedSymbolIds.Add(rcd.Id);
-                foreach (var m in mcbs) processedSymbolIds.Add(m.Id);
-                continue;
-            }
-
-            var unit = new BalanceUnit();
-            unit.Symbols.Add(rcd);
-            unit.Symbols.AddRange(mcbs);
-            double powerWeight = mcbs.Sum(m => GetSymbolWeight(m, mode, voltage));
-            unit.TotalWeight = powerWeight > 0 ? powerWeight : ZeroPowerUnitWeight * Math.Max(mcbs.Count, 1);
-
-            units.Add(unit);
-            processedSymbolIds.Add(rcd.Id);
-            foreach (var m in mcbs) processedSymbolIds.Add(m.Id);
-        }
-
-        // 3b. MCBs pod RCD 4P (trójfazowe) → indywidualne jednostki
-        // UWAGA: RCD sam nie pobiera mocy — jest urządzeniem ochronnym.
-        // Moc mają tylko MCBs podrzędne.
-        foreach (var kvp in rcdMap)
-        {
-            var rcd = kvp.Value;
-            if (IsRcdSinglePhase(rcd)) continue;
-            processedSymbolIds.Add(rcd.Id);
-
-            // RCD 4P nie wnosi własnej mocy — pomijamy rcd.PowerW (Bug #3 fix)
-
-            var mcbs = mcbsByRcd.TryGetValue(rcd.Id, out var list) ? list : new List<SymbolItem>();
-            foreach (var m in mcbs)
-            {
-                processedSymbolIds.Add(m.Id);
-
-                if (!IsSinglePhase(m)) continue;
-                double mw = GetSymbolWeight(m, mode, voltage);
-
-                if (scope == BalanceScope.OnlyUnlocked && m.IsPhaseLocked)
-                {
-                    var ph = m.Phase?.ToUpperInvariant();
-                    if (ph == "L2") baseL2 += mw;
-                    else if (ph == "L3") baseL3 += mw;
-                    else baseL1 += mw;
-                    continue;
-                }
-
-                var unit = new BalanceUnit();
-                unit.Symbols.Add(m);
-                unit.TotalWeight = mw > 0 ? mw : ZeroPowerUnitWeight;
-                units.Add(unit);
-            }
-        }
-
-        // 3c. Pozostałe symbole (MCB bez RCD, standalone)
-        foreach (var s in symbolList)
-        {
-            if (processedSymbolIds.Contains(s.Id)) continue;
-
-            if (!IsSinglePhase(s))
-            {
-                if (s.PowerW > 0)
-                {
-                    var dist = DistributePower(s.PowerW, s.Phase);
-                    baseL1 += GetWeight(dist.L1PowerW, mode, voltage);
-                    baseL2 += GetWeight(dist.L2PowerW, mode, voltage);
-                    baseL3 += GetWeight(dist.L3PowerW, mode, voltage);
-                }
-                continue;
-            }
-
-            double sw = GetSymbolWeight(s, mode, voltage);
-
-            if (scope == BalanceScope.OnlyUnlocked && s.IsPhaseLocked)
-            {
-                var ph = s.Phase?.ToUpperInvariant();
-                if (ph == "L2") baseL2 += sw;
-                else if (ph == "L3") baseL3 += sw;
-                else baseL1 += sw;
-                continue;
-            }
-
-            var unit = new BalanceUnit();
-            unit.Symbols.Add(s);
-            unit.TotalWeight = sw > 0 ? sw : ZeroPowerUnitWeight;
-            units.Add(unit);
-        }
-
-        // 4. Sortuj jednostki malejąco po wadze (Largest-First Decreasing)
-        units.Sort((a, b) => b.TotalWeight.CompareTo(a.TotalWeight));
-
-        AppLog.Debug($"BalancePhases: RCDs={rcdMap.Count}, units={units.Count}, base L1={baseL1:F0} L2={baseL2:F0} L3={baseL3:F0}, scope={scope}, mode={mode}");
-        foreach (var u in units)
-        {
-            double unitPowerW = u.Symbols.Sum(s => s.PowerW);
-            AppLog.Debug($"  Unit: {u.Label}, weight={u.TotalWeight:F2}, powerW={unitPowerW:F0}, symbols={u.Symbols.Count}");
-        }
-
-        foreach (var s in symbolList)
-            s.IsSelected = false;
+        PhaseDistributionExecutionHelper.ClearSelection(symbolList);
 
         // 5. Zachłanne przypisywanie (z animacją)
-        double[] loads = { baseL1, baseL2, baseL3 };
-        string[] phaseNames = { "L1", "L2", "L3" };
-
-        foreach (var unit in units)
-        {
-            foreach (var s in unit.Symbols)
-                s.IsSelected = true;
-
-            await Task.Delay(200);
-
-            int targetIdx = MinIndex(loads);
-            string assignedPhase = phaseNames[targetIdx];
-            loads[targetIdx] += unit.TotalWeight;
-
-            foreach (var s in unit.Symbols)
-            {
-                s.Phase = assignedPhase;
-                s.IsSelected = false;
-            }
-
-            await Task.Delay(80);
-        }
+        string[] phaseNames = PhaseNames;
+        await PhaseDistributionExecutionHelper.ExecuteGreedyAssignmentAsync(units, loads, phaseNames, MinIndex);
 
         double imbalanceAfterGreedy = CalculateImbalancePercent(loads[0], loads[1], loads[2]);
         AppLog.Debug($"BalancePhases po greedy: L1={loads[0]:F0} L2={loads[1]:F0} L3={loads[2]:F0}, asymetria={imbalanceAfterGreedy:F1}%");
@@ -413,208 +835,14 @@ public static class PhaseDistributionCalculator
         //   a) MCB z grupy RCD → inna grupa RCD na lżejszej fazie
         //   b) Standalone MCB → zmiana fazy bezpośrednio
         // Cel: asymetria ≤ 3%
-        for (int step = 0; step < 50 && CalculateImbalancePercent(loads[0], loads[1], loads[2]) > 3.0; step++)
-        {
-            int heavyIdx = MaxIndex(loads);
-            int lightIdx = MinIndex(loads);
-            if (heavyIdx == lightIdx) break;
-
-            double diff = loads[heavyIdx] - loads[lightIdx];
-            if (diff < 0.01) break;
-            double idealW = diff / 2.0;
-
-            var targetRcdUnit = units
-                .Where(u => u.Symbols.Count > 0
-                    && u.Symbols[0].Phase == phaseNames[lightIdx]
-                    && u.Symbols.Any(s => IsGroupHeadSymbol(s)))
-                .OrderBy(u => u.TotalWeight)
-                .FirstOrDefault();
-
-            SymbolItem? bestMcb = null;
-            BalanceUnit? bestSource = null;
-            double bestWeight = 0;
-            double bestFit = double.MaxValue;
-            bool bestIsStandalone = false;
-
-            foreach (var unit in units)
-            {
-                if (unit.Symbols.Count == 0) continue;
-                if (unit.Symbols[0].Phase != phaseNames[heavyIdx]) continue;
-
-                bool hasRcd = unit.Symbols.Any(s => IsGroupHeadSymbol(s));
-
-                if (hasRcd)
-                {
-                    if (targetRcdUnit == null) continue;
-
-                    var movable = unit.Symbols
-                        .Where(s => !IsGroupHeadSymbol(s) && IsSinglePhase(s) && s.PowerW > 0)
-                        .ToList();
-                    if (movable.Count <= 1) continue;
-
-                    foreach (var mcb in movable)
-                    {
-                        double w = GetSymbolWeight(mcb, mode, voltage);
-                        if (w <= 0 || w > diff) continue;
-                        double fit = Math.Abs(w - idealW);
-                        if (fit < bestFit)
-                        {
-                            bestFit = fit;
-                            bestMcb = mcb;
-                            bestSource = unit;
-                            bestWeight = w;
-                            bestIsStandalone = false;
-                        }
-                    }
-                }
-                else
-                {
-                    var movable = unit.Symbols
-                        .Where(s => IsSinglePhase(s) && s.PowerW > 0)
-                        .ToList();
-                    foreach (var mcb in movable)
-                    {
-                        double w = GetSymbolWeight(mcb, mode, voltage);
-                        if (w <= 0 || w > diff) continue;
-                        double fit = Math.Abs(w - idealW);
-                        if (fit < bestFit)
-                        {
-                            bestFit = fit;
-                            bestMcb = mcb;
-                            bestSource = unit;
-                            bestWeight = w;
-                            bestIsStandalone = true;
-                        }
-                    }
-                }
-            }
-
-            if (bestMcb == null || bestSource == null) break;
-
-            bestMcb.IsSelected = true;
-            await Task.Delay(200);
-
-            if (bestIsStandalone)
-            {
-                // Bug #1 fix: tylko przenosimy bestMcb, NIE wszystkie symbole w unit
-                bestMcb.Phase = phaseNames[lightIdx];
-                bestSource.TotalWeight -= bestWeight;
-            }
-            else if (targetRcdUnit != null)
-            {
-                var targetRcd = targetRcdUnit.Symbols.First(s => IsGroupHeadSymbol(s));
-
-                bestSource.Symbols.Remove(bestMcb);
-                bestSource.TotalWeight -= bestWeight;
-
-                targetRcdUnit.Symbols.Add(bestMcb);
-                targetRcdUnit.TotalWeight += bestWeight;
-
-                bestMcb.Phase = targetRcd.Phase;
-                bestMcb.RcdSymbolId = targetRcd.Id;
-                bestMcb.Group = targetRcd.Group;
-
-                CompactGroup(bestSource.Symbols);
-                CompactGroup(targetRcdUnit.Symbols);
-            }
-
-            loads[heavyIdx] -= bestWeight;
-            loads[lightIdx] += bestWeight;
-
-            bestMcb.IsSelected = false;
-            await Task.Delay(80);
-
-            AppLog.Debug($"BalancePhases refinement #{step}: {(bestIsStandalone ? "standalone" : "RCD→RCD")} {bestMcb.Label ?? bestMcb.Id} ({bestMcb.PowerW}W, w={bestWeight:F2}) → {phaseNames[lightIdx]}, L1={loads[0]:F2} L2={loads[1]:F2} L3={loads[2]:F2}");
-        }
-
-        double imbalanceAfterMoves = CalculateImbalancePercent(loads[0], loads[1], loads[2]);
-        AppLog.Debug($"BalancePhases po move-refinement: L1={loads[0]:F0} L2={loads[1]:F0} L3={loads[2]:F0}, asymetria={imbalanceAfterMoves:F1}%");
+        await RunMoveRefinementAsync(units, loads, phaseNames, mode, voltage);
 
         // ==========================================
         // 7. Refinement Phase 2: Swap pairs between phases
         // ==========================================
         // Jeśli pojedyncze przeniesienie nie pomaga, próbujemy zamiany par:
         // MCB z ciężkiej fazy ↔ MCB z lekkiej fazy, jeśli swap zmniejsza asymetrię.
-        for (int step = 0; step < 30 && CalculateImbalancePercent(loads[0], loads[1], loads[2]) > 3.0; step++)
-        {
-            int heavyIdx = MaxIndex(loads);
-            int lightIdx = MinIndex(loads);
-            if (heavyIdx == lightIdx) break;
-
-            double currentImbalance = CalculateImbalancePercent(loads[0], loads[1], loads[2]);
-
-            // Zbierz standalone MCBs na ciężkiej i lekkiej fazie
-            var heavyStandalone = units
-                .Where(u => u.Symbols.Count > 0
-                    && !u.Symbols.Any(s => IsGroupHeadSymbol(s))
-                    && u.Symbols[0].Phase == phaseNames[heavyIdx]
-                    && u.TotalWeight > 0)
-                .ToList();
-
-            var lightStandalone = units
-                .Where(u => u.Symbols.Count > 0
-                    && !u.Symbols.Any(s => IsGroupHeadSymbol(s))
-                    && u.Symbols[0].Phase == phaseNames[lightIdx]
-                    && u.TotalWeight > 0)
-                .ToList();
-
-            BalanceUnit? bestHeavyUnit = null;
-            BalanceUnit? bestLightUnit = null;
-            double bestSwapImbalance = currentImbalance;
-
-            foreach (var hu in heavyStandalone)
-            {
-                foreach (var lu in lightStandalone)
-                {
-                    // Symuluj swap
-                    double[] testLoads = { loads[0], loads[1], loads[2] };
-                    testLoads[heavyIdx] -= hu.TotalWeight;
-                    testLoads[heavyIdx] += lu.TotalWeight;
-                    testLoads[lightIdx] -= lu.TotalWeight;
-                    testLoads[lightIdx] += hu.TotalWeight;
-
-                    double testImbalance = CalculateImbalancePercent(testLoads[0], testLoads[1], testLoads[2]);
-                    if (testImbalance < bestSwapImbalance - 0.5) // min 0.5% improvement
-                    {
-                        bestSwapImbalance = testImbalance;
-                        bestHeavyUnit = hu;
-                        bestLightUnit = lu;
-                    }
-                }
-            }
-
-            if (bestHeavyUnit == null || bestLightUnit == null) break;
-
-            // Wykonaj swap
-            foreach (var s in bestHeavyUnit.Symbols)
-            {
-                s.IsSelected = true;
-            }
-            foreach (var s in bestLightUnit.Symbols)
-            {
-                s.IsSelected = true;
-            }
-            await Task.Delay(200);
-
-            loads[heavyIdx] -= bestHeavyUnit.TotalWeight;
-            loads[heavyIdx] += bestLightUnit.TotalWeight;
-            loads[lightIdx] -= bestLightUnit.TotalWeight;
-            loads[lightIdx] += bestHeavyUnit.TotalWeight;
-
-            foreach (var s in bestHeavyUnit.Symbols)
-                s.Phase = phaseNames[lightIdx];
-            foreach (var s in bestLightUnit.Symbols)
-                s.Phase = phaseNames[heavyIdx];
-
-            foreach (var s in bestHeavyUnit.Symbols)
-                s.IsSelected = false;
-            foreach (var s in bestLightUnit.Symbols)
-                s.IsSelected = false;
-
-            await Task.Delay(80);
-
-            AppLog.Debug($"BalancePhases swap #{step}: {bestHeavyUnit.Label} ↔ {bestLightUnit.Label}, imbalance={bestSwapImbalance:F1}%, L1={loads[0]:F2} L2={loads[1]:F2} L3={loads[2]:F2}");
-        }
+        await RunSwapRefinementAsync(units, loads, phaseNames);
 
         double finalImbalance = CalculateImbalancePercent(loads[0], loads[1], loads[2]);
         AppLog.Debug($"BalancePhases DONE: L1={loads[0]:F0} L2={loads[1]:F0} L3={loads[2]:F0}, asymetria={finalImbalance:F1}%");

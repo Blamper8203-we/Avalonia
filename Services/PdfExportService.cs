@@ -1,14 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DINBoard.Models;
+using DINBoard.Services.Pdf;
+using DINBoard.ViewModels;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using DINBoard.Models;
-using DINBoard.ViewModels;
-using DINBoard.Services.Pdf;
 
 namespace DINBoard.Services;
 
@@ -46,52 +47,74 @@ public class PdfExportService
         _standardsService = new PdfStandardsService(_moduleTypeService, resolvedValidationService);
         _circuitTableService = new PdfCircuitTableService(_moduleTypeService);
         _powerBalanceService = new PdfPowerBalanceService(_moduleTypeService);
-        _connectionService = new PdfConnectionService();
+        _connectionService = new PdfConnectionService(_moduleTypeService);
         _singleLineDiagramService = new PdfSingleLineDiagramService(_moduleTypeService);
     }
 
     /// <summary>
-    /// Eksportuje dokumentację rozdzielnicy do pliku PDF.
+    /// Eksportuje dokumentacje rozdzielnicy do pliku PDF.
     /// </summary>
     public void ExportToPdf(MainViewModel viewModel, string filePath, PdfExportOptions options)
     {
+        var dinRailRenderCache = _dinRailService.CreateRenderCache();
+        var singleLineRenderCache = _singleLineDiagramService.CreateRenderCache();
+
         var document = Document.Create(container =>
         {
-            // Strona 1: Tytułowa
             container.Page(page =>
             {
                 _dinRailService.ConfigurePage(page);
                 page.Content().Element(c => _titlePageService.ComposeTitlePage(c, viewModel, options));
             });
 
-            // Strona 2: Schemat jednokreskowy (PN-EN 60617 / IEC 61082)
             container.Page(page =>
             {
                 _dinRailService.ConfigurePage(page);
                 page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Jednokreskowy"));
-                page.Content().Element(c => _singleLineDiagramService.ComposeSingleLineDiagram(c, viewModel));
+                page.Content().Element(c => _singleLineDiagramService.ComposeSingleLineDiagram(c, viewModel, singleLineRenderCache));
                 page.Footer().Element(_dinRailService.ComposeFooter);
             });
 
-            // Strona 3: Schemat szyny DIN (1:1 z canvasem)
             container.Page(page =>
             {
                 _dinRailService.ConfigurePage(page);
                 page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy"));
-                page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options));
+                page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, renderCache: dinRailRenderCache));
                 page.Footer().Element(_dinRailService.ComposeFooter);
             });
 
-            // Strona 3: Lista obwodów
             container.Page(page =>
             {
                 _dinRailService.ConfigurePage(page);
-                page.Header().Element(c => _dinRailService.ComposeHeader(c, "Lista Obwodów"));
+                page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy (Z numerami i grupami)"));
+                page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, showNumbers: true, showGroups: true, renderCache: dinRailRenderCache));
+                page.Footer().Element(_dinRailService.ComposeFooter);
+            });
+
+            container.Page(page =>
+            {
+                _dinRailService.ConfigurePage(page);
+                page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy (Grupy)"));
+                page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, showNumbers: false, showGroups: true, renderCache: dinRailRenderCache));
+                page.Footer().Element(_dinRailService.ComposeFooter);
+            });
+
+            container.Page(page =>
+            {
+                _dinRailService.ConfigurePage(page);
+                page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy (Numery)"));
+                page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, showNumbers: true, showGroups: false, renderCache: dinRailRenderCache));
+                page.Footer().Element(_dinRailService.ComposeFooter);
+            });
+
+            container.Page(page =>
+            {
+                _dinRailService.ConfigurePage(page);
+                page.Header().Element(c => _dinRailService.ComposeHeader(c, "Lista Obwodow"));
                 page.Content().Element(c => _circuitTableService.ComposeCircuitTable(c, viewModel));
                 page.Footer().Element(_dinRailService.ComposeFooter);
             });
 
-            // Strona 4: Bilans mocy
             container.Page(page =>
             {
                 _dinRailService.ConfigurePage(page);
@@ -100,20 +123,18 @@ public class PdfExportService
                 page.Footer().Element(_dinRailService.ComposeFooter);
             });
 
-            // Strona 5: Przyłącze
             container.Page(page =>
             {
                 _dinRailService.ConfigurePage(page);
-                page.Header().Element(c => _dinRailService.ComposeHeader(c, "Przyłącze — Dobór Zabezpieczeń i WLZ"));
+                page.Header().Element(c => _dinRailService.ComposeHeader(c, "Przylacze - Dobor Zabezpieczen i WLZ"));
                 page.Content().Element(c => _connectionService.ComposeConnectionPage(c, viewModel, options));
                 page.Footer().Element(_dinRailService.ComposeFooter);
             });
 
-            // Strona 6: Normy i zgodność
             container.Page(page =>
             {
                 _dinRailService.ConfigurePage(page);
-                page.Header().Element(c => _dinRailService.ComposeHeader(c, "Zgodność z Normami"));
+                page.Header().Element(c => _dinRailService.ComposeHeader(c, "Zgodnosc z Normami"));
                 page.Content().Element(c => _standardsService.ComposeStandardsCompliance(c, viewModel));
                 page.Footer().Element(_dinRailService.ComposeFooter);
             });
@@ -123,9 +144,9 @@ public class PdfExportService
     }
 
     /// <summary>
-    /// Eksportuje widok szyny DIN do pliku PNG (ultra jakość).
+    /// Eksportuje widok szyny DIN do pliku PNG.
     /// </summary>
-public void ExportToPng(MainViewModel viewModel, string filePath, PdfExportOptions options)
+    public void ExportToPng(MainViewModel viewModel, string filePath, PdfExportOptions options)
     {
         var imageData = _dinRailService.RenderDinRailToImage(viewModel, options);
         if (imageData != null && imageData.Length > 0)
@@ -134,17 +155,17 @@ public void ExportToPng(MainViewModel viewModel, string filePath, PdfExportOptio
         }
         else
         {
-            throw new InvalidOperationException("Nie udało się wyrenderować schematu do PNG. Sprawdź czy projekt zawiera moduły.");
+            throw new InvalidOperationException("Nie udalo sie wyrenderowac schematu do PNG. Sprawdz czy projekt zawiera moduly.");
         }
     }
 
     /// <summary>
-    /// Asynchronicznie eksportuje dokumentację rozdzielnicy do pliku PDF.
-    /// Wspiera anulowanie i raportowanie postępu.
+    /// Asynchronicznie eksportuje dokumentacje rozdzielnicy do pliku PDF.
+    /// Wspiera anulowanie i raportowanie postepu.
     /// </summary>
     public async Task ExportToPdfAsync(
-        MainViewModel viewModel, 
-        string filePath, 
+        MainViewModel viewModel,
+        string filePath,
         PdfExportOptions options,
         IProgress<int>? progress = null,
         CancellationToken cancellationToken = default)
@@ -153,10 +174,11 @@ public void ExportToPng(MainViewModel viewModel, string filePath, PdfExportOptio
         {
             cancellationToken.ThrowIfCancellationRequested();
             progress?.Report(10);
+            var dinRailRenderCache = _dinRailService.CreateRenderCache();
+            var singleLineRenderCache = _singleLineDiagramService.CreateRenderCache();
 
             var document = Document.Create(container =>
             {
-                // Strona 1: Tytułowa
                 container.Page(page =>
                 {
                     _dinRailService.ConfigurePage(page);
@@ -166,42 +188,62 @@ public void ExportToPng(MainViewModel viewModel, string filePath, PdfExportOptio
                 cancellationToken.ThrowIfCancellationRequested();
                 progress?.Report(20);
 
-                // Strona 2: Schemat jednokreskowy (PN-EN 60617 / IEC 61082)
                 container.Page(page =>
                 {
                     _dinRailService.ConfigurePage(page);
                     page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Jednokreskowy"));
-                    page.Content().Element(c => _singleLineDiagramService.ComposeSingleLineDiagram(c, viewModel));
+                    page.Content().Element(c => _singleLineDiagramService.ComposeSingleLineDiagram(c, viewModel, singleLineRenderCache));
                     page.Footer().Element(_dinRailService.ComposeFooter);
                 });
 
                 cancellationToken.ThrowIfCancellationRequested();
                 progress?.Report(40);
 
-                // Strona 3: Schemat szyny DIN (1:1 z canvasem)
                 container.Page(page =>
                 {
                     _dinRailService.ConfigurePage(page);
                     page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy"));
-                    page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options));
+                    page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, renderCache: dinRailRenderCache));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy (Z numerami i grupami)"));
+                    page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, showNumbers: true, showGroups: true, renderCache: dinRailRenderCache));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy (Grupy)"));
+                    page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, showNumbers: false, showGroups: true, renderCache: dinRailRenderCache));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy (Numery)"));
+                    page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, showNumbers: true, showGroups: false, renderCache: dinRailRenderCache));
                     page.Footer().Element(_dinRailService.ComposeFooter);
                 });
 
                 cancellationToken.ThrowIfCancellationRequested();
                 progress?.Report(60);
 
-                // Strona 3: Lista obwodów
                 container.Page(page =>
                 {
                     _dinRailService.ConfigurePage(page);
-                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Lista Obwodów"));
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Lista Obwodow"));
                     page.Content().Element(c => _circuitTableService.ComposeCircuitTable(c, viewModel));
                     page.Footer().Element(_dinRailService.ComposeFooter);
                 });
 
                 progress?.Report(80);
 
-                // Strona 4: Bilans mocy
                 container.Page(page =>
                 {
                     _dinRailService.ConfigurePage(page);
@@ -210,20 +252,18 @@ public void ExportToPng(MainViewModel viewModel, string filePath, PdfExportOptio
                     page.Footer().Element(_dinRailService.ComposeFooter);
                 });
 
-                // Strona 5: Przyłącze
                 container.Page(page =>
                 {
                     _dinRailService.ConfigurePage(page);
-                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Przyłącze — Dobór Zabezpieczeń i WLZ"));
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Przylacze - Dobor Zabezpieczen i WLZ"));
                     page.Content().Element(c => _connectionService.ComposeConnectionPage(c, viewModel, options));
                     page.Footer().Element(_dinRailService.ComposeFooter);
                 });
 
-                // Strona 6: Normy
                 container.Page(page =>
                 {
                     _dinRailService.ConfigurePage(page);
-                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Zgodność z Normami"));
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Zgodnosc z Normami"));
                     page.Content().Element(c => _standardsService.ComposeStandardsCompliance(c, viewModel));
                     page.Footer().Element(_dinRailService.ComposeFooter);
                 });
@@ -238,12 +278,127 @@ public void ExportToPng(MainViewModel viewModel, string filePath, PdfExportOptio
     }
 
     /// <summary>
+    /// Generuje podglad dokumentacji PDF jako obrazy stron bez zapisu pliku.
+    /// </summary>
+    public async Task<IReadOnlyList<byte[]>> GeneratePdfPreviewImagesAsync(
+        MainViewModel viewModel,
+        PdfExportOptions options,
+        IProgress<int>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(options);
+
+        return await Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(10);
+
+            var dinRailRenderCache = _dinRailService.CreateRenderCache();
+            var singleLineRenderCache = _singleLineDiagramService.CreateRenderCache();
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Content().Element(c => _titlePageService.ComposeTitlePage(c, viewModel, options));
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Jednokreskowy"));
+                    page.Content().Element(c => _singleLineDiagramService.ComposeSingleLineDiagram(c, viewModel, singleLineRenderCache));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy"));
+                    page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, renderCache: dinRailRenderCache));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy (Z numerami i grupami)"));
+                    page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, showNumbers: true, showGroups: true, renderCache: dinRailRenderCache));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy (Grupy)"));
+                    page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, showNumbers: false, showGroups: true, renderCache: dinRailRenderCache));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Schemat Rozdzielnicy (Numery)"));
+                    page.Content().Element(c => _dinRailService.ComposeDinRailDiagram(c, viewModel, options, showNumbers: true, showGroups: false, renderCache: dinRailRenderCache));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Lista Obwodow"));
+                    page.Content().Element(c => _circuitTableService.ComposeCircuitTable(c, viewModel));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Bilans Mocy"));
+                    page.Content().Element(c => _powerBalanceService.ComposePowerBalance(c, viewModel));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Przylacze - Dobor Zabezpieczen i WLZ"));
+                    page.Content().Element(c => _connectionService.ComposeConnectionPage(c, viewModel, options));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+
+                container.Page(page =>
+                {
+                    _dinRailService.ConfigurePage(page);
+                    page.Header().Element(c => _dinRailService.ComposeHeader(c, "Zgodnosc z Normami"));
+                    page.Content().Element(c => _standardsService.ComposeStandardsCompliance(c, viewModel));
+                    page.Footer().Element(_dinRailService.ComposeFooter);
+                });
+            });
+
+            cancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(70);
+
+            var generatedImages = document.GenerateImages(new ImageGenerationSettings
+            {
+                RasterDpi = 144
+            });
+
+            cancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(100);
+            return (IReadOnlyList<byte[]>)generatedImages.ToList();
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Asynchronicznie eksportuje widok szyny DIN do pliku PNG.
-    /// Wspiera anulowanie i raportowanie postępu.
+    /// Wspiera anulowanie i raportowanie postepu.
     /// </summary>
     public async Task ExportToPngAsync(
-        MainViewModel viewModel, 
-        string filePath, 
+        MainViewModel viewModel,
+        string filePath,
         PdfExportOptions options,
         IProgress<int>? progress = null,
         CancellationToken cancellationToken = default)
@@ -254,7 +409,7 @@ public void ExportToPng(MainViewModel viewModel, string filePath, PdfExportOptio
             progress?.Report(30);
 
             var imageData = _dinRailService.RenderDinRailToImage(viewModel, options);
-            
+
             cancellationToken.ThrowIfCancellationRequested();
             progress?.Report(70);
 
@@ -264,9 +419,9 @@ public void ExportToPng(MainViewModel viewModel, string filePath, PdfExportOptio
             }
             else
             {
-                throw new InvalidOperationException("Nie udało się wyrenderować schematu do PNG. Sprawdź czy projekt zawiera moduły.");
+                throw new InvalidOperationException("Nie udalo sie wyrenderowac schematu do PNG. Sprawdz czy projekt zawiera moduly.");
             }
-            
+
             progress?.Report(100);
         }, cancellationToken).ConfigureAwait(false);
     }

@@ -17,7 +17,7 @@ public partial class ToastNotification : UserControl
 
     public ToastNotification()
     {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+        InitializeComponent();
     }
 
     public void Show(string title, string message, ToastType type = ToastType.Success, int durationMs = 3500)

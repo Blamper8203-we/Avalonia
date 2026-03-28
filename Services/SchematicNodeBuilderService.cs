@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using DINBoard.Models;
@@ -404,7 +405,21 @@ internal sealed class SchematicNodeBuilderService
     }
 
     private static string GetParam(SymbolItem sym, string key, string def = "") =>
-        sym.Parameters != null && sym.Parameters.TryGetValue(key, out var val) ? val : def;
+        sym.Parameters != null && sym.Parameters.TryGetValue(key, out var val) && !string.IsNullOrWhiteSpace(val)
+            ? val
+            : key switch
+            {
+                "CableSpec" => sym.CableCrossSection > 0
+                    ? $"{sym.CableCrossSection.ToString("0.#", CultureInfo.InvariantCulture)} mm²"
+                    : def,
+                "CableLength" => sym.CableLength > 0
+                    ? $"{sym.CableLength.ToString("0.#", CultureInfo.InvariantCulture)} m"
+                    : def,
+                "PowerInfo" => sym.PowerW > 0
+                    ? $"{sym.PowerW.ToString("0.#", CultureInfo.InvariantCulture)} W"
+                    : def,
+                _ => def
+            };
 }
 
 internal sealed record SchematicNodeBuildResult(

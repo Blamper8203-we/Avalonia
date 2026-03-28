@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using SkiaSharp;
 using DINBoard.Models;
@@ -30,20 +30,20 @@ public partial class PdfSingleLineDiagramService
     static void TblCell(SKCanvas c, string text, float x, float y, float w, SKColor color, bool bold = false)
     {
         if (string.IsNullOrEmpty(text)) return;
-        
+
         float sz = (float)E.CellFontSize;
         using var font = new SKFont(SKTypeface.FromFamilyName("Segoe UI", bold ? SKFontStyle.Bold : SKFontStyle.Normal), sz);
         using var paint = new SKPaint { Color = color, IsAntialias = true };
 
         string[] manualLines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         var wrappedLines = new List<string>();
-        
-        float maxW = w - 4f; // 2px marginesu na stronÄ™
+
+        float maxW = w - 4f;
         foreach (var line in manualLines)
         {
             var words = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (words.Length == 0) continue;
-            
+
             string currentLine = words[0];
             for (int i = 1; i < words.Length; i++)
             {
@@ -64,21 +64,18 @@ public partial class PdfSingleLineDiagramService
 
         float lineGap = 1.0f;
         float totalHeight = wrappedLines.Count * sz + (wrappedLines.Count - 1) * lineGap;
-        
-        // WyĹ›rodkowanie pionowe caĹ‚ego zablokowanego tekstu
         float startY = y + ((float)E.RowH - totalHeight) / 2 + sz - (sz * 0.1f);
 
         for (int i = 0; i < wrappedLines.Count; i++)
         {
             string lineToDraw = wrappedLines[i];
             float tw = font.MeasureText(lineToDraw);
-            
-            // Jesli nawet pojedyncze slowo bez spacji jest za dlugie by sie zmiescic - ucinamy z kropeczkami
+
             if (tw > w)
             {
-                while (lineToDraw.Length > 2 && font.MeasureText(lineToDraw + "â€¦") > maxW)
+                while (lineToDraw.Length > 2 && font.MeasureText(lineToDraw + "...") > maxW)
                     lineToDraw = lineToDraw[..^1];
-                lineToDraw += "â€¦";
+                lineToDraw += "...";
                 tw = font.MeasureText(lineToDraw);
             }
 

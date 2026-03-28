@@ -4,117 +4,454 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:DINBoard.ViewModels"
              xmlns:mi="using:Material.Icons.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+             xmlns:conv="using:DINBoard.Converters"
+             mc:Ignorable="d"
+             d:DesignWidth="1920"
+             d:DesignHeight="1080"
              x:Class="DINBoard.Views.HomeScreenView"
              x:DataType="vm:MainViewModel">
 
-    <Grid Background="{DynamicResource AppBackground}">
+    <UserControl.Resources>
+        <conv:RecentProjectTimestampConverter x:Key="RecentProjectTimestampConverter"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.home-action-card">
+            <Setter Property="Background" Value="#18181C"/>
+            <Setter Property="BorderBrush" Value="#2D2D31"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Padding" Value="32"/>
+            <Setter Property="MinHeight" Value="192"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.16"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.16"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.home-action-card:pointerover">
+            <Setter Property="Background" Value="#1E1E24"/>
+            <Setter Property="BorderBrush" Value="#3B82F6"/>
+        </Style>
+        <Style Selector="Border.home-action-icon-box">
+            <Setter Property="Width" Value="56"/>
+            <Setter Property="Height" Value="56"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Background" Value="#192848"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+        </Style>
+        <Style Selector="TextBlock.home-action-title">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style Selector="TextBlock.home-action-copy">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#5A5B5F"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="27"/>
+        </Style>
+        <Style Selector="Button.home-recent-button">
+            <Setter Property="Background" Value="#141417"/>
+            <Setter Property="BorderBrush" Value="#1E1F23"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="18,16"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="MinHeight" Value="68"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.home-recent-button:pointerover">
+            <Setter Property="Background" Value="#1C1C21"/>
+            <Setter Property="BorderBrush" Value="#36373B"/>
+        </Style>
+        <Style Selector="TextBlock.home-recent-path">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="#8FA7C8"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.home-recent-date">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#5A5B5F"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="#0C0C0E" ClipToBounds="True">
         <Grid.ColumnDefinitions>
-            <!-- Lewa strona - Logo i Licencja -->
-            <ColumnDefinition Width="400"/>
-            <!-- Prawa strona - Akcje i Ostatnie projekty -->
+            <ColumnDefinition Width="318"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Tło dla lewej strony (lekko ciemniejsze) -->
-        <Border Grid.Column="0" Background="{DynamicResource PanelBackground}" 
-                BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,1,0">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" Margin="40">
-                <!-- Logo zastępcze tekstowe, można potem podmienić pod obrazek -->
-                <mi:MaterialIcon Kind="DeveloperBoard" Width="100" Height="100" Foreground="{DynamicResource AccentBlue}"/>
-                <TextBlock Text="DINBoard" FontSize="48" FontWeight="Bold" Foreground="{DynamicResource TextMain}" HorizontalAlignment="Center"/>
-                <TextBlock Text="{DynamicResource HomeVersion}" FontSize="14" Foreground="{DynamicResource TextTertiary}" HorizontalAlignment="Center" Margin="0,-15,0,0"/>
+        <Border Grid.Column="0"
+                Background="#121316"
+                BorderBrush="#26282D"
+                BorderThickness="0,0,1,0">
+            <Grid RowDefinitions="*,Auto">
+                <Grid>
+                    <Border Opacity="0.45">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#1A3B82F6" Offset="0"/>
+                                <GradientStop Color="#00121316" Offset="0.42"/>
+                                <GradientStop Color="#00121316" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
 
-                <!-- Blok Licencji -->
-                <Border Background="{DynamicResource PanelBackgroundAlt}" CornerRadius="12" Padding="20" Margin="0,40,0,0" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="{DynamicResource LicenseStatus}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextTertiary}"/>
-                        
-                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding License.IsTrial}">
-                            <mi:MaterialIcon Kind="AlertCircleOutline" Width="20" Height="20" Foreground="{DynamicResource AccentOrange}"/>
-                            <TextBlock Text="{DynamicResource LicenseTrial}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource AccentOrange}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        
-                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !License.IsTrial}">
-                            <mi:MaterialIcon Kind="CheckCircleOutline" Width="20" Height="20" Foreground="{DynamicResource AccentGreen}"/>
-                            <TextBlock Text="{DynamicResource LicenseFull}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource AccentGreen}" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Margin="34,40"
+                                Spacing="0">
+                        <Border Width="250"
+                                Height="150"
+                                Margin="0,0,0,18"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                CornerRadius="18"
+                                Background="#0F172A"
+                                BorderBrush="#1E293B"
+                                BorderThickness="1">
+                            <Grid>
+                                <Border Margin="14"
+                                        CornerRadius="12"
+                                        Background="#0B1220"
+                                        BorderBrush="#1E3A5F"
+                                        BorderThickness="1"/>
+                                <Canvas Width="220"
+                                        Height="110"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                    <Line StartPoint="14,58"
+                                          EndPoint="204,58"
+                                          Stroke="#60A5FA"
+                                          StrokeThickness="3"
+                                          StrokeLineCap="Round"/>
 
-                        <TextBlock Text="{Binding TrialMessage}" IsVisible="{Binding License.IsTrial}" FontSize="14" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
-                        
-                        <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding !License.IsTrial}">
-                            <TextBlock Text="{DynamicResource LicenseRegisteredToPrefix}" FontSize="14" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding License.RegisteredTo}" FontSize="14" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
-                        </StackPanel>
+                                    <Ellipse Width="12"
+                                             Height="12"
+                                             Canvas.Left="8"
+                                             Canvas.Top="52"
+                                             Fill="#3B82F6"/>
 
-                        <Button Command="{Binding Workspace.ShowActivationDialogCommand}" IsVisible="{Binding License.IsTrial}" Classes="action-btn accent outline" Margin="0,10,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
-                            <TextBlock Text="{DynamicResource BtnActivateFullVersion}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Button>
+                                    <Rectangle Width="28"
+                                               Height="18"
+                                               Canvas.Left="72"
+                                               Canvas.Top="49"
+                                               RadiusX="4"
+                                               RadiusY="4"
+                                               Fill="#111827"
+                                               Stroke="#38BDF8"
+                                               StrokeThickness="2"/>
+
+                                    <Line StartPoint="86,58"
+                                          EndPoint="86,88"
+                                          Stroke="#93C5FD"
+                                          StrokeThickness="2"
+                                          StrokeLineCap="Round"/>
+
+                                    <Rectangle Width="22"
+                                               Height="14"
+                                               Canvas.Left="75"
+                                               Canvas.Top="88"
+                                               RadiusX="3"
+                                               RadiusY="3"
+                                               Fill="#0F172A"
+                                               Stroke="#22D3EE"
+                                               StrokeThickness="2"/>
+
+                                    <Line StartPoint="132,58"
+                                          EndPoint="132,34"
+                                          Stroke="#93C5FD"
+                                          StrokeThickness="2"
+                                          StrokeLineCap="Round"/>
+
+                                    <Rectangle Width="24"
+                                               Height="14"
+                                               Canvas.Left="120"
+                                               Canvas.Top="20"
+                                               RadiusX="3"
+                                               RadiusY="3"
+                                               Fill="#0F172A"
+                                               Stroke="#34D399"
+                                               StrokeThickness="2"/>
+
+                                    <Rectangle Width="36"
+                                               Height="22"
+                                               Canvas.Left="166"
+                                               Canvas.Top="47"
+                                               RadiusX="5"
+                                               RadiusY="5"
+                                               Fill="#111827"
+                                               Stroke="#60A5FA"
+                                               StrokeThickness="2"/>
+
+                                    <Line StartPoint="184,58"
+                                          EndPoint="184,36"
+                                          Stroke="#60A5FA"
+                                          StrokeThickness="2"/>
+                                    <Line StartPoint="184,36"
+                                          EndPoint="198,36"
+                                          Stroke="#60A5FA"
+                                          StrokeThickness="2"/>
+                                    <Ellipse Width="4"
+                                             Height="4"
+                                             Canvas.Left="196"
+                                             Canvas.Top="34"
+                                             Fill="#60A5FA"/>
+
+                                    <TextBlock Canvas.Left="16"
+                                               Canvas.Top="72"
+                                               Text="schemat jednokreskowy"
+                                               FontSize="10"
+                                               Foreground="#94A3B8"
+                                               FontFamily="Consolas, Cascadia Mono, monospace"/>
+                                </Canvas>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock HorizontalAlignment="Center"
+                                   FontSize="26"
+                                   FontWeight="Bold"
+                                   Foreground="White">
+                            <Run Text="DIN"/>
+                            <Run Text="Board" Foreground="#3B82F6"/>
+                        </TextBlock>
+
+                        <TextBlock Text="System dokumentacji rozdzielnic"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,8,0,0"
+                                   FontSize="13"
+                                   Foreground="#94A3B8"/>
+
+                        <StackPanel HorizontalAlignment="Center"
+                                    Margin="0,30,0,0"
+                                    Spacing="12">
+                            <Border IsVisible="{Binding License.IsTrial}"
+                                    Background="#231A08"
+                                    BorderBrush="#5D4311"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    Padding="14,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border Width="6"
+                                            Height="6"
+                                            CornerRadius="3"
+                                            Background="#F59E0B"
+                                            VerticalAlignment="Center"/>
+                                    <TextBlock Text="WERSJA PRÓBNA"
+                                               FontSize="10"
+                                               FontWeight="Bold"
+                                               Foreground="#FBBF24"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border IsVisible="{Binding License.IsTrial, Converter={StaticResource InverseBoolConverter}}"
+                                    Background="#102316"
+                                    BorderBrush="#25553A"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    Padding="14,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border Width="6"
+                                            Height="6"
+                                            CornerRadius="3"
+                                            Background="#22C55E"
+                                            VerticalAlignment="Center"/>
+                                    <TextBlock Text="PEŁNA WERSJA"
+                                               FontSize="10"
+                                               FontWeight="Bold"
+                                               Foreground="#4ADE80"/>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="{Binding TrialMessage}"
+                                       IsVisible="{Binding License.IsTrial}"
+                                       MaxWidth="210"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       FontSize="11"
+                                       Foreground="#6B6F76"/>
+
+                            <Button Command="{Binding Workspace.ShowActivationDialogCommand}"
+                                    IsVisible="{Binding Workspace.ShowActivationShortcut}"
+                                    Background="Transparent"
+                                    BorderBrush="#3B82F6"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="16,8"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="{DynamicResource BtnActivateFullVersion}"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Foreground="#E2E8F0"/>
+                            </Button>
+
+                            <TextBlock Text="Build v1.0.0.24"
+                                       HorizontalAlignment="Center"
+                                       FontFamily="Consolas, Cascadia Mono, monospace"
+                                       FontSize="10"
+                                       Foreground="#5A5B5F"/>
+                        </StackPanel>
                     </StackPanel>
-                </Border>
-            </StackPanel>
-        </Border>
-
-        <!-- Akcje i ostatnie projekty -->
-        <ScrollViewer Grid.Column="1" Padding="60">
-            <StackPanel Spacing="40">
-                
-                <TextBlock Text="{DynamicResource HomeWelcome}" FontSize="32" FontWeight="Light" Foreground="{DynamicResource TextMain}"/>
-                
-                <!-- Główne akcje -->
-                <Grid ColumnDefinitions="*,*" Margin="0,10,0,0" Width="600" HorizontalAlignment="Left">
-                    <!-- Nowy projekt -->
-                    <Button Grid.Column="0" Command="{Binding Workspace.CreateProjectCommand}" 
-                            Background="{DynamicResource PanelBackgroundAlt}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,10,0"
-                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left" VerticalContentAlignment="Top">
-                        <StackPanel Spacing="15">
-                            <mi:MaterialIcon Kind="FileDocumentPlus" Width="40" Height="40" Foreground="{DynamicResource AccentBlue}"/>
-                            <TextBlock Text="{DynamicResource HomeActionNewProject}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextMain}"/>
-                            <TextBlock Text="{DynamicResource HomeActionNewProjectDesc}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Otwórz projekt -->
-                    <Button Grid.Column="1" Command="{Binding Workspace.OpenProjectCommand}" 
-                            Background="{DynamicResource PanelBackgroundAlt}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="10,0,0,0"
-                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left" VerticalContentAlignment="Top">
-                        <StackPanel Spacing="15">
-                            <mi:MaterialIcon Kind="FolderOpenOutline" Width="40" Height="40" Foreground="{DynamicResource AccentPurple}"/>
-                            <TextBlock Text="{DynamicResource HomeActionOpenProject}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextMain}"/>
-                            <TextBlock Text="{DynamicResource HomeActionOpenProjectDesc}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Button>
                 </Grid>
 
-                <!-- Ostatnie projekty -->
-                <StackPanel Spacing="15" Margin="0,20,0,0" HorizontalAlignment="Left" Width="600">
-                    <TextBlock Text="{DynamicResource HomeRecentProjects}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextMain}"/>
-                    
-                    <Border Background="{DynamicResource PanelBackgroundAlt}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="8" Padding="5">
-                        <ItemsControl ItemsSource="{Binding RecentProjects}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Button Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).Workspace.OpenRecentProjectCommand}" CommandParameter="{Binding}" 
-                                            Background="Transparent" BorderThickness="0" CornerRadius="4" Padding="15,10" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
-                                        <Grid ColumnDefinitions="Auto,*">
-                                            <mi:MaterialIcon Kind="FileOutline" Width="20" Height="20" Foreground="{DynamicResource TextTertiary}" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding}" Margin="15,0,0,0" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                        </Grid>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="2"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </Border>
-                    
-                    <TextBlock Text="{DynamicResource HomeNoRecentProjects}" IsVisible="{Binding !HasRecentProjects}" FontSize="13" Foreground="{DynamicResource TextTertiary}" FontStyle="Italic"/>
-                </StackPanel>
+                <Border Grid.Row="1"
+                        BorderBrush="#26282D"
+                        BorderThickness="0,1,0,0"
+                        Padding="28,18">
+                    <TextBlock Text="© 2024 DINBoard Systems"
+                               FontSize="10"
+                               Foreground="#5A5B5F"/>
+                </Border>
+            </Grid>
+        </Border>
 
-            </StackPanel>
-        </ScrollViewer>
+        <Grid Grid.Column="1">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border Padding="80,82,52,52">
+                    <StackPanel MaxWidth="560" Spacing="0">
+                        <StackPanel Spacing="0" Margin="0,0,0,78">
+                            <TextBlock Text="{DynamicResource HomeWelcome}"
+                                       FontSize="30"
+                                       FontWeight="Light"
+                                       Foreground="#F3F4F6"/>
+                            <TextBlock Text="Wybierz sposób rozpoczęcia pracy"
+                                       Margin="0,12,0,0"
+                                       FontSize="14"
+                                       Foreground="#5A5B5F"/>
+                            <Border Width="48"
+                                    Height="4"
+                                    Margin="0,30,0,0"
+                                    HorizontalAlignment="Left"
+                                    Background="#3B82F6"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="18" Margin="0,0,0,72">
+                            <Button Grid.Column="0"
+                                    Classes="home-action-card"
+                                    Command="{Binding Workspace.CreateProjectCommand}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="22">
+                                    <Border Classes="home-action-icon-box">
+                                        <mi:MaterialIcon Kind="FileDocumentPlus"
+                                                         Width="26"
+                                                         Height="26"
+                                                         Foreground="#3B82F6"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1"
+                                                VerticalAlignment="Top"
+                                                Spacing="0">
+                                        <TextBlock Text="{DynamicResource HomeActionNewProject}"
+                                                   Classes="home-action-title"/>
+                                        <TextBlock Text="Utwórz pusty schemat jedno-kreskowy z gotową strukturą."
+                                                   Classes="home-action-copy"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <Button Grid.Column="1"
+                                    Classes="home-action-card"
+                                    Command="{Binding Workspace.OpenProjectCommand}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="22">
+                                    <Border Classes="home-action-icon-box">
+                                        <mi:MaterialIcon Kind="FolderOpenOutline"
+                                                         Width="26"
+                                                         Height="26"
+                                                         Foreground="#3B82F6"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1"
+                                                VerticalAlignment="Top"
+                                                Spacing="0">
+                                        <TextBlock Text="{DynamicResource HomeActionOpenProject}"
+                                                   Classes="home-action-title"/>
+                                        <TextBlock Text="Wczytaj wcześniej zapisany projekt z dysku (plik .json)."
+                                                   Classes="home-action-copy"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </Grid>
+
+                        <StackPanel Spacing="18">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16" Margin="0,0,0,14">
+                                <TextBlock Text="OSTATNIO OTWIERANE"
+                                           FontSize="10"
+                                           FontWeight="Bold"
+                                           Foreground="#5A5B5F"
+                                           VerticalAlignment="Center"/>
+                                <Border Grid.Column="1"
+                                        Height="1"
+                                        VerticalAlignment="Center"
+                                        Background="#2D2D31"/>
+                            </Grid>
+
+                            <ItemsControl ItemsSource="{Binding RecentProjects}"
+                                          IsVisible="{Binding HasRecentProjects}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Classes="home-recent-button"
+                                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).Workspace.OpenRecentProjectCommand}"
+                                                CommandParameter="{Binding}">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                                                <Border Width="30"
+                                                        Height="30"
+                                                        CornerRadius="9"
+                                                        Background="#1A1A1E"
+                                                        VerticalAlignment="Center">
+                                                    <mi:MaterialIcon Kind="FileOutline"
+                                                                     Width="16"
+                                                                     Height="16"
+                                                                     Foreground="#6B6F76"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding}"
+                                                           Classes="home-recent-path"/>
+
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding Converter={StaticResource RecentProjectTimestampConverter}}"
+                                                           Classes="home-recent-date"/>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="10"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+
+                            <TextBlock Text="{DynamicResource HomeNoRecentProjects}"
+                                       IsVisible="{Binding HasRecentProjects, Converter={StaticResource InverseBoolConverter}}"
+                                       FontSize="13"
+                                       Foreground="#5A5B5F"
+                                       FontStyle="Italic"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

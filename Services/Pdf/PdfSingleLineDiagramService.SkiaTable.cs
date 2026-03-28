@@ -18,19 +18,18 @@ public partial class PdfSingleLineDiagramService
         }
         if (nodes.Count == 0) return;
 
-        using var linePen = Stroke(CGrid, 0.5f);
-        using var sepPen = Stroke(CFrame, 1.5f);
+        using var linePen = Stroke(CGrid, 0.4f);
+        using var sepPen = Stroke(CFrame, 1.0f);
 
-        // Nagłówki wierszy
         (double yRow, string label)[] headers = {
             (E.YRowDesig,    "Oznaczenie"),
             (E.YRowProt,     "Zabezp."),
-            (E.YRowCircuit,  "Obwód"),
+            (E.YRowCircuit,  "Obw\u00F3d"),
             (E.YRowLocation, "Lokalizacja"),
             (E.YRowCable,    "Kabel"),
             (E.YRowCableType,"Typ kabla"),
-            (E.YRowCableSpec,"Przekrój"),
-            (E.YRowCableLen, "Długość"),
+            (E.YRowCableSpec,"Przekr\u00F3j"),
+            (E.YRowCableLen, "D\u0142ugo\u015B\u0107"),
             (E.YRowPower,    "Moc"),
         };
         foreach (var (yRow, label) in headers)
@@ -40,22 +39,17 @@ public partial class PdfSingleLineDiagramService
             canvas.DrawLine((float)E.DrawL, ry + (float)E.RowH, (float)E.DrawR, ry + (float)E.RowH, linePen);
         }
 
-        // Separator (grubsza linia między Location a Cable)
         float sepY = Y(yOffset, E.YRowSep);
         canvas.DrawLine((float)E.DrawL, sepY, (float)E.DrawR, sepY, sepPen);
 
-        // Kolumny tabeli — pionowe linie oddzielające komórki
         foreach (var n in nodes)
         {
             float cx = (float)(n.X + E.NW / 2);
             float cw = (float)n.CellWidth;
             float cellL = cx - cw / 2f;
-            float cellR = cx + cw / 2f;
 
-            // Pionowa linia oddzielająca
             canvas.DrawLine(cellL, Y(yOffset, E.YRowDesig), cellL, Y(yOffset, E.YTableEnd), linePen);
 
-            // Wartości w komórkach
             string desig = n.Symbol?.ReferenceDesignation ?? n.Designation ?? "";
             string prot = n.Symbol?.ProtectionType ?? n.Protection ?? "";
             string circuit = n.Symbol?.CircuitName ?? n.CircuitName ?? "";
@@ -66,15 +60,14 @@ public partial class PdfSingleLineDiagramService
             string cableLen = n.CableLength ?? "";
             string power = n.PowerInfo ?? "";
 
-            // Specjalne oznaczenia
             if (n.NodeType == SchematicNodeType.MainBreaker) { cableDesig = "FR"; }
             else if (n.NodeType == SchematicNodeType.SPD) { cableDesig = "SPD"; }
             else if (n.NodeType == SchematicNodeType.PhaseIndicator) { cableDesig = "KF"; }
 
             TblCell(canvas, desig, cellL, Y(yOffset, E.YRowDesig), cw, CTxtDes, true);
             TblCell(canvas, prot, cellL, Y(yOffset, E.YRowProt), cw, CTxt, true);
-            TblCell(canvas, string.IsNullOrEmpty(circuit) ? "—" : circuit, cellL, Y(yOffset, E.YRowCircuit), cw, CTxtDim);
-            TblCell(canvas, string.IsNullOrEmpty(location) ? "—" : location, cellL, Y(yOffset, E.YRowLocation), cw, CTxtDim);
+            TblCell(canvas, string.IsNullOrEmpty(circuit) ? "-" : circuit, cellL, Y(yOffset, E.YRowCircuit), cw, CTxtDim);
+            TblCell(canvas, string.IsNullOrEmpty(location) ? "-" : location, cellL, Y(yOffset, E.YRowLocation), cw, CTxtDim);
             TblCell(canvas, cableDesig, cellL, Y(yOffset, E.YRowCable), cw, CTxtDes, true);
             TblCell(canvas, cableType, cellL, Y(yOffset, E.YRowCableType), cw, CTxtDim);
             TblCell(canvas, cableSpec, cellL, Y(yOffset, E.YRowCableSpec), cw, CTxt);

@@ -6,6 +6,7 @@ using DINBoard.Models;
 using DINBoard.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace DINBoard.Controls;
@@ -16,10 +17,15 @@ public partial class SymbolControl : UserControl
     private Point _lastPointerWorldPosition;
     private Vector _dragOffset;
     private Canvas? _cachedCanvas;
+    private Border? _referenceDesignationBadge;
+    private TextBlock? _referenceDesignationText;
+    private SymbolItem? _observedSymbol;
 
     public SymbolControl()
     {
         InitializeComponent();
+        _referenceDesignationBadge = this.FindControl<Border>("ReferenceDesignationBadge");
+        _referenceDesignationText = this.FindControl<TextBlock>("ReferenceDesignationText");
         PointerPressed += OnPointerPressed;
         PointerMoved += OnPointerMoved;
         PointerReleased += OnPointerReleased;
@@ -30,8 +36,17 @@ public partial class SymbolControl : UserControl
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        if (DataContext is SymbolItem symbol)
+        if (_observedSymbol != null)
         {
+            _observedSymbol.PropertyChanged -= OnObservedSymbolPropertyChanged;
+        }
+
+        _observedSymbol = DataContext as SymbolItem;
+        if (_observedSymbol != null)
+        {
+            _observedSymbol.PropertyChanged += OnObservedSymbolPropertyChanged;
+
+            var symbol = _observedSymbol;
             bool isDist = IsDistributionBlock(symbol);
 
             var menuEnable = this.FindControl<MenuItem>("MenuEnableBlueCover");
@@ -49,7 +64,56 @@ public partial class SymbolControl : UserControl
             if (menuGroup != null) menuGroup.IsVisible = !isDist;
             if (menuUngroup != null) menuUngroup.IsVisible = !isDist;
             if (sepGrouping != null) sepGrouping.IsVisible = !isDist;
+
+            UpdateReferenceDesignationBadgeScale(symbol);
         }
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        if (_observedSymbol != null)
+        {
+            _observedSymbol.PropertyChanged -= OnObservedSymbolPropertyChanged;
+            _observedSymbol = null;
+        }
+
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private void OnObservedSymbolPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not SymbolItem symbol)
+        {
+            return;
+        }
+
+        if (e.PropertyName == nameof(SymbolItem.Width) || e.PropertyName == nameof(SymbolItem.Height))
+        {
+            UpdateReferenceDesignationBadgeScale(symbol);
+        }
+    }
+
+    private void UpdateReferenceDesignationBadgeScale(SymbolItem symbol)
+    {
+        if (_referenceDesignationBadge == null || _referenceDesignationText == null)
+        {
+            return;
+        }
+
+        var symbolWidth = Math.Max(1.0, symbol.Width);
+        var symbolHeight = Math.Max(1.0, symbol.Height);
+
+        // Badge skaluje się wraz z modułem na szynie DIN (zamiast stałych wartości).
+        var fontSize = Math.Clamp(symbolWidth * 0.10, 5.0, 9.0);
+        var horizontalPadding = Math.Clamp(fontSize * 0.45, 2.0, 4.0);
+        var verticalPadding = Math.Clamp(fontSize * 0.18, 1.0, 2.0);
+        var cornerRadius = Math.Clamp(fontSize * 0.35, 2.0, 3.5);
+        var bottomOffset = Math.Clamp(symbolHeight * 0.085, 10.0, 20.0);
+
+        _referenceDesignationText.FontSize = fontSize;
+        _referenceDesignationBadge.Padding = new Thickness(horizontalPadding, verticalPadding);
+        _referenceDesignationBadge.CornerRadius = new CornerRadius(cornerRadius);
+        _referenceDesignationBadge.Margin = new Thickness(0, 0, 0, -bottomOffset);
     }
 
     private void InitializeComponent()

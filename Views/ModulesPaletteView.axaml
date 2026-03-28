@@ -17,25 +17,66 @@
     </UserControl.Resources>
     
     <Border Background="{DynamicResource PanelBackground}" BorderThickness="0,0,1,0" BorderBrush="{DynamicResource PanelBorder}">
-        <Grid RowDefinitions="Auto,Auto,*">
-            <TextBlock Text="{DynamicResource HeaderModules}" Classes="section-header" Margin="8,6"/>
+        <Grid Margin="12" RowDefinitions="Auto,Auto,*">
+            <TextBlock Text="{DynamicResource HeaderModules}"
+                       Margin="4,2,4,12"
+                       FontSize="13"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextMain}"/>
+            <Border Grid.Row="1" Height="1" Background="{DynamicResource PanelBorder}" Opacity="0.8"/>
 
-
-            
             <Grid Grid.Row="2">
-                <TabControl Margin="0" Padding="0"
+                <TabControl x:Name="PaletteTabs"
+                            Margin="0,14,0,0"
+                            Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
                             IsVisible="{Binding #PaletteRoot.IsModulesEnabled}"
                             ItemsSource="{Binding #PaletteRoot.Categories}">
+                    <TabControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" Margin="0,0,0,10"/>
+                        </ItemsPanelTemplate>
+                    </TabControl.ItemsPanel>
+
                     <TabControl.Styles>
                         <Style Selector="TabItem">
                             <Setter Property="FontSize" Value="11"/>
-                            <Setter Property="Padding" Value="6,4"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="14,8"/>
+                            <Setter Property="Margin" Value="0,0,8,8"/>
+                            <Setter Property="ZIndex" Value="1"/>
+                            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="CornerRadius" Value="8"/>
+                            <Setter Property="MinWidth" Value="56"/>
+                            <Setter Property="MinHeight" Value="36"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="Transitions">
+                                <Transitions>
+                                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+                                    <BrushTransition Property="Foreground" Duration="0:0:0.12"/>
+                                </Transitions>
+                            </Setter>
+                        </Style>
+                        <Style Selector="TabItem:pointerover">
+                            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+                        </Style>
+                        <Style Selector="TabItem:selected">
+                            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
                         </Style>
                     </TabControl.Styles>
 
                     <TabControl.ItemTemplate>
                         <DataTemplate x:DataType="local:ModulesPaletteView+ModuleCategory">
-                            <TextBlock Text="{Binding Name}">
+                            <TextBlock Text="{Binding Name}" TextWrapping="NoWrap">
                                 <TextBlock.ContextMenu>
                                     <ContextMenu>
                                         <MenuItem Header="{DynamicResource MenuDeleteTab}" Click="DeleteCategory_Click"/>
@@ -47,32 +88,34 @@
 
                     <TabControl.ContentTemplate>
                         <DataTemplate x:DataType="local:ModulesPaletteView+ModuleCategory" x:CompileBindings="False">
-                            <ScrollViewer>
-                                <ItemsControl ItemsSource="{Binding Items}">
-                                    <ItemsControl.ItemTemplate>
-                                         <DataTemplate x:DataType="local:ModulesPaletteView+PaletteItem">
-                                            <Border Background="{DynamicResource PanelBackgroundAlt}" Margin="4,2" Padding="6" CornerRadius="4"
-                                                    BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1"
-                                                    PointerPressed="OnPointerPressed"
-                                                    ToolTip.Tip="{Binding Description}">
-                                                <Border.ContextMenu>
-                                                    <ContextMenu>
-                                                        <MenuItem Header="{DynamicResource MenuDelete}" Click="DeleteModule_Click"/>
-                                                    </ContextMenu>
-                                                </Border.ContextMenu>
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <mi:MaterialIcon Kind="{Binding IconKind}" Width="{Binding DataContext.Schematic.IconSize, RelativeSource={RelativeSource AncestorType=local:ModulesPaletteView}}" Height="{Binding DataContext.Schematic.IconSize, RelativeSource={RelativeSource AncestorType=local:ModulesPaletteView}}" IsVisible="{Binding !HasVisual}"/>
-                                                    <Image Source="{Binding Visual}" Width="{Binding DataContext.Schematic.IconSize, RelativeSource={RelativeSource AncestorType=local:ModulesPaletteView}}" Height="{Binding DataContext.Schematic.IconSize, RelativeSource={RelativeSource AncestorType=local:ModulesPaletteView}}" IsVisible="{Binding HasVisual}"/>
-                                                    <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Name}" FontWeight="Medium" FontSize="11"/>
-                                                        <TextBlock Text="{Binding Description}" FontSize="9" Classes="secondary"/>
+                            <Border Margin="0,10,0,0" Background="Transparent">
+                                <ScrollViewer>
+                                    <ItemsControl ItemsSource="{Binding Items}">
+                                        <ItemsControl.ItemTemplate>
+                                             <DataTemplate x:DataType="local:ModulesPaletteView+PaletteItem">
+                                                <Border Background="{DynamicResource PanelBackgroundAlt}" Margin="4,2" Padding="6" CornerRadius="4"
+                                                        BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1"
+                                                        PointerPressed="OnPointerPressed"
+                                                        ToolTip.Tip="{Binding Description}">
+                                                    <Border.ContextMenu>
+                                                        <ContextMenu>
+                                                            <MenuItem Header="{DynamicResource MenuDelete}" Click="DeleteModule_Click"/>
+                                                        </ContextMenu>
+                                                    </Border.ContextMenu>
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <mi:MaterialIcon Kind="{Binding IconKind}" Width="{Binding DataContext.Schematic.IconSize, RelativeSource={RelativeSource AncestorType=local:ModulesPaletteView}}" Height="{Binding DataContext.Schematic.IconSize, RelativeSource={RelativeSource AncestorType=local:ModulesPaletteView}}" IsVisible="{Binding !HasVisual}"/>
+                                                        <Image Source="{Binding Visual}" Width="{Binding DataContext.Schematic.IconSize, RelativeSource={RelativeSource AncestorType=local:ModulesPaletteView}}" Height="{Binding DataContext.Schematic.IconSize, RelativeSource={RelativeSource AncestorType=local:ModulesPaletteView}}" IsVisible="{Binding HasVisual}"/>
+                                                        <StackPanel VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Name}" FontWeight="Medium" FontSize="11"/>
+                                                            <TextBlock Text="{Binding Description}" FontSize="9" Classes="secondary"/>
+                                                        </StackPanel>
                                                     </StackPanel>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
                         </DataTemplate>
                     </TabControl.ContentTemplate>
                 </TabControl>

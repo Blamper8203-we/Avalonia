@@ -87,10 +87,12 @@ public partial class SymbolManagerViewModel : ObservableObject
                     _mainViewModel.SelectedSymbol = null;
             }
             _mainViewModel.StatusMessage = $"Usunięto moduł: {symbol.Label ?? "Nieznany"}";
+            _mainViewModel.MarkProjectAsChanged();
             return;
         }
 
         _undoRedoService?.Execute(action);
+        _mainViewModel.MarkProjectAsChanged();
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
     }
@@ -150,11 +152,13 @@ public partial class SymbolManagerViewModel : ObservableObject
             }
             if (_mainViewModel.SelectedSymbol != null && symbolsList.Contains(_mainViewModel.SelectedSymbol))
                 _mainViewModel.SelectedSymbol = null;
+            _mainViewModel.MarkProjectAsChanged();
             _mainViewModel.StatusMessage = $"Usunięto {symbolsList.Count} modułów";
             return;
         }
 
         _undoRedoService?.Execute(action);
+        _mainViewModel.MarkProjectAsChanged();
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
     }
@@ -173,6 +177,7 @@ public partial class SymbolManagerViewModel : ObservableObject
         {
             _mainViewModel.Symbols.Remove(_mainViewModel.SelectedSymbol);
             _mainViewModel.SelectedSymbol = null;
+            _mainViewModel.MarkProjectAsChanged();
         }
     }
 
@@ -225,6 +230,7 @@ public partial class SymbolManagerViewModel : ObservableObject
 
         _mainViewModel.SelectedSymbol = _mainViewModel.Symbols.LastOrDefault(s => s.IsSelected);
         
+        _mainViewModel.MarkProjectAsChanged();
         _mainViewModel.StatusMessage = $"Skopiowano {duplicatedCount} elementów";
         RecalculateModuleNumbers();
     }

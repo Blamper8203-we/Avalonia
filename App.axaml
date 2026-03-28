@@ -71,6 +71,126 @@
         </Style>
         
         <!-- Toolbar Button -->
+        <Style Selector="Border.toolbar-shell">
+            <Setter Property="Background" Value="{DynamicResource ToolbarBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+        <Style Selector="Button.toolbar-menu-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.toolbar-menu-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+        </Style>
+        <Style Selector="Button.toolbar-menu-btn:pressed">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+        </Style>
+        <Style Selector="Button.toolbar-menu-btn.active">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+        </Style>
+        <Style Selector="Button.toolbar-icon-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="MinWidth" Value="34"/>
+            <Setter Property="MinHeight" Value="32"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.toolbar-icon-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+        </Style>
+        <Style Selector="Button.toolbar-icon-btn:pressed">
+            <Setter Property="Background" Value="{DynamicResource PanelBorder}"/>
+        </Style>
+        <Style Selector="Border.toolbar-zoom-badge">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="MinWidth" Value="48"/>
+        </Style>
+        <Style Selector="TextBlock.toolbar-project-name">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextTertiary}"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="FlyoutPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="Border.toolbar-flyout-shell">
+            <Setter Property="Background" Value="{DynamicResource MenuBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MenuBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="3"/>
+            <Setter Property="BoxShadow" Value="{DynamicResource CardShadow}"/>
+        </Style>
+        <Style Selector="TextBlock.toolbar-flyout-section">
+            <Setter Property="Foreground" Value="{DynamicResource TextTertiary}"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="14,8,14,4"/>
+        </Style>
+        <Style Selector="Rectangle.toolbar-flyout-divider">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Fill" Value="{DynamicResource MenuBorder}"/>
+            <Setter Property="Margin" Value="0,6"/>
+        </Style>
+        <Style Selector="Button.toolbar-flyout-item">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="MinHeight" Value="40"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.toolbar-flyout-item:pointerover">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+        </Style>
+        <Style Selector="Button.toolbar-flyout-item:pressed">
+            <Setter Property="Background" Value="{DynamicResource PanelBorder}"/>
+        </Style>
+        <Style Selector="Border.toolbar-flyout-card">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="8,2,8,6"/>
+        </Style>
         <Style Selector="Button.toolbar-btn">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Padding" Value="6,4"/>
@@ -119,28 +239,51 @@
         <Style Selector="ToggleButton.toolbar-btn:disabled">
             <Setter Property="Opacity" Value="0.5"/>
         </Style>
+
+        <Style Selector="Border.workspace-tabs-bar">
+            <Setter Property="Background" Value="{DynamicResource ToolbarBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="10,8,12,8"/>
+        </Style>
+        <Style Selector="Border.workspace-tab-separator">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBorder}"/>
+            <Setter Property="Margin" Value="10,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Opacity" Value="0.55"/>
+        </Style>
         
         <!-- Sheet Tab ToggleButton -->
         <Style Selector="ToggleButton.sheet-tab">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="MinHeight" Value="40"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15"/>
                     <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
                 </Transitions>
             </Setter>
         </Style>
         <Style Selector="ToggleButton.sheet-tab:pointerover">
             <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
         </Style>
         <Style Selector="ToggleButton.sheet-tab:checked">
             <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
             <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
         </Style>
         <Style Selector="ToggleButton.sheet-tab:focus">
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>

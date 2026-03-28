@@ -46,3 +46,34 @@ Wait, Stop. Read this CAREFULLY. You are participating in a project that has suf
 - Do not mix pure refactorings with new feature development.
 
 **Failure to observe these rules constitutes a violation of the project's quality guidelines.**
+
+This repository is a professional desktop engineering application built with C# / .NET 10 / Avalonia UI / MVVM.
+
+When editing code in this repository:
+
+- Preserve existing behavior unless explicitly asked to change it.
+- Prefer minimal, safe, scoped changes.
+- Do not perform large rewrites without strong justification.
+- Respect MVVM boundaries.
+- Keep business and calculation logic out of Views.
+- Be careful with rendering, canvas, layout, drag/drop, and snapping code.
+- Be careful with project persistence and PDF export code.
+- Preserve undo/redo consistency.
+- Do not silently alter electrical formulas, validation rules, or phase balancing logic.
+
+Treat these files and services as critical:
+- Services/PhaseDistributionCalculator.cs
+- Services/ElectricalValidationService.cs
+- Services/SchematicLayoutEngine.cs
+- Services/SchematicCanvasController.cs
+- Services/SchematicDragDropController.cs
+- Services/SchematicDinRailController.cs
+- Services/UndoRedoService.cs
+- Services/PdfExportService.cs
+
+For non-trivial changes, respond with:
+1. Problem
+2. Cause
+3. Safe fix
+4. Code
+5. What to test

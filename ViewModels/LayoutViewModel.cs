@@ -184,7 +184,7 @@ public partial class LayoutViewModel : ObservableObject, IDisposable
         _mainViewModel.ModuleManager.CommitClonesPlacement(clones);
         IsPlacingClones = false;
         ClonesToPlace.Clear();
-        _mainViewModel.HasUnsavedChanges = true;
+        _mainViewModel.MarkProjectAsChanged();
     }
 
     /// <summary>
@@ -196,7 +196,7 @@ public partial class LayoutViewModel : ObservableObject, IDisposable
         _mainViewModel.ModuleManager.CommitClonesPlacement(ClonesToPlace.ToList());
         IsPlacingClones = false;
         ClonesToPlace.Clear();
-        _mainViewModel.HasUnsavedChanges = true;
+        _mainViewModel.MarkProjectAsChanged();
         _mainViewModel.StatusMessage = "Powielone elementy postawione na schemacie";
     }
 

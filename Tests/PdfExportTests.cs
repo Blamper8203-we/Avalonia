@@ -281,6 +281,34 @@ public class PdfExportTests : IDisposable
         Assert.True(new FileInfo(filePath).Length > 0);
     }
 
+    [Fact]
+    public void PdfDinRailService_RenderDinRailToImage_WithRenderCache_ReusesBytesPerVariant()
+    {
+        var service = new PdfDinRailService(new SymbolImportService(), new SvgProcessor());
+        var options = new PdfExportOptions { PngQuality = PngRenderQuality.High };
+        var cache = service.CreateRenderCache();
+
+        _viewModel.Symbols.Add(new SymbolItem
+        {
+            Id = "cache-test",
+            Type = "MCB",
+            Label = "Cache Test",
+            X = 100,
+            Y = 100,
+            Width = 200,
+            Height = 1000
+        });
+
+        var baseImageFirst = service.RenderDinRailToImage(_viewModel, options, renderCache: cache);
+        var baseImageSecond = service.RenderDinRailToImage(_viewModel, options, renderCache: cache);
+        var numberedImage = service.RenderDinRailToImage(_viewModel, options, showNumbers: true, showGroups: false, renderCache: cache);
+
+        Assert.NotNull(baseImageFirst);
+        Assert.Same(baseImageFirst, baseImageSecond);
+        Assert.NotNull(numberedImage);
+        Assert.NotSame(baseImageFirst, numberedImage);
+    }
+
     #endregion
 
     #region PDF Service Component Tests - Null Container Validation

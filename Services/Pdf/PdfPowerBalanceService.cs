@@ -26,19 +26,42 @@ public class PdfPowerBalanceService
         _moduleTypeService = moduleTypeService ?? throw new ArgumentNullException(nameof(moduleTypeService));
     }
 
+    internal static double CalculateDesignCurrent(double calculatedPowerW, double lineVoltageV, bool isThreePhase, double cosPhi = 0.9)
+    {
+        if (calculatedPowerW <= 0 || lineVoltageV <= 0 || cosPhi <= 0)
+        {
+            return 0;
+        }
+
+        var phaseVoltageV = lineVoltageV / Math.Sqrt(3);
+        return isThreePhase
+            ? calculatedPowerW / (lineVoltageV * Math.Sqrt(3) * cosPhi)
+            : calculatedPowerW / (phaseVoltageV * cosPhi);
+    }
+
     public void ComposePowerBalance(IContainer container, MainViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(container);
         ArgumentNullException.ThrowIfNull(viewModel);
 
-        var allMcbs = viewModel.Symbols
-            .Where(s => s != null && _moduleTypeService.IsMcb(s))
-            .ToList();
+        // Korzystaj z PhaseDistributionCalculator — spójnie z PowerBalanceViewModel
+        var dist = PhaseDistributionCalculator.CalculateTotalDistribution(viewModel.Symbols);
+        double powerL1 = dist.L1PowerW;
+        double powerL2 = dist.L2PowerW;
+        double powerL3 = dist.L3PowerW;
+        double totalPower = powerL1 + powerL2 + powerL3;
 
-        double totalPower = allMcbs.Sum(m => m.PowerW);
-        double powerL1 = allMcbs.Where(m => m.Phase == "L1").Sum(m => m.PowerW);
-        double powerL2 = allMcbs.Where(m => m.Phase == "L2").Sum(m => m.PowerW);
-        double powerL3 = allMcbs.Where(m => m.Phase == "L3").Sum(m => m.PowerW);
+        // Współczynnik jednoczesności z UI (PowerBalanceViewModel)
+        double simultaneityFactor = viewModel.PowerBalance.SimultaneityFactor;
+        double calculatedPower = totalPower * simultaneityFactor;
+
+        // Napięcie z konfiguracji projektu
+        var lineVoltage = viewModel.CurrentProject?.PowerConfig?.Voltage ?? 400;
+        var phaseVoltage = lineVoltage / Math.Sqrt(3);
+        bool isThreePhase = viewModel.CurrentProject?.PowerConfig?.Phases == 3;
+
+        // Prąd obliczeniowy
+        double calcCurrent = CalculateDesignCurrent(calculatedPower, lineVoltage, isThreePhase);
 
         container.Column(column =>
         {
@@ -85,8 +108,7 @@ public class PdfPowerBalanceService
             column.Item().Height(20);
             column.Item().Text("Obliczenia:").FontSize(12 * UiToPdfScale).SemiBold();
 
-            double simultaneityFactor = 0.6; // Typowy dla mieszkań
-            double calculatedPower = totalPower * simultaneityFactor;
+            var voltageLabel = isThreePhase ? $"3x{lineVoltage}V" : $"{phaseVoltage:N0}V";
 
             column.Item().Table(table =>
             {
@@ -102,8 +124,8 @@ public class PdfPowerBalanceService
                 table.Cell().Padding(5).Text("Moc obliczeniowa:").FontSize(10 * UiToPdfScale);
                 table.Cell().Padding(5).Text($"{calculatedPower:N0} W ({calculatedPower / 1000:N2} kW)").FontSize(10 * UiToPdfScale).SemiBold();
 
-                table.Cell().Padding(5).Text("Prąd obliczeniowy (3x400V):").FontSize(10 * UiToPdfScale);
-                table.Cell().Padding(5).Text($"{calculatedPower / (400 * 1.73):N1} A").FontSize(10 * UiToPdfScale).SemiBold();
+                table.Cell().Padding(5).Text($"Prąd obliczeniowy ({voltageLabel}):").FontSize(10 * UiToPdfScale);
+                table.Cell().Padding(5).Text($"{calcCurrent:N1} A").FontSize(10 * UiToPdfScale).SemiBold();
             });
         });
     }

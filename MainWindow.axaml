@@ -12,7 +12,9 @@
         x:Class="DINBoard.MainWindow"
         x:Name="RootWindow"
         x:DataType="vm:MainViewModel"
+        d:DataContext="{x:Static vm:DesignData.MainViewModel}"
         mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="800"
+        Icon="avares://DINBoard/Assets/app_icon.ico"
         Title="DINBoard"
         WindowState="Maximized"
         Width="1400" Height="900"
@@ -44,9 +46,10 @@
         </Grid.RowDefinitions>
         
         <!-- TOOLBAR -->
-        <Border Grid.Row="0" Background="{DynamicResource ToolbarBackground}" Padding="6,3" 
-                BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1">
-            <Grid>
+        <Border x:Name="ToolbarShell"
+                Grid.Row="0"
+                Classes="toolbar-shell">
+            <Grid RowDefinitions="Auto,Auto,Auto">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -54,19 +57,18 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Left: File Operations -->
-                <StackPanel Orientation="Horizontal" Spacing="2">
+                <StackPanel Grid.Row="0" Margin="14,10,0,8" Orientation="Horizontal" Spacing="4">
                     
                     <!-- MENU PLIK -->
-                    <Button Classes="toolbar-btn" Content="{DynamicResource MenuFile}" VerticalAlignment="Center">
+                    <Button Classes="toolbar-menu-btn active" Content="{DynamicResource MenuFile}" VerticalAlignment="Center">
                         <Button.Flyout>
                             <Flyout Placement="BottomEdgeAlignedLeft" ShowMode="Standard">
-                                <Border Background="{DynamicResource MenuBackground}" BorderBrush="{DynamicResource MenuBorder}" BorderThickness="1" CornerRadius="6" Padding="3" Width="220">
+                                <Border Classes="toolbar-flyout-shell" Width="304">
                                     <StackPanel Spacing="1">
-                                        <!-- PROJEKT -->
-                                        <TextBlock Text="{DynamicResource MenuProject}" Foreground="{DynamicResource TextTertiary}" FontSize="9" FontWeight="Bold" Margin="8,4,8,2"/>
+                                        <TextBlock Classes="toolbar-flyout-section" Text="{DynamicResource MenuProject}"/>
                                         
                                         <!-- Nowy -->
-                                        <Button Command="{Binding Workspace.CreateProjectCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Workspace.CreateProjectCommand}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="24"/>
@@ -80,7 +82,7 @@
                                         </Button>
 
                                         <!-- Otwórz -->
-                                        <Button Command="{Binding Workspace.LoadCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Workspace.LoadCommand}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="24"/>
@@ -94,7 +96,7 @@
                                         </Button>
 
                                         <!-- Zapisz -->
-                                        <Button Command="{Binding Workspace.SaveCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Workspace.SaveCommand}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="24"/>
@@ -107,21 +109,8 @@
                                             </Grid>
                                         </Button>
 
-                                        <!-- Import z Excela -->
-                                        <Button Command="{Binding Workspace.ImportFromExcelCommand}" x:CompileBindings="False" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="24"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <mi:MaterialIcon Kind="FileExcelBox" Width="16" Height="16" Foreground="{DynamicResource AccentGreen}"/>
-                                                <TextBlock Grid.Column="1" Text="Importuj obwody z Excela..." Margin="12,0,0,0" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center"/>
-                                            </Grid>
-                                        </Button>
-
                                         <!-- Zapisz jako -->
-                                        <Button Command="{Binding Workspace.SaveAsCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Workspace.SaveAsCommand}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="24"/>
@@ -133,13 +122,13 @@
                                             </Grid>
                                         </Button>
                                         
-                                        <Rectangle Height="1" Fill="{DynamicResource MenuBorder}" Margin="0,4"/>
+                                        <Rectangle Classes="toolbar-flyout-divider"/>
 
                                         <!-- EKSPORT -->
-                                        <TextBlock Text="{DynamicResource MenuExport}" Foreground="{DynamicResource TextTertiary}" FontSize="10" FontWeight="Bold" Margin="12,4"/>
+                                        <TextBlock Classes="toolbar-flyout-section" Text="{DynamicResource MenuExport}"/>
                                         
                                         <!-- Drukuj -->
-                                        <Button Command="{Binding Workspace.PrintCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Workspace.PrintCommand}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="24"/>
@@ -153,7 +142,7 @@
                                         </Button>
 
                                         <!-- Eksport PDF -->
-                                        <Button Command="{Binding Exporter.ExportPdfCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Exporter.ExportPdfCommand}">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <TextBlock Text="📄" FontSize="16"/>
                                                 <TextBlock Text="{DynamicResource MenuExportPdf}" VerticalAlignment="Center"/>
@@ -161,7 +150,7 @@
                                         </Button>
 
                                         <!-- Eksport PNG (Czysty) -->
-                                        <Button Command="{Binding Exporter.ExportPngCleanCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Exporter.ExportPngCleanCommand}">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <TextBlock Text="🖼" FontSize="16"/>
                                                 <TextBlock Text="{DynamicResource MenuExportPngClean}" VerticalAlignment="Center"/>
@@ -169,7 +158,7 @@
                                         </Button>
 
                                         <!-- Eksport PNG (Z Oznaczeniami) -->
-                                        <Button Command="{Binding Exporter.ExportPngAnnotatedCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Exporter.ExportPngAnnotatedCommand}">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <TextBlock Text="🖍" FontSize="16"/>
                                                 <TextBlock Text="{DynamicResource MenuExportPngAnnotated}" VerticalAlignment="Center"/>
@@ -177,17 +166,25 @@
                                         </Button>
 
                                         <!-- Eksport BOM (CSV) -->
-                                        <Button Command="{Binding Exporter.ExportBomCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Exporter.ExportBomCommand}">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <TextBlock Text="📋" FontSize="16"/>
                                                 <TextBlock Text="{DynamicResource MenuExportBom}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
 
-                                        <Rectangle Height="1" Fill="{DynamicResource MenuBorder}" Margin="0,4"/>
+                                        <!-- Eksport LaTeX -->
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Exporter.ExportLatexCommand}">
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="📝" FontSize="16"/>
+                                                <TextBlock Text="{DynamicResource MenuExportLatex}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Rectangle Classes="toolbar-flyout-divider"/>
                                         
                                         <!-- Wyjdź -->
-                                        <Button Command="{Binding Workspace.ExitCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Workspace.ExitCommand}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="24"/>
@@ -206,15 +203,15 @@
                     </Button>
                     
                     <!-- MENU WIDOK -->
-                    <Button Classes="toolbar-btn" Content="{DynamicResource MenuView}" VerticalAlignment="Center">
+                    <Button Classes="toolbar-menu-btn" Content="{DynamicResource MenuView}" VerticalAlignment="Center">
                         <Button.Flyout>
                             <Flyout Placement="BottomEdgeAlignedLeft" ShowMode="Standard">
-                                <Border Background="{DynamicResource MenuBackground}" BorderBrush="{DynamicResource MenuBorder}" BorderThickness="1" CornerRadius="6" Padding="3" Width="220">
+                                <Border Classes="toolbar-flyout-shell" Width="284">
                                     <StackPanel Spacing="1">
-                                        <TextBlock Text="{DynamicResource MenuDisplayOptions}" Foreground="{DynamicResource TextTertiary}" FontSize="9" FontWeight="Bold" Margin="8,4,8,2"/>
+                                        <TextBlock Classes="toolbar-flyout-section" Text="{DynamicResource MenuDisplayOptions}"/>
                                         
                                         <!-- Toggle prawy panel -->
-                                        <Button Command="{Binding ToggleRightPanelCommand}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding ToggleRightPanelCommand}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="24"/>
@@ -229,12 +226,12 @@
                                             </Grid>
                                         </Button>
 
-                                        <Rectangle Height="1" Fill="{DynamicResource MenuBorder}" Margin="0,4"/>
+                                        <Rectangle Classes="toolbar-flyout-divider"/>
                                         
-                                        <TextBlock Text="{DynamicResource MenuSheets}" Foreground="{DynamicResource TextTertiary}" FontSize="9" FontWeight="Bold" Margin="8,4,8,2"/>
+                                        <TextBlock Classes="toolbar-flyout-section" Text="{DynamicResource MenuSheets}"/>
                                         
                                         <!-- Sheet 1: Szyna DIN -->
-                                        <Button Command="{Binding Schematic.SwitchToSheet1Command}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Schematic.SwitchToSheet1Command}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="24"/>
@@ -250,7 +247,7 @@
                                         </Button>
                                         
                                         <!-- Sheet 2: Schemat jednokreskowy -->
-                                        <Button Command="{Binding Schematic.SwitchToSheet2Command}" Background="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8">
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Schematic.SwitchToSheet2Command}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="24"/>
@@ -264,112 +261,187 @@
                                                                  IsVisible="{Binding Schematic.IsSheet2Active}"/>
                                             </Grid>
                                         </Button>
+
+                                        <!-- Sheet 3: Lista obwodow -->
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Schematic.SwitchToSheet3Command}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <mi:MaterialIcon Kind="FormatListBulleted" Width="16" Height="16" Foreground="{DynamicResource TextSecondary}"/>
+                                                <TextBlock Grid.Column="1" Text="Lista obwodow" Margin="12,0,0,0" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center"/>
+                                                <mi:MaterialIcon Grid.Column="2" Kind="Check" Width="14" Height="14" 
+                                                                 Foreground="{DynamicResource AccentGreen}"
+                                                                 IsVisible="{Binding Schematic.IsSheet3Active}"/>
+                                            </Grid>
+                                        </Button>
+
+                                        <!-- Sheet 4: Podglad PDF -->
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding Schematic.SwitchToSheet4Command}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <mi:MaterialIcon Kind="FilePdfBox" Width="16" Height="16" Foreground="{DynamicResource TextSecondary}"/>
+                                                <TextBlock Grid.Column="1" Text="Podglad PDF" Margin="12,0,0,0" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center"/>
+                                                <mi:MaterialIcon Grid.Column="2" Kind="Check" Width="14" Height="14" 
+                                                                 Foreground="{DynamicResource AccentGreen}"
+                                                                 IsVisible="{Binding Schematic.IsSheet4Active}"/>
+                                            </Grid>
+                                        </Button>
                                     </StackPanel>
                                 </Border>
                             </Flyout>
                         </Button.Flyout>
                     </Button>
 
-                    <Border Width="1" Background="{DynamicResource PanelBorder}" Margin="4,2" Opacity="0.4"/>
+                    <Button Classes="toolbar-menu-btn" Content="{DynamicResource MenuTools}" VerticalAlignment="Center">
+                        <Button.Flyout>
+                            <Flyout Placement="BottomEdgeAlignedLeft" ShowMode="Standard">
+                                <Border Classes="toolbar-flyout-shell" Width="284">
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Classes="toolbar-flyout-section" Text="{DynamicResource MenuToolsSection}"/>
 
-                    <Button Classes="toolbar-btn" Command="{Binding UndoCommand}" ToolTip.Tip="{DynamicResource TooltipUndo}">
-                        <mi:MaterialIcon Kind="Undo" Width="14" Height="14"/>
-                    </Button>
-                    <Button Classes="toolbar-btn" Command="{Binding RedoCommand}" ToolTip.Tip="{DynamicResource TooltipRedo}">
-                        <mi:MaterialIcon Kind="Redo" Width="14" Height="14"/>
+                                        <Button Classes="toolbar-flyout-item" Click="BtnDinRail_Click">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <mi:MaterialIcon Kind="ViewModule" Width="16" Height="16" Foreground="{DynamicResource AccentBlue}"/>
+                                                <TextBlock Grid.Column="1" Text="{DynamicResource ToolDinRail}" Margin="12,0,0,0" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Button>
+
+                                        <Button Classes="toolbar-flyout-item" Command="{Binding GenerateBusbarCommand}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <mi:MaterialIcon Kind="PowerPlug" Width="16" Height="16" Foreground="{DynamicResource TextSecondary}"/>
+                                                <TextBlock Grid.Column="1" Text="{DynamicResource ToolBusbar}" Margin="12,0,0,0" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Button>
+
+                                        <Button Classes="toolbar-flyout-item" Click="BtnImportModules_Click">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <mi:MaterialIcon Kind="FileImport" Width="16" Height="16" Foreground="{DynamicResource TextSecondary}"/>
+                                                <TextBlock Grid.Column="1" Text="{DynamicResource ToolImportSvg}" Margin="12,0,0,0" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </Flyout>
+                        </Button.Flyout>
                     </Button>
 
-                    <Border Width="1" Background="{DynamicResource PanelBorder}" Margin="4,2" Opacity="0.4"/>
+                    <Button Classes="toolbar-menu-btn"
+                            Content="{DynamicResource MenuHelp}"
+                            VerticalAlignment="Center"
+                            Click="BtnHelp_Click"/>
 
-                    <Button Classes="toolbar-btn" Command="{Binding ModuleManager.DeleteSelectedCommand}" ToolTip.Tip="{DynamicResource TooltipDeleteSelected}">
-                        <mi:MaterialIcon Kind="TrashCanOutline" Width="14" Height="14"/>
-                    </Button>
+                </StackPanel>
 
-                    <Border Width="1" Background="{DynamicResource PanelBorder}" Margin="4,2" Opacity="0.4"/>
+                <Border Grid.Row="1" Grid.ColumnSpan="3" Height="1" Background="{DynamicResource PanelBorder}" Opacity="0.9"/>
 
-                    <Button Classes="toolbar-btn" x:Name="BtnDinRail" Click="BtnDinRail_Click" ToolTip.Tip="{DynamicResource ToolDinRail}">
-                        <mi:MaterialIcon Kind="ViewModule" Width="14" Height="14"/>
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="14,10,14,12" Orientation="Horizontal" Spacing="4">
+
+                    <Button Classes="toolbar-icon-btn" Command="{Binding UndoCommand}" ToolTip.Tip="{DynamicResource TooltipUndo}">
+                        <mi:MaterialIcon Kind="Undo" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
                     </Button>
-                    <Button Classes="toolbar-btn"
-                            Command="{Binding GenerateBusbarCommand}"
-                            ToolTip.Tip="{DynamicResource ToolBusbar}">
-                        <mi:MaterialIcon Kind="PowerPlug" Width="14" Height="14"/>
-                    </Button>
-                    <Button Classes="toolbar-btn" x:Name="BtnImportModules" Click="BtnImportModules_Click" ToolTip.Tip="{DynamicResource ToolImportSvg}">
-                        <mi:MaterialIcon Kind="FileImport" Width="14" Height="14"/>
+                    <Button Classes="toolbar-icon-btn" Command="{Binding RedoCommand}" ToolTip.Tip="{DynamicResource TooltipRedo}">
+                        <mi:MaterialIcon Kind="Redo" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
                     </Button>
 
-                    <Border Width="1" Background="{DynamicResource PanelBorder}" Margin="4,2" Opacity="0.4"/>
+                    <Border Width="1" Height="20" Background="{DynamicResource PanelBorder}" Margin="6,0" Opacity="0.5"/>
 
-                    <Button Classes="toolbar-btn" x:Name="BtnZoomIn" Click="BtnZoomIn_Click" ToolTip.Tip="{DynamicResource TooltipZoomIn}">
-                        <mi:MaterialIcon Kind="MagnifyPlus" Width="14" Height="14"/>
+                    <Button Classes="toolbar-icon-btn" Command="{Binding ModuleManager.DeleteSelectedCommand}" ToolTip.Tip="{DynamicResource TooltipDeleteSelected}">
+                        <mi:MaterialIcon Kind="TrashCanOutline" Width="14" Height="14" Foreground="{DynamicResource AccentRed}"/>
                     </Button>
-                    <Button Classes="toolbar-btn" x:Name="BtnZoomOut" Click="BtnZoomOut_Click" ToolTip.Tip="{DynamicResource TooltipZoomOut}">
-                        <mi:MaterialIcon Kind="MagnifyMinus" Width="14" Height="14"/>
+
+                    <Button Classes="toolbar-icon-btn" x:Name="BtnDinRail" Click="BtnDinRail_Click" ToolTip.Tip="{DynamicResource ToolDinRail}">
+                        <mi:MaterialIcon Kind="ViewModule" Width="14" Height="14" Foreground="{DynamicResource AccentBlue}"/>
                     </Button>
-                    <Button Classes="toolbar-btn" x:Name="BtnZoomFit" Click="BtnZoomFit_Click" ToolTip.Tip="{DynamicResource TooltipZoomFit}">
-                        <mi:MaterialIcon Kind="Target" Width="14" Height="14"/>
+                    <Button Classes="toolbar-icon-btn" x:Name="BtnImportModules" Click="BtnImportModules_Click" ToolTip.Tip="{DynamicResource ToolImportSvg}">
+                        <mi:MaterialIcon Kind="FileImport" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
+                    </Button>
+
+                    <Border Width="1" Height="20" Background="{DynamicResource PanelBorder}" Margin="6,0" Opacity="0.5"/>
+
+                    <Button Classes="toolbar-icon-btn" x:Name="BtnZoomIn" Click="BtnZoomIn_Click" ToolTip.Tip="{DynamicResource TooltipZoomIn}">
+                        <mi:MaterialIcon Kind="MagnifyPlus" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
+                    </Button>
+                    <Border Classes="toolbar-zoom-badge" VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource ToolbarZoomPercent}" FontSize="10" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center"/>
+                    </Border>
+                    <Button Classes="toolbar-icon-btn" x:Name="BtnZoomOut" Click="BtnZoomOut_Click" ToolTip.Tip="{DynamicResource TooltipZoomOut}">
+                        <mi:MaterialIcon Kind="MagnifyMinus" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
+                    </Button>
+                    <Button Classes="toolbar-icon-btn" x:Name="BtnZoomFit" Click="BtnZoomFit_Click" ToolTip.Tip="{DynamicResource TooltipZoomFit}">
+                        <mi:MaterialIcon Kind="CropFree" Width="14" Height="14" Foreground="{DynamicResource AccentBlue}"/>
                     </Button>
 
                     </StackPanel>
                 
-                <!-- Right: Zoom & Settings -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                    <Border Width="1" Background="{DynamicResource PanelBorder}" Margin="4,2" Opacity="0.4"/>
+                <!-- Right: Project & Settings -->
+                <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,10,14,8" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <TextBlock Classes="toolbar-project-name" Text="{Binding ProjectFileName}" MaxWidth="280" TextTrimming="CharacterEllipsis"/>
 
-                    <Button Classes="toolbar-btn" ToolTip.Tip="{DynamicResource ToolSettings}">
-                        <mi:MaterialIcon Kind="Cog" Width="14" Height="14"/>
+                    <Button Classes="toolbar-icon-btn" ToolTip.Tip="{DynamicResource ToolSettings}">
+                        <mi:MaterialIcon Kind="Cog" Width="16" Height="16" Foreground="{DynamicResource TextSecondary}"/>
                         <Button.Flyout>
                             <Flyout Placement="BottomEdgeAlignedRight" ShowMode="Standard">
-                                <Border Background="{DynamicResource PanelBackground}" 
-                                        BorderBrush="{DynamicResource PanelBorder}" 
-                                        BorderThickness="1" CornerRadius="6" Padding="0" Width="260" Height="220">
-                                    <TabControl Margin="0">
+                                <Border Classes="toolbar-flyout-shell" Width="320">
+                                    <ScrollViewer MaxHeight="430">
+                                        <StackPanel Spacing="1">
                                         <!-- Zakładka Motywy -->
-                                        <TabItem Header="{DynamicResource SettingsTheme}" FontSize="11">
-                                            <StackPanel Spacing="10" Margin="10">
-                                                <TextBlock Text="{DynamicResource SettingsSelectTheme}" FontSize="11" Classes="secondary"/>
-                                                
-                                                <ScrollViewer>
-                                                    <ListBox ItemsSource="{Binding ProjectTheme.AvailableThemes}"
-                                                             SelectedItem="{Binding ProjectTheme.SelectedTheme}"
-                                                             SelectionMode="Single"
-                                                             Background="Transparent">
-                                                        <ListBox.ItemTemplate>
+                                            <TextBlock Classes="toolbar-flyout-section" Text="{DynamicResource SettingsAppearanceSection}"/>
+                                            <Border Classes="toolbar-flyout-card">
+                                                <StackPanel Spacing="8">
+                                                    <TextBlock Text="{DynamicResource SettingsSelectTheme}" FontSize="11" Classes="secondary"/>
+                                                    <ComboBox ItemsSource="{Binding ProjectTheme.AvailableThemes}"
+                                                              SelectedItem="{Binding ProjectTheme.SelectedTheme}"
+                                                              HorizontalAlignment="Stretch">
+                                                        <ComboBox.ItemTemplate>
                                                             <DataTemplate>
                                                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                    <mi:MaterialIcon Kind="ThemeLightDark" Width="16" Height="16" Opacity="0.5"/>
+                                                                    <mi:MaterialIcon Kind="ThemeLightDark" Width="16" Height="16" Opacity="0.55"/>
                                                                     <TextBlock Text="{Binding}"/>
                                                                 </StackPanel>
                                                             </DataTemplate>
-                                                        </ListBox.ItemTemplate>
-                                                    </ListBox>
-                                                </ScrollViewer>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                </StackPanel>
+                                            </Border>
 
-
-                                            </StackPanel>
-                                        </TabItem>
+                                            <Rectangle Classes="toolbar-flyout-divider"/>
                                         
                                         <!-- Zakładka Widok -->
-                                        <TabItem Header="{DynamicResource MenuView}" FontSize="11">
-                                            <StackPanel Spacing="16" Margin="10">
-                                                <TextBlock Text="{DynamicResource SettingsSchematicOptions}" Classes="secondary" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                                
-                                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0,0,0,8">
+                                            <TextBlock Classes="toolbar-flyout-section" Text="{DynamicResource SettingsSchematicOptions}" IsVisible="False"/>
+                                            <Border Classes="toolbar-flyout-card" IsVisible="False">
+                                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
                                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource SettingsGrid}" VerticalAlignment="Center" Margin="0,0,10,12"/>
                                                     <ToggleSwitch Grid.Row="0" Grid.Column="1" IsChecked="{Binding Schematic.ShowGrid}" OffContent="{DynamicResource SettingsHidden}" OnContent="{DynamicResource SettingsVisible}" Margin="0,0,0,12"/>
 
                                                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource SettingsDinRailAxis}" VerticalAlignment="Center" Margin="0,0,10,12"/>
                                                     <ToggleSwitch Grid.Row="1" Grid.Column="1" IsChecked="{Binding Schematic.ShowDinRailAxis}" OffContent="{DynamicResource SettingsHidden}" OnContent="{DynamicResource SettingsVisible}" Margin="0,0,0,12"/>
-                                                    
-                                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource SettingsPageNumbers}" VerticalAlignment="Center" Margin="0,0,10,12"/>
-                                                    <ToggleSwitch Grid.Row="2" Grid.Column="1" IsChecked="{Binding Schematic.ShowPageNumbers}" OffContent="{DynamicResource SettingsHiddenPlural}" OnContent="{DynamicResource SettingsVisiblePlural}" Margin="0,0,0,12"/>
+
+                                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource SettingsPageNumbers}" VerticalAlignment="Center"/>
+                                                    <ToggleSwitch Grid.Row="2" Grid.Column="1" IsChecked="{Binding Schematic.ShowPageNumbers}" OffContent="{DynamicResource SettingsHiddenPlural}" OnContent="{DynamicResource SettingsVisiblePlural}"/>
                                                 </Grid>
+                                            </Border>
 
-                                                <Separator Background="{DynamicResource PanelBorder}"/>
-
-                                                <TextBlock Text="{DynamicResource SettingsInterface}" Classes="secondary" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                                
+                                            <TextBlock Classes="toolbar-flyout-section" Text="{DynamicResource SettingsInterface}"/>
+                                            <Border Classes="toolbar-flyout-card">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto">
                                                         <TextBlock Text="{DynamicResource SettingsIconSize}" VerticalAlignment="Center"/>
@@ -377,9 +449,9 @@
                                                     </Grid>
                                                     <Slider Minimum="24" Maximum="64" Value="{Binding Schematic.IconSize}" TickFrequency="4" IsSnapToTickEnabled="True"/>
                                                 </StackPanel>
-                                            </StackPanel>
-                                        </TabItem>
-                                    </TabControl>
+                                            </Border>
+                                        </StackPanel>
+                                    </ScrollViewer>
                                 </Border>
                             </Flyout>
                         </Button.Flyout>
@@ -396,7 +468,8 @@
         </Border>
 
         <!-- MAIN CONTENT -->
-        <Grid Grid.Row="1">
+        <Grid x:Name="MainContentShell"
+              Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280"/>
                 <ColumnDefinition Width="*"/>
@@ -419,54 +492,87 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 
-                <!-- Sheet Tabs (Restored for DEBUG - No Style, No Icons) -->
-                <Border Grid.Row="0" Background="{DynamicResource ToolbarBackground}" Padding="4,2">
-                    <StackPanel Orientation="Horizontal" Spacing="2">
+                <!-- Workspace Tabs -->
+                <Border Grid.Row="0" Classes="workspace-tabs-bar">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
                         <ToggleButton x:Name="Sheet1Tab" 
                                       IsChecked="{Binding Schematic.IsSheet1Active, Mode=OneWay}"
                                       Command="{Binding Schematic.SwitchToSheet1Command}"
                                       Classes="sheet-tab">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <PathIcon Data="M3,13H11V3H3V13M3,21H11V15H3V21M13,21H21V11H13V21M13,3V9H21V3H13Z" Width="16" Height="16"/>
-                                <TextBlock Text="{DynamicResource TabDistributionBoard}" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="ViewModule"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"/>
+                                <TextBlock Text="{DynamicResource TabDistributionBoard}"
+                                           VerticalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"/>
                             </StackPanel>
                         </ToggleButton>
                         <ToggleButton x:Name="Sheet2Tab"
                                       IsChecked="{Binding Schematic.IsSheet2Active, Mode=OneWay}"
                                       Command="{Binding Schematic.SwitchToSheet2Command}"
                                       Classes="sheet-tab">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <PathIcon Data="M3,3H21V5H3V3M3,7H21V9H3V7M3,11H21V13H3V11M3,15H21V17H3V15" Width="16" Height="16"/>
-                                <TextBlock Text="{DynamicResource TabCircuitSchematic}" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="FileTreeOutline"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"/>
+                                <TextBlock Text="{DynamicResource TabCircuitSchematic}"
+                                           VerticalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"/>
                             </StackPanel>
                         </ToggleButton>
                         <ToggleButton x:Name="Sheet3Tab"
                                       IsChecked="{Binding Schematic.IsSheet3Active, Mode=OneWay}"
                                       Command="{Binding Schematic.SwitchToSheet3Command}"
                                       Classes="sheet-tab">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <mi:MaterialIcon Kind="FormatListBulleted" Width="16" Height="16"/>
-                                <TextBlock Text="{DynamicResource TabCircuitList}" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="FormatListBulleted"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"/>
+                                <TextBlock Text="{DynamicResource TabCircuitList}"
+                                           VerticalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"/>
+                            </StackPanel>
+                        </ToggleButton>
+                        <ToggleButton x:Name="Sheet4Tab"
+                                      IsChecked="{Binding Schematic.IsSheet4Active, Mode=OneWay}"
+                                      Command="{Binding Schematic.SwitchToSheet4Command}"
+                                      Classes="sheet-tab">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="FilePdfBox"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"/>
+                                <TextBlock Text="Podglad PDF"
+                                           VerticalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"/>
                             </StackPanel>
                         </ToggleButton>
 
-                        <!-- Separator -->
-                        <Border Width="1" Background="{DynamicResource PanelBorder}" Margin="6,4" Opacity="0.4"/>
+                        <Border Classes="workspace-tab-separator"/>
+                        </StackPanel>
 
                         <!-- Przełącznik motywu schematu (jasny/ciemny) -->
                         <ToggleButton x:Name="SchematicThemeToggle"
+                                      Grid.Column="2"
                                       IsChecked="{Binding Schematic.IsSingleLineLightTheme}"
                                       Command="{Binding Schematic.ToggleSingleLineThemeCommand}"
                                       Classes="toolbar-btn"
                                       ToolTip.Tip="{DynamicResource TooltipToggleSchematicTheme}"
                                       IsVisible="{Binding Schematic.IsSheet2Active}"
+                                      Margin="10,0,0,0"
+                                      VerticalAlignment="Center"
                                       Padding="6,4">
                             <StackPanel Orientation="Horizontal" Spacing="4">
                                 <mi:MaterialIcon x:Name="SchematicThemeIcon" Kind="WeatherSunny" Width="14" Height="14"/>
                                 <TextBlock x:Name="SchematicThemeLabel" Text="{DynamicResource ThemeLight}" FontSize="11" VerticalAlignment="Center"/>
                             </StackPanel>
                         </ToggleButton>
-                    </StackPanel>
+                    </Grid>
                 </Border>
                 
                 <!-- Sheet Content -->
@@ -511,13 +617,15 @@
                                     <Border BorderBrush="#883B82F6"
                                             BorderThickness="1.5"
                                             CornerRadius="4"
-                                            Background="#0D3B82F6"/>
+                                            Background="#0D3B82F6"
+                                            IsHitTestVisible="False"/>
                                     <Border Background="#CC3B82F6"
                                             CornerRadius="3"
                                             Padding="5,1"
                                             VerticalAlignment="Top"
                                             HorizontalAlignment="Left"
-                                            Margin="4,-10,0,0">
+                                            Margin="4,-10,0,0"
+                                            IsHitTestVisible="False">
                                         <TextBlock Text="{Binding GroupName}"
                                                    FontSize="9"
                                                    FontWeight="Bold"
@@ -613,58 +721,123 @@
                             Padding="0">
                         <views:CircuitListView DataContext="{Binding CircuitList}"/>
                     </Border>
+
+                    <Border x:Name="Sheet4Container"
+                            Background="{DynamicResource AppBackground}" 
+                            IsVisible="{Binding Schematic.IsSheet4Active}"
+                            Padding="0">
+                        <views:PdfPreviewView DataContext="{Binding Exporter}"/>
+                    </Border>
                     </Grid>
                 </Grid>
             <Border x:Name="RightPanel" Grid.Column="2" Background="{DynamicResource PanelBackground}" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource PanelBorder}"
                     IsVisible="{Binding IsRightPanelVisible}">
-                <TabControl x:Name="RightTabControl" Margin="0" Padding="0">
-                    <TabControl.Styles>
-                        <Style Selector="TabItem">
-                            <Setter Property="Padding" Value="8,5"/>
-                            <Setter Property="FontSize" Value="11"/>
-                        </Style>
-                    </TabControl.Styles>
+                    <Grid Margin="12" RowDefinitions="Auto,Auto,*">
+                            <TextBlock Text="{DynamicResource HeaderRightPanelProperties}"
+                                       Margin="4,2,4,12"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextMain}"/>
+                            <Border Grid.Row="1" Height="1" Background="{DynamicResource PanelBorder}" Opacity="0.8"/>
+                            <TabControl x:Name="RightTabControl"
+                                        Grid.Row="2"
+                                        Margin="0,14,0,0"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0">
+                                <TabControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,10"/>
+                                    </ItemsPanelTemplate>
+                                </TabControl.ItemsPanel>
+                                <TabControl.Styles>
+                            <Style Selector="TabItem">
+                                <Setter Property="Padding" Value="14,8"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Margin" Value="0,0,8,8"/>
+                                <Setter Property="ZIndex" Value="1"/>
+                                <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+                                <Setter Property="Tag" Value="{DynamicResource TextSecondary}"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                                <Setter Property="CornerRadius" Value="8"/>
+                                <Setter Property="MinWidth" Value="56"/>
+                                <Setter Property="MinHeight" Value="36"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="Transitions">
+                                    <Transitions>
+                                        <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                                        <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+                                        <BrushTransition Property="Foreground" Duration="0:0:0.12"/>
+                                    </Transitions>
+                                </Setter>
+                            </Style>
+                            <Style Selector="TabItem:pointerover">
+                                <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+                                <Setter Property="Tag" Value="{DynamicResource TextMain}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+                            </Style>
+                            <Style Selector="TabItem:selected">
+                                <Setter Property="Background" Value="{DynamicResource PanelBackgroundAlt}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+                                <Setter Property="Tag" Value="{DynamicResource AccentBlue}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                            </Style>
+                        </TabControl.Styles>
                     
                     <!-- TAB 1: Konfiguracja -->
                     <TabItem>
                         <TabItem.Header>
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <mi:MaterialIcon Kind="Cog" Width="16" Height="16"/>
-                                <TextBlock Text="{DynamicResource TabConfiguration}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <mi:MaterialIcon Kind="Cog"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Foreground="{Binding Tag, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+                                <TextBlock Text="{DynamicResource TabConfiguration}"
+                                           TextWrapping="NoWrap"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
                             </StackPanel>
                         </TabItem.Header>
-                        <views:PowerConfigPanel/>
+                        <Border Margin="0,10,0,0" Background="Transparent">
+                            <views:PowerConfigPanel/>
+                        </Border>
                     </TabItem>
                     
-                    <!-- TAB 2: Obwody -->
+                    <!-- TAB 2: Bilans -->
                     <TabItem>
                         <TabItem.Header>
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <mi:MaterialIcon Kind="FormatListGroup" Width="16" Height="16"/>
-                                <TextBlock Text="{DynamicResource TabCircuitGroups}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <mi:MaterialIcon Kind="ChartBar"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Foreground="{Binding Tag, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+                                <TextBlock Text="{DynamicResource TabBalance}"
+                                           TextWrapping="NoWrap"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
                             </StackPanel>
                         </TabItem.Header>
-                        <views:GroupedCircuitsPanel/>
-                    </TabItem>
-
-                    <!-- TAB 3: Bilans -->
-                    <TabItem>
-                        <TabItem.Header>
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <mi:MaterialIcon Kind="ChartBar" Width="16" Height="16"/>
-                                <TextBlock Text="{DynamicResource TabBalance}"/>
-                            </StackPanel>
-                        </TabItem.Header>
-                        <views:PowerBalancePanel x:Name="PnlPowerBalance"/>
+                        <Border Margin="0,10,0,0" Background="Transparent">
+                            <views:PowerBalancePanel x:Name="PnlPowerBalance"/>
+                        </Border>
                     </TabItem>
 
                     <TabItem>
                         <TabItem.Header>
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <mi:MaterialIcon Kind="AlertCircleOutline" Width="16" Height="16"/>
-                                <TextBlock Text="{DynamicResource TabValidation}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <mi:MaterialIcon Kind="InformationOutline"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Foreground="{Binding Tag, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+                                <TextBlock Text="{DynamicResource TabValidation}"
+                                           TextWrapping="NoWrap"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
                             </StackPanel>
                         </TabItem.Header>
+                        <Border Margin="0,10,0,0" Background="Transparent">
                         <ScrollViewer>
                             <StackPanel Spacing="8" Margin="8">
                                 <TextBlock Classes="section-header" Text="{DynamicResource ValidationResults}"/>
@@ -718,74 +891,123 @@
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>
+                        </Border>
                     </TabItem>
 
                     <TabItem x:Name="CircuitEditTab">
                         <TabItem.Header>
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <mi:MaterialIcon Kind="Pencil" Width="16" Height="16"/>
-                                <TextBlock Text="{DynamicResource TabCircuitEdit}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <mi:MaterialIcon Kind="Pencil"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Foreground="{Binding Tag, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+                                <TextBlock Text="{DynamicResource TabCircuitEdit}"
+                                           TextWrapping="NoWrap"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
                             </StackPanel>
                         </TabItem.Header>
-                        <views:CircuitEditPanelView x:Name="CircuitEditPanel"/>
+                        <Border Margin="0,10,0,0" Background="Transparent">
+                            <views:CircuitEditPanelView x:Name="CircuitEditPanel"/>
+                        </Border>
                     </TabItem>
-                </TabControl>
+                            </TabControl>
+                    </Grid>
             </Border>
         </Grid>
 
         <!-- Toast Notification Overlay -->
         <controls:ToastNotification x:Name="Toast" Grid.Row="1" 
                                      IsVisible="False"
+                                     IsHitTestVisible="{Binding IsHomeScreenVisible, Converter={StaticResource InverseBoolConverter}}"
                                      HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                      ZIndex="100"/>
 
-        <Border Grid.Row="2" Background="{DynamicResource PanelBackground}" Padding="8,3" 
+        <Border x:Name="StatusBarShell"
+                Grid.Row="2"
+                Background="{DynamicResource PanelBackground}" Padding="8,3" 
                 BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <Grid RowDefinitions="Auto,Auto">
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <!-- Left: Project name + status -->
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <StackPanel Orientation="Horizontal" Spacing="3">
-                        <mi:MaterialIcon Kind="FileDocumentOutline" Width="12" Height="12" Foreground="{DynamicResource TextTertiary}"/>
-                        <TextBlock Text="{Binding ProjectFileName}" Classes="secondary" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <Ellipse Width="6" Height="6" Fill="{DynamicResource AccentRed}" VerticalAlignment="Center" 
-                                 IsVisible="{Binding HasUnsavedChanges}" Margin="2,0,0,0"
-                                 ToolTip.Tip="{DynamicResource TooltipUnsavedChanges}"/>
+                    <!-- Left: Project name + status -->
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="3">
+                            <mi:MaterialIcon Kind="FileDocumentOutline" Width="12" Height="12" Foreground="{DynamicResource TextTertiary}"/>
+                            <TextBlock Text="{Binding ProjectFileName}" Classes="secondary" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource AccentRed}" VerticalAlignment="Center"
+                                     IsVisible="{Binding HasUnsavedChanges}" Margin="2,0,0,0"
+                                     ToolTip.Tip="{DynamicResource TooltipUnsavedChanges}"/>
+                        </StackPanel>
+                        <Border Width="1" Background="{DynamicResource PanelBorder}" Margin="4,1" Opacity="0.3"/>
+                        <StackPanel Orientation="Horizontal" Spacing="3">
+                            <mi:MaterialIcon Kind="CheckCircle" Width="12" Height="12" Foreground="{DynamicResource AccentGreen}"/>
+                            <TextBlock Text="{Binding StatusMessage}" Classes="secondary" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </StackPanel>
-                    <Border Width="1" Background="{DynamicResource PanelBorder}" Margin="4,1" Opacity="0.3"/>
-                    <StackPanel Orientation="Horizontal" Spacing="3">
-                        <mi:MaterialIcon Kind="CheckCircle" Width="12" Height="12" Foreground="{DynamicResource AccentGreen}"/>
-                        <TextBlock Text="{Binding StatusMessage}" Classes="secondary" FontSize="10" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </StackPanel>
 
-                <!-- Right: Stats -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="14">
-                    <StackPanel Orientation="Horizontal" Spacing="3" ToolTip.Tip="{DynamicResource TooltipTotalPower}">
-                        <mi:MaterialIcon Kind="LightningBolt" Width="12" Height="12" Foreground="{DynamicResource AccentYellow}"/>
-                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center"
-                                   Text="{Binding TotalPowerKW, StringFormat='{}{0:F1} kW'}"/>
+                    <!-- Right: Stats -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="14">
+                        <StackPanel Orientation="Horizontal" Spacing="3" ToolTip.Tip="{DynamicResource TooltipTotalPower}">
+                            <mi:MaterialIcon Kind="LightningBolt" Width="12" Height="12" Foreground="{DynamicResource AccentYellow}"/>
+                            <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center"
+                                       Text="{Binding TotalPowerKW, StringFormat='{}{0:F1} kW'}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="3" ToolTip.Tip="{DynamicResource TooltipGroupCount}">
+                            <mi:MaterialIcon Kind="Group" Width="12" Height="12" Foreground="{DynamicResource AccentBlue}"/>
+                            <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{DynamicResource StatusGroupPrefix}"/>
+                            <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{Binding GroupCount}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="3" ToolTip.Tip="{DynamicResource TooltipModuleCount}">
+                            <mi:MaterialIcon Kind="Shape" Width="12" Height="12" Classes="tertiary"/>
+                            <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{DynamicResource StatusModulePrefix}"/>
+                            <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{Binding Symbols.Count}"/>
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="3" ToolTip.Tip="{DynamicResource TooltipGroupCount}">
-                        <mi:MaterialIcon Kind="Group" Width="12" Height="12" Foreground="{DynamicResource AccentBlue}"/>
-                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{DynamicResource StatusGroupPrefix}"/>
-                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{Binding GroupCount}"/>
+                </Grid>
+
+                <Border Grid.Row="1"
+                        IsVisible="{Binding Exporter.IsExportInProgress}"
+                        Margin="0,6,0,0"
+                        Padding="8,6"
+                        CornerRadius="6"
+                        Background="{DynamicResource PanelBackgroundAlt}"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource PanelBorder}">
+                    <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="170,*,Auto" ColumnSpacing="8">
+                            <ProgressBar Height="6"
+                                         Minimum="0"
+                                         Maximum="100"
+                                         Value="{Binding Exporter.ExportProgressPercent}"
+                                         VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Exporter.ExportProgressStage}"
+                                       Classes="secondary"
+                                       FontSize="10"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding Exporter.ExportProgressPercent, StringFormat='{}{0}%'}"
+                                       Classes="secondary"
+                                       FontSize="10"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                        <TextBlock Text="{Binding Exporter.ExportLongOperationReason}"
+                                   Classes="tertiary"
+                                   FontSize="9"
+                                   TextWrapping="Wrap"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="3" ToolTip.Tip="{DynamicResource TooltipModuleCount}">
-                        <mi:MaterialIcon Kind="Shape" Width="12" Height="12" Classes="tertiary"/>
-                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{DynamicResource StatusModulePrefix}"/>
-                        <TextBlock Classes="secondary" FontSize="10" VerticalAlignment="Center" Text="{Binding Symbols.Count}"/>
-                    </StackPanel>
-                </StackPanel>
+                </Border>
             </Grid>
         </Border>
 
         <!-- Home Screen Overlay -->
-        <views:HomeScreenView Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsHomeScreenVisible}" ZIndex="999"/>
     </Grid>
 </Window>
+
+

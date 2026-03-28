@@ -36,6 +36,31 @@ public class PhaseDistributionCalculatorTests
     }
 
     [Fact]
+    public async Task BalancePhasesAsync_PhaseIndicators_AssignsRoundRobinAndKeepsSnapshot()
+    {
+        var symbols = new List<SymbolItem>
+        {
+            new() { Id = "ind-1", Type = "KontrolkiFaz", Phase = "PENDING" },
+            new() { Id = "ind-2", Type = "KontrolkiFaz", Phase = "PENDING" },
+            new() { Id = "ind-3", Type = "KontrolkiFaz", Phase = "PENDING" },
+            new() { Id = "mcb-1", Type = "MCB 1P", Phase = "L1", PowerW = 2000, Width = 18, Height = 90 }
+        };
+
+        var snapshot = await PhaseDistributionCalculator.BalancePhasesAsync(
+            symbols,
+            BalanceMode.Current,
+            BalanceScope.AllSinglePhase,
+            230);
+
+        Assert.Equal("PENDING", snapshot["ind-1"]);
+        Assert.Equal("PENDING", snapshot["ind-2"]);
+        Assert.Equal("PENDING", snapshot["ind-3"]);
+        Assert.Equal("L1", symbols[0].Phase);
+        Assert.Equal("L2", symbols[1].Phase);
+        Assert.Equal("L3", symbols[2].Phase);
+    }
+
+    [Fact]
     public async Task BalancePhasesAsync_EqualPowerCircuits_ZeroImbalance()
     {
         // 6 obwodów po 2000W — powinno rozłożyć idealnie 2×2000 na każdą fazę

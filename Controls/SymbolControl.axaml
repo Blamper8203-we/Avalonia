@@ -144,7 +144,8 @@
                    IsVisible="{Binding Visual, Converter={x:Static ObjectConverters.IsNull}}"/>
 
         <!-- Oznaczenie schematowe pod modułem (Q0, QF1, T1, H1...) -->
-        <Border Background="#CC1a1a2e"
+        <Border x:Name="ReferenceDesignationBadge"
+                Background="#CC1a1a2e"
                 CornerRadius="3"
                 Padding="4,1"
                 VerticalAlignment="Bottom"
@@ -152,7 +153,8 @@
                 Margin="0,0,0,-20"
                 IsHitTestVisible="False"
                 IsVisible="{Binding ReferenceDesignation, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <TextBlock Text="{Binding ReferenceDesignation}"
+            <TextBlock x:Name="ReferenceDesignationText"
+                       Text="{Binding ReferenceDesignation}"
                        FontSize="9"
                        FontWeight="Bold"
                        Foreground="#D4D4D4"

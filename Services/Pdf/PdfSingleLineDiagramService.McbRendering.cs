@@ -23,7 +23,7 @@ public partial class PdfSingleLineDiagramService
 
         SymMCB(c, cx, cy, ph);
 
-        // PhaseBadge(c, n.Phase, cx - 20, y + 24); // UsuniÄ™to znaczki faz na proĹ›bÄ™ uĹĽytkownika
+        // PhaseBadge(c, n.Phase, cx - 20, y + 24); // Removed at the user's request.
         Txt(c, n.Designation, cx + 12, y + 25, 8.5f, CTxtDes, true);
 
         DrawWireLine(c, cx, y + NH, Y(yo, E.YWireEnd), CWire, 1.2f);

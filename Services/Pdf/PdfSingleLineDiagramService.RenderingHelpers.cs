@@ -29,7 +29,6 @@ public partial class PdfSingleLineDiagramService
         DrawCircuitVectors(canvas, lay, pageIndex, yOff);
         DrawSkiaTable(canvas, lay, pageIndex, yOff);
         DrawSkiaTitleBlock(canvas, lay, pageIndex + 1, lay.TotalPages, yOff);
-        DrawLegend(canvas, lay, pageIndex, yOff);
         DrawCableLabels(canvas, lay, pageIndex, yOff);
     }
 

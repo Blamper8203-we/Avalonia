@@ -10,10 +10,21 @@ obj/
 # Benchmarks/test artifacts
 BenchmarkDotNet.Artifacts/
 TestResults/
+*.trx
+coverage/
+coverage.*
+
+# Local package cache
+.nuget/
 
 # Tooling
 .agent/
 .qoder/
+.dotnet/
+.dotnet-home/
+.appdata/
+.localappdata/
+artifacts/
 
 # Logs
 *.log
@@ -22,6 +33,12 @@ build*.txt
 *errors*.txt
 run_log.txt
 diagnostics*.out
+diag_run.txt
+diff*.txt
+*.patch
+
+# Local publish artifacts
+publish/
 
 # OS/editor
 .DS_Store

@@ -12,13 +12,13 @@ public partial class ProjectMetadataDialog : Window
     // Parameterless constructor required by Avalonia XAML loader
     public ProjectMetadataDialog()
     {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+        InitializeComponent();
         _metadata = new ProjectMetadata();
     }
 
     public ProjectMetadataDialog(ProjectMetadata metadata)
     {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+        InitializeComponent();
         
         // Klonujemy obiekt, by nie modyfikować oryginału dopóki użytkownik nie kliknie Zapisz
         _metadata = new ProjectMetadata

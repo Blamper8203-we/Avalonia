@@ -270,6 +270,9 @@ public class DialogService : IDialogService
         if (_mainWindow == null) return null;
 
         var storageProvider = _mainWindow.StorageProvider;
+        var patterns = string.Equals(filterExtension, ".dinboard", StringComparison.OrdinalIgnoreCase)
+            ? new[] { "*.dinboard", "*.json" }
+            : new[] { $"*{filterExtension}" };
 
         var options = new FilePickerOpenOptions
         {
@@ -279,7 +282,7 @@ public class DialogService : IDialogService
             {
                 new FilePickerFileType(filterName)
                 {
-                    Patterns = new[] { $"*{filterExtension}" }
+                    Patterns = patterns
                 }
             }
         };

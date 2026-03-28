@@ -7,14 +7,18 @@ namespace DINBoard;
 
 sealed class Program
 {
+    public static string[] StartupArgs { get; private set; } = Array.Empty<string>();
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called.
     [STAThread]
     public static void Main(string[] args)
     {
+        StartupArgs = args ?? Array.Empty<string>();
+
         try
         {
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(StartupArgs);
         }
         catch (Exception ex)
         {

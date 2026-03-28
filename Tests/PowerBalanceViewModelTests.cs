@@ -123,4 +123,37 @@ public class PowerBalanceViewModelTests
         // Assert
         Assert.Equal(1000 * 0.8, vm.CalculatedPowerW);
     }
+
+    [Fact]
+    public void RecalculatePhaseBalance_UsesConnectionPowerFromProjectConfig()
+    {
+        // Arrange
+        var vm = new PowerBalanceViewModel();
+        var symbols = new ObservableCollection<SymbolItem>
+        {
+            new SymbolItem { Phase = "L1", PowerW = 4000 },
+            new SymbolItem { Phase = "L2", PowerW = 3000 },
+            new SymbolItem { Phase = "L3", PowerW = 3000 }
+        };
+        var project = new Project
+        {
+            PowerConfig = new PowerSupplyConfig
+            {
+                Voltage = 400,
+                PowerKw = 6
+            }
+        };
+        vm.SimultaneityFactor = 0.8; // 10 kW * 0.8 = 8 kW
+
+        // Act
+        vm.RecalculatePhaseBalance(symbols, project);
+
+        // Assert
+        Assert.Equal(6000, vm.ConnectionPowerW);
+        Assert.Equal(8000, vm.CalculatedPowerW);
+        Assert.Equal(133.33, vm.ConnectionPowerUsagePercent, 2);
+        Assert.Equal(-2000, vm.ConnectionPowerReserveW);
+        Assert.True(vm.IsConnectionPowerExceeded);
+        Assert.True(vm.IsConnectionPowerStatusError);
+    }
 }

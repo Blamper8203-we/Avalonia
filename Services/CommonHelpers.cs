@@ -63,6 +63,26 @@ public static class CommonHelpers
     };
 
     /// <summary>
+    /// Obciazalnosc - metoda C (ulozenie bezposrednie, bez oslon).
+    /// Wartosci referencyjne dla przewodow Cu/PVC 70C, obwod pojedynczy.
+    /// </summary>
+    public static readonly Dictionary<double, double> CableAmpacityMethodC = new()
+    {
+        { 1.5, 19.5 },
+        { 2.5, 27.0 },
+        { 4.0, 36.0 },
+        { 6.0, 46.0 },
+        { 10.0, 63.0 },
+        { 16.0, 85.0 },
+        { 25.0, 112.0 },
+        { 35.0, 138.0 },
+        { 50.0, 168.0 },
+        { 70.0, 213.0 },
+        { 95.0, 258.0 },
+        { 120.0, 299.0 }
+    };
+
+    /// <summary>
     /// Interpoluje obciążalność prądową dla podanego przekroju i wybranej tabeli.
     /// </summary>
     public static double GetCableCapacity(double crossSectionMm2, Dictionary<double, double> table)

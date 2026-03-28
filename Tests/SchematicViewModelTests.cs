@@ -4,6 +4,7 @@ using Xunit;
 using DINBoard.Models;
 using DINBoard.ViewModels;
 using DINBoard.Services;
+using DINBoard.Services.Pdf;
 using Avalonia.Controls;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -30,10 +31,13 @@ public class SchematicViewModelTests
         var validationService = new ElectricalValidationService();
         var pdfExportService = new PdfExportService(moduleTypeService, validationService, symbolImportService, new SvgProcessor());
         var bomExportService = new BomExportService(moduleTypeService);
+        var latexExportService = new LatexExportService(moduleTypeService, validationService);
         var busbarGenerator = new PowerBusbarGenerator();
         var busbarPlacementService = new BusbarPlacementService(symbolImportService, projectService, busbarGenerator);
+        var licenseService = new LicenseService();
+        var recentProjectsService = new RecentProjectsService();
 
-        var mainVm = new MainViewModel(
+        var mainVm = new MainViewModel(new MainViewModelDeps(
             projectService,
             dialogService,
             undoRedoService,
@@ -43,8 +47,11 @@ public class SchematicViewModelTests
             validationService,
             pdfExportService,
             bomExportService,
-            busbarPlacementService
-        );
+            latexExportService,
+            busbarPlacementService,
+            licenseService,
+            recentProjectsService
+        ));
 
         // Access the injected SchematicViewModel that MainViewModel creates internally.
         // This ensures we test the same instance that MainViewModel uses.

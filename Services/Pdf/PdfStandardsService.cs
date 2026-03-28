@@ -76,6 +76,10 @@ public class PdfStandardsService
                     .FontSize(12 * UiToPdfScale).Bold().FontColor("#4B5563");
                 
                 var balance = _validationService.CalculatePhaseLoads(viewModel.Symbols);
+                var lineVoltage = viewModel.CurrentProject?.PowerConfig?.Voltage ?? 400;
+                var phaseVoltage = lineVoltage / Math.Sqrt(3);
+                bool isThreePhase = viewModel.CurrentProject?.PowerConfig?.Phases == 3;
+                var voltageLabel = isThreePhase ? $"{phaseVoltage:N0} V / {lineVoltage} V" : $"{phaseVoltage:N0} V";
                 
                 section.Item().Table(table =>
                 {
@@ -87,7 +91,7 @@ public class PdfStandardsService
                     });
                     
                     table.Cell().Element(CellStyle).Text("Napięcie znamionowe:").SemiBold();
-                    table.Cell().Element(CellStyle).Text("230 V / 400 V");
+                    table.Cell().Element(CellStyle).Text(voltageLabel);
                     table.Cell().Element(CellStyle).Text("✓");
                     
                     table.Cell().Element(CellStyle).Text("Częstotliwość:").SemiBold();

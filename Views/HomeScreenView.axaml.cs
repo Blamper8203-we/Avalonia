@@ -6,6 +6,6 @@ public partial class HomeScreenView : UserControl
 {
     public HomeScreenView()
     {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+        InitializeComponent();
     }
 }

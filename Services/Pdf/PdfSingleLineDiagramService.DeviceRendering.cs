@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using SkiaSharp;
 using DINBoard.Models;
 using E = DINBoard.Services.SchematicLayoutEngine;
@@ -62,7 +62,7 @@ public partial class PdfSingleLineDiagramService
         }
     }
 
-    // UsuniÄ™to DrawInfoTable, CellText, DrawNodeTblData z logiki Skia.
-    // Od teraz formatowane sÄ… przez metody DrawQuestTable w QuestPDF.
+    // Usunięto DrawInfoTable, CellText, DrawNodeTblData z logiki Skia.
+    // Od teraz formatowane są przez metody DrawQuestTable w QuestPDF.
 
 }

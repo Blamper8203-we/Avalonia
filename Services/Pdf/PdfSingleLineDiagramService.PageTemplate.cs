@@ -13,21 +13,21 @@ public partial class PdfSingleLineDiagramService
         float fw = (float)(E.PageW - E.FrameL - E.FrameR);
         float fh = (float)(E.PageH - E.FrameT - E.FrameB);
 
-        // BiaĹ‚e tĹ‚o strony
+        // White page background.
         using var bgPaint = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill };
         canvas.DrawRect(0, yOffset, (float)E.PageW, (float)E.PageH, bgPaint);
 
-        // Ramka gĹ‚Ăłwna
-        using var framePen = Stroke(CFrame, 1.5f);
+        // Main frame.
+        using var framePen = Stroke(CFrame, 1.1f);
         canvas.DrawRect(fl, ft, fw, fh, framePen);
         
-        // Ramka dla tytuĹ‚u
+        // Title block frame.
         canvas.DrawRect((float)E.DrawR, (float)(E.PageH - E.FrameB - E.TitleH) + yOffset, (float)E.TitleW, (float)E.TitleH, framePen);
 
         // Siatka i markery
-        using var gridPen = Stroke(CFrame, 0.5f);
+        using var gridPen = Stroke(CGrid, 0.4f);
         using var font = new SKFont(SKTypeface.FromFamilyName("Segoe UI"), 10);
-        using var txtPaint = new SKPaint { Color = CFrame, IsAntialias = true };
+        using var txtPaint = new SKPaint { Color = CGridTxt, IsAntialias = true };
 
         // Kolumny (1..8)
         float colSpace = fw / E.GridCols;
@@ -44,7 +44,7 @@ public partial class PdfSingleLineDiagramService
             canvas.DrawText((i + 1).ToString(), cx + colSpace / 2 - textW / 2, ft + fh + 12, SKTextAlign.Left, font, txtPaint);
         }
 
-        // RzÄ™dy (A..F)
+        // Rows (A..F)
         float rowSpace = fh / E.GridRows;
         for (int i = 0; i < E.GridRows; i++)
         {

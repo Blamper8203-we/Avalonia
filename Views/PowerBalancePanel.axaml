@@ -79,6 +79,104 @@
                     </Grid>
                 </StackPanel>
             </Border>
+
+            <!-- Connection Power vs Balance -->
+            <Border Classes="card" ToolTip.Tip="Porownanie mocy obliczeniowej z moca przylaczeniowa ustawiona w zakladce Konfiguracja.">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="MOC PRZYLACZENIOWA VS BILANS" Classes="section-header"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Moc przylaczeniowa" Classes="secondary" FontSize="11"/>
+                        <TextBlock Grid.Column="1"
+                                   IsVisible="{Binding PowerBalance.HasConnectionPowerLimit}"
+                                   FontWeight="Bold"
+                                   FontSize="12">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0:N2} kW">
+                                    <Binding Path="PowerBalance.ConnectionPowerW" Converter="{x:Static local:PowerBalancePanel.WattsToKwConverter}"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <TextBlock Grid.Column="1"
+                                   IsVisible="{Binding !PowerBalance.HasConnectionPowerLimit}"
+                                   Text="nie ustawiono"
+                                   FontWeight="Bold"
+                                   FontSize="12"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Moc obliczeniowa" Classes="secondary" FontSize="11"/>
+                        <TextBlock Grid.Column="1" FontWeight="Bold" FontSize="12">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0:N2} kW">
+                                    <Binding Path="PowerBalance.CalculatedPowerW" Converter="{x:Static local:PowerBalancePanel.WattsToKwConverter}"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Wykorzystanie mocy" Classes="secondary" FontSize="11"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding PowerBalance.ConnectionPowerUsagePercent, StringFormat={}{0:N1}%}"
+                                   FontWeight="Bold"
+                                   FontSize="12"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Rezerwa mocy" Classes="secondary" FontSize="11"/>
+                        <TextBlock Grid.Column="1" FontWeight="Bold" FontSize="12">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0:N2} kW">
+                                    <Binding Path="PowerBalance.ConnectionPowerReserveW" Converter="{x:Static local:PowerBalancePanel.WattsToKwConverter}"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Grid>
+
+                    <Border Height="1" Background="{DynamicResource PanelBorder}"/>
+
+                    <Grid ColumnDefinitions="Auto,*">
+                        <mi:MaterialIcon Kind="InformationOutline"
+                                         Width="14"
+                                         Height="14"
+                                         Foreground="{DynamicResource TextTertiary}"
+                                         IsVisible="{Binding PowerBalance.IsConnectionPowerStatusNeutral}"/>
+                        <mi:MaterialIcon Kind="CheckCircle"
+                                         Width="14"
+                                         Height="14"
+                                         Foreground="{DynamicResource AccentGreen}"
+                                         IsVisible="{Binding PowerBalance.IsConnectionPowerStatusOk}"/>
+                        <mi:MaterialIcon Kind="AlertOctagon"
+                                         Width="14"
+                                         Height="14"
+                                         Foreground="{DynamicResource AccentRed}"
+                                         IsVisible="{Binding PowerBalance.IsConnectionPowerStatusError}"/>
+
+                        <TextBlock Grid.Column="1"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding PowerBalance.ConnectionPowerStatusText}"
+                                   Foreground="{DynamicResource TextTertiary}"
+                                   FontWeight="SemiBold"
+                                   IsVisible="{Binding PowerBalance.IsConnectionPowerStatusNeutral}"/>
+                        <TextBlock Grid.Column="1"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding PowerBalance.ConnectionPowerStatusText}"
+                                   Foreground="{DynamicResource AccentGreen}"
+                                   FontWeight="SemiBold"
+                                   IsVisible="{Binding PowerBalance.IsConnectionPowerStatusOk}"/>
+                        <TextBlock Grid.Column="1"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding PowerBalance.ConnectionPowerStatusText}"
+                                   Foreground="{DynamicResource AccentRed}"
+                                   FontWeight="SemiBold"
+                                   IsVisible="{Binding PowerBalance.IsConnectionPowerStatusError}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
             
             <!-- Phase Balance -->
             <TextBlock Classes="section-header" Text="{DynamicResource HeaderPhaseBalance}"/>
